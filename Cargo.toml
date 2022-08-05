@@ -1,0 +1,18 @@
+[workspace]
+
+members = [
+    "desktop",
+]
+
+exclude = [
+    "controller",
+    "libclient",
+    "libkynput",
+]
+
+[patch.crates-io]
+libclient-rs = { path = "libclient/libclient-rs" }
+libclient-sys = { path = "libclient/libclient-rs/libclient-sys" }
+libkynput-rs = { path = "libkynput/libkynput-rs" }
+libkynput-sys = { path = "libkynput/libkynput-rs/libkynput-sys" }
+winit = { path = "external/winit" }

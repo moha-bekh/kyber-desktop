@@ -1,0 +1,209 @@
+#!/bin/bash
+
+set -e
+set -x
+
+source component-versions.sh
+
+BASE_DIR=$(realpath $(dirname $0))
+
+usage()
+{
+cat << EOF
+usage: $0 -o <path> [options]
+
+Build Desktop Application.
+
+OPTIONS:
+   -h            Show some help
+   -s            Skip native dependencies build
+   -d            Build only native dependencies
+   -c            Run clippy
+   -t            Run tests
+   -p            Generate a package of the app
+   -o <path>     Install the built binaries in the absolute path (Default: ./rootfs-x86_64-linux-gnu)
+EOF
+}
+
+git_clone() {
+    local REPO=$1
+    local BRANCH=$2
+
+    if [[ -z "${CI_JOB_TOKEN}" ]]; then
+        local FULL_REPO_URI="git@gitlab.com:${REPO}"
+    else
+        local FULL_REPO_URI="https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/${REPO}"
+    fi
+
+    echo "Repo: '${FULL_REPO_URI}'"
+    if [[ -z "${BRANCH}" ]]; then
+        git clone --recurse-submodules ${FULL_REPO_URI}
+    else
+        git clone --recurse-submodules ${FULL_REPO_URI} -b $BRANCH
+    fi
+}
+
+checkout_deps() {
+    # Checkout libkynput
+    if [[ ! -d libkynput ]]; then
+        git_clone "kyber-labs/kyber-streamer/libkynput.git"
+    fi
+
+    LIBKYNPUT_PATH=$(realpath libkynput)
+
+    cd libkynput
+    git reset --hard $LIBKYNPUT_SHA1
+    git submodule update
+    cd -
+
+    # Checkout libclient
+    if [[ ! -d libclient ]]; then
+        git_clone "kyber-labs/kyber-streamer/libclient.git"
+    fi
+
+    cd libclient
+    echo "Set libclient SHA1 to $LIBCLIENT_SHA1"
+    git reset --hard $LIBCLIENT_SHA1
+    git submodule update
+
+    mkdir -p .cargo
+    echo "[patch.crates-io]" > .cargo/config.toml
+    echo "libkynput-rs = { path = \"$LIBKYNPUT_PATH/libkynput-rs\" }" >> .cargo/config.toml
+    echo "libkynput-sys = { path = \"$LIBKYNPUT_PATH/libkynput-rs/libkynput-sys\" }" >> .cargo/config.toml
+
+    cd -
+
+    # Checkout streamer
+    if [[ ! -d txproto ]]; then
+        git_clone "kyber-labs/kyber-streamer/txproto.git"
+    fi
+
+    cd txproto
+    git reset --hard $TXPROTO_SHA1
+    git submodule update
+    cd -
+
+    # Checkout controller
+    if [[ ! -d controller ]]; then
+        git_clone "kyber-labs/kyber-streamer/controller.git"
+    fi
+
+    cd controller
+    git reset --hard $CONTROLLER_SHA1
+    git submodule update
+    cd -
+}
+
+build_deps() {
+    # Build libkynput
+    cd libkynput
+    ./build-linux.sh -o $OUT_DIR
+    cd -
+
+    # Build libclient
+    cd libclient
+    ./build-linux.sh -o $OUT_DIR
+    cd -
+
+    # Build streamer
+    cd txproto
+    ./build-linux.sh -o $OUT_DIR
+    cd -
+
+    # Build controller
+    cd controller
+    ./build-linux.sh -o $OUT_DIR
+    cd -
+}
+
+package() {
+    local source_directory=$1
+    local stagging_directory="kyber-debian-buster-x86_64"
+
+    mkdir -p "$stagging_directory"
+
+    cp -a $1/* $stagging_directory/
+
+    cp \
+        scripts/linux/run_client.sh \
+        scripts/linux/run_controller.sh \
+        $stagging_directory
+
+    tar cfvj $(basename $stagging_directory).tar.bz2 $stagging_directory
+}
+
+BUILD_DEPS=true
+PACKAGE=false
+ACTION="build"
+OUT_DIR=$(pwd)/rootfs-x86_64-linux-gnu
+
+while getopts "hsdctpo:" OPTION
+do
+    case $OPTION in
+        h)
+            usage
+            exit 1
+            ;;
+        s)
+            BUILD_DEPS=false
+            ;;
+        d)
+            ACTION="none"
+            ;;
+        c)
+            ACTION="clippy"
+            ;;
+        t)
+            ACTION="test"
+            ;;
+        p)
+            PACKAGE=true
+            ;;
+        o)
+            OUT_DIR=$OPTARG
+            ;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+if [ "x$1" != "x" ]; then
+    usage
+    exit 1
+fi
+
+# Build local repository
+export PATH=$OUT_DIR/bin:$PATH
+export LD_LIBRARY_PATH=$OUT_DIR/lib:$OUT_DIR/lib/x86_64-linux-gnu
+export PKG_CONFIG_PATH=$OUT_DIR/lib/pkgconfig:$OUT_DIR/lib/x86_64-linux-gnu/pkgconfig
+
+# Checkout dependencies. Required in any cases
+checkout_deps
+
+# Build dependencies
+if [ "$BUILD_DEPS" = true ]; then
+    build_deps
+else
+    echo "Skip dependencies build"
+fi
+
+# Run action
+case "$ACTION" in
+    "build")
+        cargo build --release
+        cp target/release/client $OUT_DIR/bin
+    ;;
+    "clippy")
+        cargo clippy -- -D warnings
+    ;;
+    "test")
+        cargo test
+    ;;
+    "none")
+        echo "No action requested"
+    ;;
+esac
+
+# Package if requested
+if [ "$PACKAGE" = true ]; then
+    package $OUT_DIR
+fi

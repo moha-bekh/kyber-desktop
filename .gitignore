@@ -1,0 +1,7 @@
+controller
+input_server
+libclient
+libkynput
+rootfs-*
+target
+txproto

@@ -1,0 +1,3 @@
+[submodule "external/winit"]
+	path = external/winit
+	url = ../../external/winit.git
