@@ -30,9 +30,8 @@ lint:
     - cargo fmt -- --check
   cache: []
 
-contrib-debian-buster-x86_64:
+.contrib-linux-x86_64-common:
   stage: contrib
-  image: $DEBIAN_IMAGE
   tags:
     - docker
   only:
@@ -53,39 +52,29 @@ contrib-debian-buster-x86_64:
       - rootfs
     expire_in: 1 week
 
-build-debian-buster-x86_64:
+.build-linux-x86_64-common:
   stage: build
-  image: $DEBIAN_IMAGE
   tags:
     - docker
   only:
     - main
     - merge_requests
     - tags
-  needs:
-    - contrib-debian-buster-x86_64
   script: |
     export ROOTFS_PATH=$(pwd)/rootfs
     cd $ROOTFS_PATH
     ../scripts/change_prefix.sh
     cd -
     ./build-linux.sh -s -p -o $ROOTFS_PATH
-  artifacts:
-    paths:
-      - kyber-debian-buster-x86_64.tar.bz2
-    expire_in: 1 week
 
-test-debian-buster-x86_64:
+.test-linux-x86_64-common:
   stage: test
-  image: $DEBIAN_IMAGE
   tags:
     - docker
   only:
     - main
     - merge_requests
     - tags
-  needs:
-    - contrib-debian-buster-x86_64
   script: |
     export ROOTFS_PATH=$(pwd)/rootfs
     cd $ROOTFS_PATH
@@ -93,7 +82,7 @@ test-debian-buster-x86_64:
     cd -
     ./build-linux.sh -s -t -o $ROOTFS_PATH
 
-clippy-debian-buster-x86_64:
+.clippy-linux-x86_64-common:
   stage: misc
   image: $DEBIAN_IMAGE
   tags:
@@ -110,6 +99,34 @@ clippy-debian-buster-x86_64:
     ../scripts/change_prefix.sh
     cd -
     ./build-linux.sh -s -c -o $ROOTFS_PATH
+
+contrib-debian-buster-x86_64:
+  extends: .contrib-linux-x86_64-common
+  image: $DEBIAN_IMAGE
+
+build-debian-buster-x86_64:
+  extends: .build-linux-x86_64-common
+  image: $DEBIAN_IMAGE
+  needs:
+    - contrib-debian-buster-x86_64
+  variables:
+    KYBER_STAGGING_DIRECTORY: "kyber-debian-buster-x86_64"
+  artifacts:
+    paths:
+      - kyber-debian-buster-x86_64.tar.bz2
+    expire_in: 1 week
+
+test-debian-buster-x86_64:
+  extends: .test-linux-x86_64-common
+  image: $DEBIAN_IMAGE
+  needs:
+    - contrib-debian-buster-x86_64
+
+clippy-debian-buster-x86_64:
+  extends: .clippy-linux-x86_64-common
+  image: $DEBIAN_IMAGE
+  needs:
+    - contrib-debian-buster-x86_64
 
 contrib-windows-x86_64:
   stage: contrib

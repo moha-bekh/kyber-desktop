@@ -182,7 +182,13 @@ build_deps() {
 
 package() {
     local source_directory=$1
-    local stagging_directory="kyber-debian-buster-x86_64"
+
+    if [[ -z "${KYBER_STAGGING_DIRECTORY}" ]]; then
+        local stagging_directory="kyber-linux-x86_64"
+    else
+        local stagging_directory="${KYBER_STAGGING_DIRECTORY}"
+    fi
+
     local stagging_directory_realpath=$(realpath $stagging_directory)
 
     local src_bin=$source_directory/bin
