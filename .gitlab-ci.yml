@@ -1,6 +1,7 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   DEBIAN_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-bullseye:20221108113934
+  UBUNTU_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/ubuntu-jammy:20230221174229
   WIN64_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-win64:20221122115700
   MACOS_RUST_VERSION: 1.65.0
 
@@ -127,6 +128,23 @@ clippy-debian-buster-x86_64:
   image: $DEBIAN_IMAGE
   needs:
     - contrib-debian-buster-x86_64
+
+contrib-ubuntu-jammy-x86_64:
+  extends: .contrib-linux-x86_64-common
+  image: $UBUNTU_IMAGE
+  when: manual
+
+build-ubuntu-jammy-x86_64:
+  extends: .build-linux-x86_64-common
+  image: $UBUNTU_IMAGE
+  needs:
+    - contrib-ubuntu-jammy-x86_64
+  variables:
+    KYBER_STAGGING_DIRECTORY: "kyber-ubuntu-jammy-x86_64"
+  artifacts:
+    paths:
+      - kyber-ubuntu-jammy-x86_64.tar.bz2
+    expire_in: 1 week
 
 contrib-windows-x86_64:
   stage: contrib
