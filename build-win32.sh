@@ -150,7 +150,8 @@ package() {
         $src_bin/txproto.exe \
         $src_bin/libclient.dll \
         $src_bin/libkynput.dll \
-        $src_bin/txproto_stream.lua \
+        $src_bin/txproto_stream_audio.lua \
+        $src_bin/txproto_stream_video.lua \
         $stagging_directory
 
     cp \

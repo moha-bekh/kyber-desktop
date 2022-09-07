@@ -43,6 +43,13 @@ fn main() {
                 .takes_value(false),
         )
         .arg(
+            clap::Arg::with_name("audio")
+                .long("audio")
+                .help("Enable audio")
+                .value_parser(clap::value_parser!(bool))
+                .takes_value(true),
+        )
+        .arg(
             clap::Arg::with_name("inputs")
                 .long("inputs")
                 .help("Enable inputs")
@@ -113,6 +120,7 @@ fn main() {
             .unwrap();
 
     config.set_yuv444(matches.is_present("444"));
+    config.set_audio(matches.get_one("audio").copied().unwrap_or(false));
     config.set_inputs(matches.get_one("inputs").copied().unwrap_or(true));
 
     let client = Client::new(&config);
