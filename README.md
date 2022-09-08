@@ -86,3 +86,47 @@ cargo install cargo-c
 ```
 ./build-win32.sh
 ```
+
+### macOS
+
+#### Install required system packages
+
+```
+brew install \
+    m4 nasm openssl@1.1 pkg-config \
+    autotool automake libtool
+```
+
+#### Install Rust and required Rust tools
+
+```
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup target add x86_64-apple-darwin aarch64-apple-darwin
+cargo install cargo-c
+```
+
+#### Build: dev mode
+
+```
+./build-macos.sh -a <arch>
+```
+
+`<arch>` can be:
+* `x86_64` (The default value)
+* `arm64`
+
+#### Build: create a macOS bundle
+
+A `.app` bundle can be generated:
+```
+./build-macos.sh -p -a <arch>
+```
+
+The command outputs:
+* `kyber-client.app`
+* `kyber-client.app.zip`
+
+The bundle can be runned by another Mac, but it must be allowed at first:
+```
+xattr -r -d com.apple.quarantine kyber-client.app
+```

@@ -106,6 +106,10 @@ fn main() {
     let window_handle = match window.window_handle() {
         #[cfg(target_os = "linux")]
         raw_window_handle::RawWindowHandle::Xlib(handle) => WindowHandle::from_x11(handle.window),
+        #[cfg(target_os = "macos")]
+        raw_window_handle::RawWindowHandle::AppKit(handle) => {
+            WindowHandle::from_ns_view(handle.ns_view as u64)
+        }
         #[cfg(target_os = "windows")]
         raw_window_handle::RawWindowHandle::Win32(handle) => {
             WindowHandle::from_hwnd(handle.hwnd as u64)

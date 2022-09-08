@@ -10,6 +10,12 @@ stages:
   - test
   - misc
 
+.variables-macos-x86_64: &variables-macos-x86_64
+  HOST_ARCH: x86_64
+
+.variables-macos-arm64: &variables-macos-arm64
+  HOST_ARCH: arm64
+
 lint:
   stage: lint
   image: $DEBIAN_IMAGE
@@ -152,3 +158,57 @@ clippy-windows-x86_64:
     ../scripts/change_prefix.sh
     cd -
     ./build-win32.sh -s -c -o $ROOTFS_PATH
+
+.contrib-macos-common:
+  stage: contrib
+  tags:
+    - macos
+  only:
+    - main
+    - merge_requests
+    - tags
+  script: |
+    ./build-macos.sh -d -a $HOST_ARCH -o $(pwd)/rootfs
+  artifacts:
+    paths:
+      - rootfs
+    expire_in: 1 week
+
+.build-macos-common:
+  stage: build
+  tags:
+    - macos
+  only:
+    - main
+    - merge_requests
+    - tags
+  script: |
+    export ROOTFS_PATH=$(pwd)/rootfs
+    cd $ROOTFS_PATH
+    ../scripts/change_prefix.sh
+    cd -
+    ./build-macos.sh -s -p -a $HOST_ARCH -o $ROOTFS_PATH
+  artifacts:
+    paths:
+      - kyber-client.app.zip
+    expire_in: 1 week
+
+contrib-macos-x86_64:
+  extends: .contrib-macos-common
+  variables: *variables-macos-x86_64
+
+build-macos-x86_64:
+  extends: .build-macos-common
+  variables: *variables-macos-x86_64
+  needs:
+    - contrib-macos-x86_64
+
+contrib-macos-arm64:
+  extends: .contrib-macos-common
+  variables: *variables-macos-arm64
+
+build-macos-arm64:
+  extends: .build-macos-common
+  variables: *variables-macos-arm64
+  needs:
+    - contrib-macos-arm64
