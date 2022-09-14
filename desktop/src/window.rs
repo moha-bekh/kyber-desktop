@@ -34,6 +34,7 @@ struct State {
     window: winit::window::Window,
     window_size: RectSize,
     input_pipeline: Option<Pipeline>,
+    supports_relative_mouse: bool,
     pipeline_state: PipelineStateReader,
     input_handler: Option<Arc<crate::input_handler::WinitHandler>>,
     video_layout: VideoLayout,
@@ -315,26 +316,30 @@ impl State {
                         self.window.set_cursor_grab(false)?;
                     }
 
-                    pipeline.set_type_processing_state(
-                        InputType::MousePosition,
-                        RouterProcessingState::from_boolean(true),
-                    )?;
-                    pipeline.set_type_processing_state(
-                        InputType::MouseMove,
-                        RouterProcessingState::from_boolean(false),
-                    )?;
+                    if self.supports_relative_mouse {
+                        pipeline.set_type_processing_state(
+                            InputType::MousePosition,
+                            RouterProcessingState::from_boolean(true),
+                        )?;
+                        pipeline.set_type_processing_state(
+                            InputType::MouseMove,
+                            RouterProcessingState::from_boolean(false),
+                        )?;
+                    }
                 } else {
                     self.window.set_cursor_visible(false);
                     self.window.set_cursor_grab(true)?;
 
-                    pipeline.set_type_processing_state(
-                        InputType::MousePosition,
-                        RouterProcessingState::from_boolean(false),
-                    )?;
-                    pipeline.set_type_processing_state(
-                        InputType::MouseMove,
-                        RouterProcessingState::from_boolean(true),
-                    )?;
+                    if self.supports_relative_mouse {
+                        pipeline.set_type_processing_state(
+                            InputType::MousePosition,
+                            RouterProcessingState::from_boolean(false),
+                        )?;
+                        pipeline.set_type_processing_state(
+                            InputType::MouseMove,
+                            RouterProcessingState::from_boolean(true),
+                        )?;
+                    }
                 }
 
                 self.cursor_visible = cursor.visible;
@@ -394,6 +399,7 @@ impl Window {
                 client: None,
                 window,
                 input_pipeline: None,
+                supports_relative_mouse: true,
                 pipeline_state,
                 input_handler: None,
                 window_size: RectSize {
@@ -455,6 +461,7 @@ impl Window {
             RouterProcessingState::from_boolean(false),
         )?;
 
+        state.supports_relative_mouse = input_pipeline.produces_type(InputType::MouseMove);
         state.input_pipeline = Some(input_pipeline);
 
         Ok(())
