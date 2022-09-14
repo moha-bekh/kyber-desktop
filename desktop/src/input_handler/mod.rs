@@ -9,7 +9,7 @@ use tests::platform;
 use std::collections::{HashMap, HashSet};
 
 use log::warn;
-use winit::event::{DeviceEvent, MouseScrollDelta};
+use winit::event::{DeviceEvent, MouseScrollDelta, WindowEvent};
 
 use crate::error::Result;
 
@@ -21,6 +21,7 @@ use libkynput_rs::{
 #[derive(Debug, PartialEq)]
 enum WinitEventType {
     Device,
+    Window,
 }
 
 trait PlatformImpl {
@@ -37,6 +38,15 @@ fn winit_deviceevent_to_libkynput(event: &DeviceEvent) -> Option<InputType> {
         DeviceEvent::Button { .. } => Some(InputType::MouseButton),
         DeviceEvent::MouseWheel { .. } => Some(InputType::MouseWheel),
         DeviceEvent::MouseMotion { .. } => Some(InputType::MouseMove),
+        _ => None,
+    }
+}
+
+fn winit_windowevent_to_libkynput(event: &WindowEvent) -> Option<InputType> {
+    match event {
+        WindowEvent::KeyboardInput { .. } => Some(InputType::Keyboard),
+        WindowEvent::MouseInput { .. } => Some(InputType::MouseButton),
+        WindowEvent::MouseWheel { .. } => Some(InputType::MouseWheel),
         _ => None,
     }
 }
@@ -179,6 +189,55 @@ impl WinitHandler {
     pub fn send_mouse_position(&self, x: i16, y: i16) {
         let position = MousePosition { x, y };
         let pkt = position.to_packet(InputTarget::Host);
+        self.consumer.consume(pkt);
+    }
+
+    pub fn consume_window_event(&self, event: &WindowEvent) {
+        // Check if the DeviceEvent type should be handled by this producer
+        if !self.can_process_event(
+            winit_windowevent_to_libkynput(event),
+            WinitEventType::Window,
+        ) {
+            return;
+        }
+
+        let pkt = match event {
+            WindowEvent::KeyboardInput { input, .. } => {
+                match platform::Impl::convert_scancode(input.scancode as u16) {
+                    Some(scancode) => {
+                        let pressed = convert_element_state(input.state);
+                        let key = KeyboardKey { scancode, pressed };
+                        key.to_packet(InputTarget::Host)
+                    }
+                    None => {
+                        warn!("Ignoring keycode {}", input.scancode);
+                        return;
+                    }
+                }
+            }
+            WindowEvent::MouseInput { state, button, .. } => {
+                let btn = match button {
+                    winit::event::MouseButton::Left => MouseButtonType::Left,
+                    winit::event::MouseButton::Right => MouseButtonType::Right,
+                    _ => return,
+                };
+
+                let button = MouseButton {
+                    button: btn,
+                    pressed: convert_element_state(*state),
+                };
+                button.to_packet(InputTarget::Host)
+            }
+            WindowEvent::MouseWheel {
+                delta: MouseScrollDelta::LineDelta(horizontal, vertical),
+                ..
+            } => {
+                let wheel = platform::Impl::convert_mouse_wheel(*horizontal, *vertical);
+                wheel.to_packet(InputTarget::Host)
+            }
+            _ => return,
+        };
+
         self.consumer.consume(pkt);
     }
 }

@@ -175,6 +175,61 @@ impl State {
                     warn!("DeviceEvent discarded because no input handler is defined");
                 }
             }
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        device_id,
+                        input,
+                        is_synthetic,
+                    },
+                ..
+            } => {
+                if let Some(handler) = self.input_handler.as_ref() {
+                    handler.consume_window_event(&WindowEvent::KeyboardInput {
+                        device_id: *device_id,
+                        input: *input,
+                        is_synthetic: *is_synthetic,
+                    });
+                }
+            }
+            Event::WindowEvent {
+                event:
+                    WindowEvent::MouseInput {
+                        device_id,
+                        state,
+                        button,
+                        ..
+                    },
+                ..
+            } => {
+                if let Some(handler) = self.input_handler.as_ref() {
+                    handler.consume_window_event(&WindowEvent::MouseInput {
+                        device_id: *device_id,
+                        state: *state,
+                        button: *button,
+                        modifiers: winit::event::ModifiersState::default(),
+                    });
+                }
+            }
+            Event::WindowEvent {
+                event:
+                    WindowEvent::MouseWheel {
+                        device_id,
+                        delta,
+                        phase,
+                        ..
+                    },
+                ..
+            } => {
+                if let Some(handler) = self.input_handler.as_ref() {
+                    handler.consume_window_event(&WindowEvent::MouseWheel {
+                        device_id: *device_id,
+                        delta: *delta,
+                        phase: *phase,
+                        modifiers: winit::event::ModifiersState::default(),
+                    });
+                }
+            }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::Stopped)) => {
                 *control_flow = ControlFlow::Exit;
             }
