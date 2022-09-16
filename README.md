@@ -4,6 +4,13 @@ Tool that uses ffmpeg and libvlc to remotey control a computer desktop.
 
 ## Build
 
+### Get submodules
+
+The project has some submodules to get
+```
+git submodule update --init
+```
+
 ### Linux
 
 #### Install required system packages
