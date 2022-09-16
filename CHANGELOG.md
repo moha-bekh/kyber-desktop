@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 * client: Update to winit 0.28.1
 * macOS client: Relative mouse moves can now be received without enabling IOKit
 * macOS client: Correclty scale window size on Retina displays
+* macOS M1 client: Fix a random crash at startup, during Kymux URI parsing
 
 ## [0.8.0] - 2023-02-15
 
