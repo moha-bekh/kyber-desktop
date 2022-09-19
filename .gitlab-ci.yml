@@ -39,7 +39,14 @@ contrib-debian-buster-x86_64:
     - merge_requests
     - tags
   script: |
-    ./build-linux.sh -d -o $(pwd)/rootfs
+    export KYBER_DIRNAME=rootfs
+    export KYBER_PREFIX=$(pwd)/$KYBER_DIRNAME
+    # Build contribs
+    ./build-linux.sh -d -o $KYBER_PREFIX
+    # Prepare rootfs to be shared to other jobs
+    cd $KYBER_PREFIX
+    ../scripts/change_prefix.sh $(pwd)
+    cd -
   artifacts:
     paths:
       - rootfs
@@ -113,7 +120,14 @@ contrib-windows-x86_64:
     - merge_requests
     - tags
   script: |
-    ./build-win32.sh -d -o $(pwd)/rootfs
+    export KYBER_DIRNAME=rootfs
+    export KYBER_PREFIX=$(pwd)/$KYBER_DIRNAME
+    # Build contribs
+    ./build-win32.sh -d -o $KYBER_PREFIX
+    # Prepare rootfs to be shared to other jobs
+    cd $KYBER_PREFIX
+    ../scripts/change_prefix.sh $(pwd)
+    cd -
   artifacts:
     paths:
       - rootfs
@@ -168,7 +182,14 @@ clippy-windows-x86_64:
     - merge_requests
     - tags
   script: |
-    ./build-macos.sh -d -a $HOST_ARCH -o $(pwd)/rootfs
+    export KYBER_DIRNAME=rootfs
+    export KYBER_PREFIX=$(pwd)/$KYBER_DIRNAME
+    # Build contribs
+    ./build-macos.sh -d -a $HOST_ARCH -o $KYBER_PREFIX
+    # Prepare rootfs to be shared to other jobs
+    cd $KYBER_PREFIX
+    ../scripts/change_prefix.sh $(pwd)
+    cd -
   artifacts:
     paths:
       - rootfs
