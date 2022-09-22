@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 * controller: Update actix-web to 4.2.1
 * controller/libclient/libkynput: Update tokio to 1.21.2
+* macOS client: Fix Videotoolbox performances issue
 
 ## [0.6.0] - 2022-10-12
 
