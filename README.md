@@ -13,7 +13,7 @@ git submodule update --init
 
 ### Linux
 
-#### Install required system packages
+#### Debian: Install required system packages
 
 ```
 sudo apt-get install -y \
@@ -30,6 +30,16 @@ sudo apt-get install -y \
     libssl-dev libevdev-dev libudev-dev libinput-dev libidn11
 
 sudo apt-get build-dep -y vlc
+```
+
+#### Arch: Install required system packages
+
+```
+pacman -S base-devel cmake meson ninja pkg-config llvm clang openssl-1.1 \
+    autoconf libtool curl git wget unzip python3 python-setuptools lua gettext \
+    bison flex nasm ant ragel help2man libdrm mesa glslang lcms2 pulseaudio  \
+    libxcb libxkbcommon xcb-util xcb-util-renderutil wayland wayland-protocols \
+    libevdev libinput libidn11 ffmpeg a52dec vulkan-headers
 ```
 
 #### Install Rust and required Rust tools
