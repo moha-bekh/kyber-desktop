@@ -1,0 +1,41 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [Unreleased]
+
+* client: --inputs=false can now be passed to disable inputs
+
+## [0.5.0] - 2022-06-10
+
+* Switch to Rust 1.61.0
+* Run `cargo update`
+* Windows: Switch to [vigem-client](https://github.com/CasualX/vigem-client) crate (MIT license).
+* Update SDL2 to 2.0.22
+* Windows client: Fix video artifact issue
+
+## [0.4.0] - 2022-06-02
+
+* client: Input/Window interaction improvements
+* Host cursor is now sent to the client on connection
+* Gamepad plug/unplug are sent even if the window isn't focused
+* client: The cursor is now grabbed within the window in relative mode
+
+## [0.3.0] - 2022-05-17
+
+* client: Add --444 flag to enable YUV 4:4:4
+* Windows client: Fix 444 decoding
+
+## [0.2.0] - 2022-05-13
+
+* Improve client robustness when a process crashes on host side (#71)
+* Assassin's Creed Odyssey is not playable with the mouse
+* Linux client: Add support of libinput 1.19+
+* Linux client: Extended scancodes are now handled correctly when the user isn't in input group
+* Linux client: App can now be closed with CTRL+C
+
+## [0.1.0] - 2022-05-06
+
+### Added
+* Windows Host and Client
+* Linux Host and Client
