@@ -4,7 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.0] - 2022-10-12
+
 * client: --inputs=false can now be passed to disable inputs
+* Audio grab (Windows/Linux) and playback (All) is now available. It is disabled by default, and can be enabled with --audio=true
+* Update libvlc, based on ba9b27e1ae +  0latency.41
+* macOS client: Minimal implementation. Video Toolbox performances are bad, but software decoding is working correctly. Basic Keyboard/Mouse/Gamepad support
+* Linux client: Fix a mouse left click issue that works once
+* Windows: Fix loading issue for both Client/Host on Windows 11
 
 ## [0.5.0] - 2022-06-10
 
