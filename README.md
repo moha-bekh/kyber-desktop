@@ -94,7 +94,8 @@ cargo install cargo-c
 ```
 brew install \
     m4 nasm openssl@1.1 pkg-config \
-    autotool automake libtool
+    autotool automake libtool \
+    cmake gettext meson ragel ant help2man
 ```
 
 #### Install Rust and required Rust tools
