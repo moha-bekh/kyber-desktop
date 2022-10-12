@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* controller: Update actix-web to 4.2.1
+* controller/libclient/libkynput: Update tokio to 1.21.2
+
 ## [0.6.0] - 2022-10-12
 
 * client: --inputs=false can now be passed to disable inputs
