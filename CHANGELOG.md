@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 * controller/libclient/libkynput: Update tokio to 1.21.2
 * macOS client: Fix Videotoolbox performances issue
 * macOS client: Add custom cursor support
+* macOS client: Experimental support of IOKit keyboard/mouse grab.
+                Enabled when envvar KYBER_USE_IOKIT is defined.
 
 ## [0.6.0] - 2022-10-12
 
