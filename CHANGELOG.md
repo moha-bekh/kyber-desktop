@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 * controller: Fix keyboard flush on Window focus loss/Application exit
 * client: When the cursor is hidden, it is now impossible to go out of the window (0.7 regression)
 * Windows: If MouseMove is supported, avoid to send MousePosition when cursor is hidden (0.7.0 regression)
+* client: Update to winit 0.28.1
 
 ## [0.8.0] - 2023-02-15
 
