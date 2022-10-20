@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
 * macOS client: Add custom cursor support
 * macOS client: Experimental support of IOKit keyboard/mouse grab.
                 Enabled when envvar KYBER_USE_IOKIT is defined.
+* macOS client: Fullscreen now hides Status bar, dock
+* macOS client: Cursor location assistance is disabled
+* macOS client: Fullscreen behavior also applied when fullscreen is triggered with the Status bar fullscreen button
 
 ## [0.6.0] - 2022-10-12
 
