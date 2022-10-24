@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 * macOS client: Fullscreen behavior also applied when fullscreen is triggered with the Status bar fullscreen button
 * Windows txproto: Fix the cursor position sent. The cursor wasn't warped at the correct position after a window resize
 * macOS client: Bind middle mouse button when not using IOKit
+* All clients: Fullscreen now locks the cursor in the video. This also allows to use macOS client on multiple screen setups
 
 ## [0.6.0] - 2022-10-12
 

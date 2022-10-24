@@ -90,6 +90,38 @@ impl State {
         Ok(())
     }
 
+    fn grab_cursor(&self, grab: bool) {
+        // The cursor should be contained in the Rect where the video is displayed.
+        // However, not all platforms support this feature, and some are only able
+        // to contain within the whole window.
+        // Try to contain in a Rect at first, and fallback in the whole window contain
+        // if not supported.
+        let ret = if self.window.fullscreen().is_some() {
+            use winit::dpi::{PhysicalSize, Position, Size};
+
+            let pos = Position::Physical(PhysicalPosition::new(
+                self.video_layout.video_pos.x as i32,
+                self.video_layout.video_pos.y as i32,
+            ));
+
+            let size = Size::Physical(PhysicalSize::new(
+                self.video_layout.video_size.width,
+                self.video_layout.video_size.height,
+            ));
+
+            self.window.set_cursor_rect(Some((pos, size)))
+        } else {
+            self.window.set_cursor_rect(None)
+        };
+
+        if ret.is_err() {
+            let ret = self.window.set_cursor_grab(grab);
+            if let Err(err) = ret {
+                warn!("Fail during grab_cursor({:?}): {:?}", grab, err);
+            }
+        }
+    }
+
     fn handle_event(
         &mut self,
         event: &Event<UserEvent>,
@@ -148,7 +180,9 @@ impl State {
                 self.video_layout.update_display_layout(RectSize {
                     width: size.width,
                     height: size.height,
-                })
+                });
+
+                self.grab_cursor(self.window.fullscreen().is_some());
             }
             Event::WindowEvent {
                 event: WindowEvent::CursorMoved { position, .. },
@@ -272,10 +306,6 @@ impl State {
                         width: window_size.width,
                         height: window_size.height,
                     });
-
-                    if self.cursor_visible {
-                        self.window.set_cursor_grab(false)?;
-                    }
                 } else {
                     debug!("Enter fullscreen");
 
@@ -292,8 +322,6 @@ impl State {
 
                     self.window
                         .set_fullscreen(Some(window::Fullscreen::Borderless(monitor)));
-
-                    self.window.set_cursor_grab(true)?;
                 }
             }
             Event::UserEvent(UserEvent::SetCursor) => {
@@ -342,7 +370,7 @@ impl State {
                     }
 
                     if self.window.fullscreen().is_none() {
-                        self.window.set_cursor_grab(false)?;
+                        self.grab_cursor(false);
                     }
 
                     if self.supports_relative_mouse {
@@ -357,7 +385,7 @@ impl State {
                     }
                 } else {
                     self.window.set_cursor_visible(false);
-                    self.window.set_cursor_grab(true)?;
+                    self.grab_cursor(true);
 
                     if self.supports_relative_mouse {
                         pipeline.set_type_processing_state(
