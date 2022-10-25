@@ -119,12 +119,14 @@ build_deps() {
 package() {
     local source_directory=$1
     local stagging_directory="kyber-windows-x86_64"
+    local stagging_directory_realpath=$(realpath $stagging_directory)
 
     local src_bin=$source_directory/bin
     local src_lib=$source_directory/lib
 
     mkdir -p "$stagging_directory"
 
+    # Copy all dll
     cp \
         $src_bin/avcodec-59.dll \
         $src_bin/avdevice-59.dll \
@@ -140,8 +142,11 @@ package() {
         $src_bin/swscale-6.dll \
         $stagging_directory
 
-    cp -a $src_lib/vlc/plugins $stagging_directory
+    cd $src_lib/vlc
+    find plugins -name \*.dll -exec cp --parents {} $stagging_directory_realpath \;
+    cd -
 
+    # Copy all exe
     cp \
         $src_bin/client.exe \
         $src_bin/controller.exe \
@@ -153,6 +158,10 @@ package() {
         $src_bin/txproto_stream_audio.lua \
         $src_bin/txproto_stream_video.lua \
         $stagging_directory
+
+    # Strip all exe and dll
+    find $stagging_directory -name \*.exe -exec x86_64-w64-mingw32-strip {} \;
+    find $stagging_directory -name \*.dll -exec x86_64-w64-mingw32-strip {} \;
 
     cp \
         $BASE_DIR/scripts/windows/install_service.bat \
