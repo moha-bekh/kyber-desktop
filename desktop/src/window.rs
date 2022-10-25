@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use log::{debug, warn};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use winit::{
+    dpi::PhysicalPosition,
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::{self, CursorRgba, WindowBuilder},
@@ -38,6 +39,7 @@ struct State {
     pipeline_state: PipelineStateReader,
     input_handler: Option<Arc<crate::input_handler::WinitHandler>>,
     video_layout: VideoLayout,
+    last_cursor_pos: Option<PhysicalPosition<u32>>,
 
     window_focused: bool,
     cursor_inside_window: bool,
@@ -152,11 +154,27 @@ impl State {
                 event: WindowEvent::CursorMoved { position, .. },
                 ..
             } => {
+                // Cast to our internal representation
+                let position: PhysicalPosition<u32> = PhysicalPosition {
+                    x: position.x as _,
+                    y: position.y as _,
+                };
+
+                // Avoid to send the same MouseMove multiple time
+                if let Some(last_cursor_pos) = self.last_cursor_pos {
+                    if last_cursor_pos.x == position.x && last_cursor_pos.y == position.y {
+                        return Ok(());
+                    }
+                }
+
+                self.last_cursor_pos = Some(position);
+
+                // Project and send the position if an handler is defined
                 if let Some(input_handler) = self.input_handler.as_ref() {
                     let projected_pos = self.video_layout.local_to_host(
                         Position {
-                            x: position.x as u32,
-                            y: position.y as u32,
+                            x: position.x,
+                            y: position.y,
                         },
                         self.pipeline_state.has_one_mouse_button_pressed(),
                     );
@@ -291,15 +309,17 @@ impl State {
                     // otherwise i32::MAX is sent. Then the client must move its own cursor to
                     // match the host cursor coordinates.
                     if !self.cursor_visible && cursor.x != i32::MAX && cursor.y != i32::MAX {
-                        use winit::dpi::PhysicalPosition;
-
                         let position = self.video_layout.host_to_local(Position {
                             x: cursor.x as u32,
                             y: cursor.y as u32,
                         });
 
-                        self.window
-                            .set_cursor_position(PhysicalPosition::new(position.x, position.y))?;
+                        // Store this position because it will be raised by winit after calling
+                        // set_cursor_position. This is just a local update, not a real MouseMove
+                        let physical_position = PhysicalPosition::new(position.x, position.y);
+                        self.last_cursor_pos = Some(physical_position);
+
+                        self.window.set_cursor_position(physical_position)?;
                     }
 
                     if !cursor.data.is_empty() {
@@ -407,6 +427,7 @@ impl Window {
                     height: window_height,
                 },
                 video_layout,
+                last_cursor_pos: None,
                 window_focused: false,
                 cursor_inside_window: false,
                 cursor_visible: true,
