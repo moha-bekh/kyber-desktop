@@ -119,11 +119,33 @@ build_deps() {
 package() {
     local source_directory=$1
     local stagging_directory="kyber-debian-buster-x86_64"
+    local stagging_directory_realpath=$(realpath $stagging_directory)
 
-    mkdir -p "$stagging_directory"
+    local src_bin=$source_directory/bin
 
-    cp -a $1/* $stagging_directory/
+    mkdir -p "$stagging_directory/bin"
+    mkdir -p "$stagging_directory/lib"
 
+    # Copy bin directory
+    cp \
+        $src_bin/client \
+        $src_bin/controller \
+        $src_bin/input_server \
+        $src_bin/txproto \
+        $src_bin/txproto_stream_audio.lua \
+        $src_bin/txproto_stream_video.lua \
+        $stagging_directory/bin
+
+    # Copy libraries
+    cd $source_directory
+    find lib -name \*.so\* -exec cp -a --parents {} $stagging_directory_realpath \;
+    cd -
+
+    # Strip all binaries and libraries
+    find $stagging_directory/bin -type f -executable -exec strip {} \;
+    find $stagging_directory/lib -name \*.so\* -exec strip {} \;
+
+    # Copy scripts
     cp \
         scripts/linux/run_client.sh \
         scripts/linux/run_controller.sh \
