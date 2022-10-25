@@ -16,6 +16,8 @@ All notable changes to this project will be documented in this file.
 * Windows txproto: Fix the cursor position sent. The cursor wasn't warped at the correct position after a window resize
 * macOS client: Bind middle mouse button when not using IOKit
 * All clients: Fullscreen now locks the cursor in the video. This also allows to use macOS client on multiple screen setups
+* Windows/Linux: libvlc build has been reduced
+* Windows/Linux: Final packages have cleaned. Useless files aren't copied, and bins/libs are stripped
 
 ## [0.6.0] - 2022-10-12
 
