@@ -220,6 +220,7 @@ impl WinitHandler {
                 let btn = match button {
                     winit::event::MouseButton::Left => MouseButtonType::Left,
                     winit::event::MouseButton::Right => MouseButtonType::Right,
+                    winit::event::MouseButton::Middle => MouseButtonType::Middle,
                     _ => return,
                 };
 
