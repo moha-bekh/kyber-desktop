@@ -204,11 +204,14 @@ impl State {
                 ..
             } => {
                 if let Some(handler) = self.input_handler.as_ref() {
-                    handler.consume_window_event(&WindowEvent::KeyboardInput {
-                        device_id: *device_id,
-                        input: *input,
-                        is_synthetic: *is_synthetic,
-                    });
+                    handler.consume_window_event(
+                        &WindowEvent::KeyboardInput {
+                            device_id: *device_id,
+                            input: *input,
+                            is_synthetic: *is_synthetic,
+                        },
+                        self.window.scale_factor(),
+                    );
                 }
             }
             Event::WindowEvent {
@@ -222,12 +225,15 @@ impl State {
                 ..
             } => {
                 if let Some(handler) = self.input_handler.as_ref() {
-                    handler.consume_window_event(&WindowEvent::MouseInput {
-                        device_id: *device_id,
-                        state: *state,
-                        button: *button,
-                        modifiers: winit::event::ModifiersState::default(),
-                    });
+                    handler.consume_window_event(
+                        &WindowEvent::MouseInput {
+                            device_id: *device_id,
+                            state: *state,
+                            button: *button,
+                            modifiers: winit::event::ModifiersState::default(),
+                        },
+                        self.window.scale_factor(),
+                    );
                 }
             }
             Event::WindowEvent {
@@ -241,12 +247,15 @@ impl State {
                 ..
             } => {
                 if let Some(handler) = self.input_handler.as_ref() {
-                    handler.consume_window_event(&WindowEvent::MouseWheel {
-                        device_id: *device_id,
-                        delta: *delta,
-                        phase: *phase,
-                        modifiers: winit::event::ModifiersState::default(),
-                    });
+                    handler.consume_window_event(
+                        &WindowEvent::MouseWheel {
+                            device_id: *device_id,
+                            delta: *delta,
+                            phase: *phase,
+                            modifiers: winit::event::ModifiersState::default(),
+                        },
+                        self.window.scale_factor(),
+                    );
                 }
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::Stopped)) => {

@@ -193,7 +193,7 @@ impl WinitHandler {
         self.consumer.consume(pkt);
     }
 
-    pub fn consume_window_event(&self, event: &WindowEvent) {
+    pub fn consume_window_event(&self, event: &WindowEvent, scale_factor: f64) {
         // Check if the DeviceEvent type should be handled by this producer
         if !self.can_process_event(
             winit_windowevent_to_libkynput(event),
