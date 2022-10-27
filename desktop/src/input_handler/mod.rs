@@ -10,7 +10,10 @@ use tests::platform;
 use std::collections::{HashMap, HashSet};
 
 use log::warn;
-use winit::event::{DeviceEvent, MouseScrollDelta, WindowEvent};
+use winit::{
+    dpi::PhysicalPosition,
+    event::{DeviceEvent, MouseScrollDelta, WindowEvent},
+};
 
 use crate::error::Result;
 
@@ -31,6 +34,13 @@ trait PlatformImpl {
     fn convert_scancode(scancode: u16) -> Option<u16>;
 
     fn convert_mouse_wheel(horizontal: f32, vertical: f32) -> MouseWheel;
+
+    fn convert_mouse_wheel_pixel_delta(
+        _position: &PhysicalPosition<f64>,
+        _scale_factor: f64,
+    ) -> Option<MouseWheel> {
+        None
+    }
 }
 
 fn winit_deviceevent_to_libkynput(event: &DeviceEvent) -> Option<InputType> {
@@ -236,6 +246,18 @@ impl WinitHandler {
             } => {
                 let wheel = platform::Impl::convert_mouse_wheel(*horizontal, *vertical);
                 wheel.to_packet(InputTarget::Host)
+            }
+            WindowEvent::MouseWheel {
+                delta: MouseScrollDelta::PixelDelta(position),
+                ..
+            } => {
+                let wheel = platform::Impl::convert_mouse_wheel_pixel_delta(position, scale_factor);
+
+                if let Some(wheel) = wheel {
+                    wheel.to_packet(InputTarget::Host)
+                } else {
+                    return;
+                }
             }
             _ => return,
         };
