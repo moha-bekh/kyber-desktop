@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 * Windows: If MouseMove is supported, avoid to send MousePosition when cursor is hidden (0.7.0 regression)
 * client: Update to winit 0.28.1
 * macOS client: Relative mouse moves can now be received without enabling IOKit
+* macOS client: Correclty scale window size on Retina displays
 
 ## [0.8.0] - 2023-02-15
 
