@@ -14,6 +14,7 @@ impl super::PlatformImpl for Impl {
         HashMap::from([
             (InputType::Keyboard, WinitEventType::Window),
             (InputType::MouseButton, WinitEventType::Window),
+            (InputType::MouseMove, WinitEventType::Device),
             (InputType::MouseWheel, WinitEventType::Window),
         ])
     }
