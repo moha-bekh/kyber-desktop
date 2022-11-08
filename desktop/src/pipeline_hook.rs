@@ -20,7 +20,7 @@ const SCANCODE_COUNT: usize = 512;
 
 const SHORTCUT_FULLSCREEN: &[u16] = &[SCANCODE_F, SCANCODE_LCTRL, SCANCODE_LALT];
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ShortcutType {
     Fullscreen,
 }

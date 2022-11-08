@@ -20,7 +20,7 @@ use crate::pipeline_hook::{PipelineStateReader, ShortcutType};
 
 use crate::video_layout::{Position, RectSize, VideoLayout};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UserEvent {
     StopRequest,
     Shortcut(ShortcutType),
