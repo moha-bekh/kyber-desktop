@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* controller/libkynput: windows_sys is now used and replaces winapi
+* Rust dependencies updated
+
 ## [0.7.0] - 2022-10-28
 
 * controller: Update actix-web to 4.2.1
