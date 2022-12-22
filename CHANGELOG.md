@@ -61,6 +61,7 @@ All notable changes to this project will be documented in this file.
 * Linux client: Add support of libinput 1.19+
 * Linux client: Extended scancodes are now handled correctly when the user isn't in input group
 * Linux client: App can now be closed with CTRL+C
+* vlc: Fix a one-frame latency issue on RTP access
 
 ## [0.1.0] - 2022-05-06
 
