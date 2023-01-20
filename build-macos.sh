@@ -103,11 +103,6 @@ build_deps() {
     cd libclient
     ./build-macos.sh -a $HOST_ARCH -o $OUT_DIR
     cd -
-
-    # Build controller
-    cd controller
-    ./build-macos.sh -a $HOST_ARCH -o $OUT_DIR
-    cd -
 }
 
 package() {
