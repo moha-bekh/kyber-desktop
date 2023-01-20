@@ -81,16 +81,6 @@ checkout_deps() {
     echo "libkynput-sys = { path = \"$LIBKYNPUT_PATH/libkynput-rs/libkynput-sys\" }" >> .cargo/config.toml
 
     cd -
-
-    # Checkout controller
-    if [[ ! -d controller ]]; then
-        git_clone "kyber-labs/kyber-streamer/controller.git"
-    fi
-
-    cd controller
-    git reset --hard $CONTROLLER_SHA1
-    git submodule update
-    cd -
 }
 
 build_deps() {
