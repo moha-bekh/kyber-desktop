@@ -61,7 +61,8 @@ checkout_deps() {
     LIBKYNPUT_PATH=$(realpath libkynput)
 
     cd libkynput
-    git reset --hard $LIBKYNPUT_SHA1
+    git reset --hard
+    git checkout $LIBKYNPUT_SHA1
     git submodule update
     cd -
 
@@ -72,7 +73,8 @@ checkout_deps() {
 
     cd libclient
     echo "Set libclient SHA1 to $LIBCLIENT_SHA1"
-    git reset --hard $LIBCLIENT_SHA1
+    git reset --hard
+    git checkout $LIBCLIENT_SHA1
     git submodule update
 
     mkdir -p .cargo
