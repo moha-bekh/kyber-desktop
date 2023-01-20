@@ -11,7 +11,7 @@ use std::sync::Arc;
 use log::{info, LevelFilter};
 use winit::event_loop::EventLoop;
 
-use libclient_rs::{Client, WindowHandle};
+use libclient_rs::{Client, StreamingProtocol, WindowHandle};
 use libkynput_rs::{InputType, Pipeline};
 
 use pipeline_hook::ClientPipelineHook;
@@ -119,9 +119,13 @@ fn main() {
         }
     };
 
-    let config =
-        libclient_rs::Config::default(streamer_ip.as_str(), &input_pipeline, &window_handle)
-            .unwrap();
+    let config = libclient_rs::Config::default(
+        streamer_ip.as_str(),
+        StreamingProtocol::Rtp,
+        &input_pipeline,
+        &window_handle,
+    )
+    .unwrap();
 
     config.set_yuv444(matches.is_present("444"));
     config.set_audio(matches.get_one("audio").copied().unwrap_or(false));
