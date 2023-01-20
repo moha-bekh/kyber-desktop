@@ -5,9 +5,12 @@ members = [
 ]
 
 exclude = [
+    "avserver",
     "controller",
     "libclient",
     "libkynput",
+    "libkypc",
+    "kymux",
 ]
 
 [patch.crates-io]

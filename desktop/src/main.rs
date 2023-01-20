@@ -8,7 +8,7 @@ mod window;
 
 use std::sync::Arc;
 
-use log::{info, LevelFilter};
+use log::{error, info, LevelFilter};
 use winit::event_loop::EventLoop;
 
 use libclient_rs::{Client, StreamingProtocol, WindowHandle};
@@ -40,6 +40,13 @@ fn main() {
                 .takes_value(false),
         )
         .arg(
+            clap::Arg::with_name("protocol")
+                .long("protocol")
+                .help("Protocol to use")
+                .value_parser(["rtp", "kymux"])
+                .default_value("kymux"),
+        )
+        .arg(
             clap::Arg::with_name("444")
                 .long("444")
                 .help("Enable YUV444")
@@ -63,6 +70,15 @@ fn main() {
         .get_matches();
 
     let streamer_ip = String::from(matches.value_of("STREAMER_IP").unwrap());
+
+    let protocol = match matches.value_of("protocol") {
+        Some("rtp") => StreamingProtocol::Rtp,
+        Some("kymux") => StreamingProtocol::Kymux,
+        _ => {
+            error!("No valid protocol specified");
+            return;
+        }
+    };
 
     // Create window
     let event_loop = EventLoop::<UserEvent>::with_user_event();
@@ -126,7 +142,7 @@ fn main() {
         STREAMER_HOST,
         streamer_ip.as_str(),
         STREAMER_CERT,
-        StreamingProtocol::Rtp,
+        protocol,
         &input_pipeline,
         &window_handle,
     )

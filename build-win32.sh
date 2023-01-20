@@ -44,6 +44,20 @@ git_clone() {
 }
 
 checkout_deps() {
+    # Checkout kymux
+    if [[ ! -d kymux ]]; then
+        git_clone "kyber-labs/kyber-streamer/kymux.git"
+    else
+        git -C kymux fetch
+    fi
+
+    KYMUX_PATH=$(realpath kymux)
+
+    cd kymux
+    git reset --hard
+    git checkout $KYMUX_SHA1
+    cd -
+
     # Checkout libkypc
     if [[ ! -d libkypc ]]; then
         git_clone "kyber-labs/kyber-streamer/libkypc.git"
@@ -75,6 +89,7 @@ checkout_deps() {
 
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
+    echo "kymux_client = { path = \"$KYMUX_PATH/kymux_client\" }" >> .cargo/config.toml
     echo "libkypc = { path = \"$LIBKYPC_PATH\" }" >> .cargo/config.toml
 
     cd -
@@ -94,6 +109,7 @@ checkout_deps() {
 
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
+    echo "kymux = { path = \"$KYMUX_PATH/kymux\" }" >> .cargo/config.toml
     echo "libkynput-rs = { path = \"$LIBKYNPUT_PATH/libkynput-rs\" }" >> .cargo/config.toml
     echo "libkynput-sys = { path = \"$LIBKYNPUT_PATH/libkynput-rs/libkynput-sys\" }" >> .cargo/config.toml
 
@@ -135,6 +151,7 @@ checkout_deps() {
     echo "[patch.crates-io]" > .cargo/config.toml
     echo "avservice-types = { path = \"$AVSERVER_PATH/avservice-types\" }" >> .cargo/config.toml
     echo "inputservice-types = { path = \"$LIBKYNPUT_PATH/inputservice-types\" }" >> .cargo/config.toml
+    echo "kymux = { path = \"$KYMUX_PATH/kymux\" }" >> .cargo/config.toml
     echo "libkypc = { path = \"$LIBKYPC_PATH\" }" >> .cargo/config.toml
 
     cd -
@@ -204,6 +221,7 @@ package() {
         $src_bin/txproto.exe \
         $src_bin/libclient.dll \
         $src_bin/libkynput.dll \
+        $src_bin/avserver_kymux_stream.lua \
         $src_bin/avserver_rtp_stream.lua \
         $src_bin/kybertest_cert.pem \
         $src_bin/kybertest_key.pem \
