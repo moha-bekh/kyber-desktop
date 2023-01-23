@@ -56,6 +56,8 @@ checkout_deps() {
     # Checkout libkynput
     if [[ ! -d libkynput ]]; then
         git_clone "kyber-labs/kyber-streamer/libkynput.git"
+    else
+        git -C libkynput fetch
     fi
 
     LIBKYNPUT_PATH=$(realpath libkynput)
@@ -69,6 +71,8 @@ checkout_deps() {
     # Checkout libclient
     if [[ ! -d libclient ]]; then
         git_clone "kyber-labs/kyber-streamer/libclient.git"
+    else
+        git -C libclient fetch
     fi
 
     cd libclient
