@@ -79,16 +79,16 @@ checkout_deps() {
 
     cd -
 
-    # Checkout streamer
-    if [[ ! -d txproto ]]; then
-        git_clone "kyber-labs/kyber-streamer/txproto.git"
+    # Checkout avserver
+    if [[ ! -d avserver ]]; then
+        git_clone "kyber-labs/kyber-streamer/avserver.git"
     else
-        git -C txproto fetch
+        git -C avserver fetch
     fi
 
-    cd txproto
+    cd avserver
     git reset --hard
-    git checkout $TXPROTO_SHA1
+    git checkout $AVSERVER_SHA1
     git submodule update
     cd -
 
@@ -117,8 +117,8 @@ build_deps() {
     ./build-win32.sh -o $OUT_DIR
     cd -
 
-    # Build streamer
-    cd txproto
+    # Build avserver
+    cd avserver
     ./build-win32.sh -o $OUT_DIR
     cd -
 
@@ -146,6 +146,7 @@ package() {
         $src_bin/avformat-59.dll \
         $src_bin/avutil-57.dll \
         $src_bin/liblua.dll \
+        $src_bin/libtxproto.dll \
         $src_bin/libvlccore.dll \
         $src_bin/libvlc.dll \
         $src_bin/postproc-56.dll \
@@ -160,6 +161,7 @@ package() {
 
     # Copy all exe
     cp \
+        $src_bin/avserver.exe \
         $src_bin/client.exe \
         $src_bin/controller.exe \
         $src_bin/input_server.exe \

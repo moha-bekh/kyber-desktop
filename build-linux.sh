@@ -80,16 +80,16 @@ checkout_deps() {
 
     cd -
 
-    # Checkout streamer
+    # Checkout avserver
     if [[ ! -d txproto ]]; then
-        git_clone "kyber-labs/kyber-streamer/txproto.git"
+        git_clone "kyber-labs/kyber-streamer/avserver.git"
     else
-        git -C txproto fetch
+        git -C avserver fetch
     fi
 
-    cd txproto
+    cd avserver
     git reset --hard
-    git checkout $TXPROTO_SHA1
+    git checkout $AVSERVER_SHA1
     git submodule update
     cd -
 
@@ -118,8 +118,8 @@ build_deps() {
     ./build-linux.sh -o $OUT_DIR
     cd -
 
-    # Build streamer
-    cd txproto
+    # Build avserver
+    cd avserver
     ./build-linux.sh -o $OUT_DIR
     cd -
 
@@ -141,6 +141,7 @@ package() {
 
     # Copy bin directory
     cp \
+        $src_bin/avserver \
         $src_bin/client \
         $src_bin/controller \
         $src_bin/input_server \
