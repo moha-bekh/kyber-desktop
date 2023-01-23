@@ -81,7 +81,7 @@ checkout_deps() {
     cd -
 
     # Checkout avserver
-    if [[ ! -d txproto ]]; then
+    if [[ ! -d avserver ]]; then
         git_clone "kyber-labs/kyber-streamer/avserver.git"
     else
         git -C avserver fetch
