@@ -187,17 +187,21 @@ package() {
     zip -r ${zipname} $stagging_directory
 }
 
+FETCH_SOURCES=true
 BUILD_DEPS=true
 PACKAGE=false
 ACTION="build"
 OUT_DIR=$(pwd)/rootfs-x86_64-w64-mingw32
 
-while getopts "hsdctpo:" OPTION
+while getopts "hnsdctpo:" OPTION
 do
     case $OPTION in
         h)
             usage
             exit 1
+            ;;
+        n)
+            FETCH_SOURCES=false
             ;;
         s)
             BUILD_DEPS=false
@@ -232,8 +236,12 @@ export LD_LIBRARY_PATH=$OUT_DIR/lib
 export PKG_CONFIG_ALLOW_CROSS=1
 export PKG_CONFIG_LIBDIR=$OUT_DIR/lib/pkgconfig
 
-# Checkout dependencies. Required in any cases
-checkout_deps
+# Checkout dependencies
+if [ "$FETCH_SOURCES" = true ]; then
+    checkout_deps
+else
+    echo "Skip dependencies source fetch"
+fi
 
 # Build dependencies
 if [ "$BUILD_DEPS" = true ]; then

@@ -24,6 +24,7 @@ Build Desktop Application.
 
 OPTIONS:
    -h            Show some help
+   -n            Skip sources fetch
    -s            Skip native dependencies build
    -d            Build only native dependencies
    -c            Run clippy
@@ -156,17 +157,21 @@ get_cargo_target()
     esac
 }
 
+FETCH_SOURCES=true
 BUILD_DEPS=true
 PACKAGE=false
 ACTION="build"
 OUT_DIR=$(pwd)/rootfs-$HOST_ARCH-macos
 
-while getopts "hsdctpo:a:" OPTION
+while getopts "hnsdctpo:a:" OPTION
 do
     case $OPTION in
         h)
             usage
             exit 1
+            ;;
+        n)
+            FETCH_SOURCES=false
             ;;
         s)
             BUILD_DEPS=false
@@ -203,8 +208,12 @@ export PATH=$OUT_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$OUT_DIR/lib
 export PKG_CONFIG_PATH=$OUT_DIR/lib/pkgconfig
 
-# Checkout dependencies. Required in any cases
-checkout_deps
+# Checkout dependencies
+if [ "$FETCH_SOURCES" = true ]; then
+    checkout_deps
+else
+    echo "Skip dependencies source fetch"
+fi
 
 # Build dependencies
 if [ "$BUILD_DEPS" = true ]; then
