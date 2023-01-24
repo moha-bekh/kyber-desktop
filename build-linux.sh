@@ -45,6 +45,21 @@ git_clone() {
 }
 
 checkout_deps() {
+    # Checkout libkypc
+    if [[ ! -d libkypc ]]; then
+        git_clone "kyber-labs/kyber-streamer/libkypc.git"
+    else
+        git -C libkypc fetch
+    fi
+
+    LIBKYPC_PATH=$(realpath libkypc)
+
+    cd libkypc
+    git reset --hard
+    git checkout $LIBKYPC_SHA1
+    git submodule update
+    cd -
+
     # Checkout libkynput
     if [[ ! -d libkynput ]]; then
         git_clone "kyber-labs/kyber-streamer/libkynput.git"
@@ -58,6 +73,11 @@ checkout_deps() {
     git reset --hard
     git checkout $LIBKYNPUT_SHA1
     git submodule update
+
+    mkdir -p .cargo
+    echo "[patch.crates-io]" > .cargo/config.toml
+    echo "libkypc = { path = \"$LIBKYPC_PATH\" }" >> .cargo/config.toml
+
     cd -
 
     # Checkout libclient
@@ -87,10 +107,17 @@ checkout_deps() {
         git -C avserver fetch
     fi
 
+    AVSERVER_PATH=$(realpath avserver)
+
     cd avserver
     git reset --hard
     git checkout $AVSERVER_SHA1
     git submodule update
+
+    mkdir -p .cargo
+    echo "[patch.crates-io]" > .cargo/config.toml
+    echo "libkypc = { path = \"$LIBKYPC_PATH\" }" >> .cargo/config.toml
+
     cd -
 
     # Checkout controller
@@ -104,6 +131,13 @@ checkout_deps() {
     git reset --hard
     git checkout $CONTROLLER_SHA1
     git submodule update
+
+    mkdir -p .cargo
+    echo "[patch.crates-io]" > .cargo/config.toml
+    echo "avservice-types = { path = \"$AVSERVER_PATH/avservice-types\" }" >> .cargo/config.toml
+    echo "inputservice-types = { path = \"$LIBKYNPUT_PATH/inputservice-types\" }" >> .cargo/config.toml
+    echo "libkypc = { path = \"$LIBKYPC_PATH\" }" >> .cargo/config.toml
+
     cd -
 }
 
@@ -144,10 +178,9 @@ package() {
         $src_bin/avserver \
         $src_bin/client \
         $src_bin/controller \
-        $src_bin/input_server \
+        $src_bin/inputserver \
         $src_bin/txproto \
-        $src_bin/txproto_stream_audio.lua \
-        $src_bin/txproto_stream_video.lua \
+        $src_bin/avserver_rtp_stream.lua \
         $stagging_directory/bin
 
     # Copy libraries

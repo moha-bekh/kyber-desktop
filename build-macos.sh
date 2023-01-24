@@ -54,6 +54,21 @@ git_clone() {
 }
 
 checkout_deps() {
+    # Checkout libkypc
+    if [[ ! -d libkypc ]]; then
+        git_clone "kyber-labs/kyber-streamer/libkypc.git"
+    else
+        git -C libkypc fetch
+    fi
+
+    LIBKYPC_PATH=$(realpath libkypc)
+
+    cd libkypc
+    git reset --hard
+    git checkout $LIBKYPC_SHA1
+    git submodule update
+    cd -
+
     # Checkout libkynput
     if [[ ! -d libkynput ]]; then
         git_clone "kyber-labs/kyber-streamer/libkynput.git"
@@ -67,6 +82,11 @@ checkout_deps() {
     git reset --hard
     git checkout $LIBKYNPUT_SHA1
     git submodule update
+
+    mkdir -p .cargo
+    echo "[patch.crates-io]" > .cargo/config.toml
+    echo "libkypc = { path = \"$LIBKYPC_PATH\" }" >> .cargo/config.toml
+
     cd -
 
     # Checkout libclient

@@ -4,5 +4,6 @@ kyber-debian-buster-x86_64*
 kyber-windows-x86_64*
 libclient
 libkynput
+libkypc
 rootfs-*
 target

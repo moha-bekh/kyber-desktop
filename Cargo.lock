@@ -736,6 +736,7 @@ dependencies = [
  "libc",
  "libkynput-sys",
  "log",
+ "thiserror",
 ]
 
 [[package]]
