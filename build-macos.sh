@@ -129,7 +129,10 @@ package() {
     echo "Creating $app_dir from $source_directory"
     mkdir -p $app_dir/Contents/MacOS $app_dir/Contents/Frameworks/plugins
 
-    cp $source_directory/bin/client $app_dir/Contents/MacOS
+    cp \
+        $source_directory/bin/client \
+        $source_directory/bin/kybertest_cert.pem \
+        $app_dir/Contents/MacOS
 
     cp -a \
         $source_directory/lib/liblibkynput*.dylib \
@@ -256,7 +259,10 @@ case "$ACTION" in
             --target $CARGO_TARGET \
             --release
 
-        cp target/$CARGO_TARGET/release/client $OUT_DIR/bin
+        cp \
+            target/$CARGO_TARGET/release/client \
+            test/tls/kybertest_cert.pem \
+            $OUT_DIR/bin
     ;;
     "clippy")
         cargo clippy --target $CARGO_TARGET -- -D warnings

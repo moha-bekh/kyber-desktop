@@ -181,6 +181,8 @@ package() {
         $src_bin/inputserver \
         $src_bin/txproto \
         $src_bin/avserver_rtp_stream.lua \
+        $src_bin/kybertest_cert.pem \
+        $src_bin/kybertest_key.pem \
         $stagging_directory/bin
 
     # Copy libraries
@@ -268,6 +270,13 @@ case "$ACTION" in
     "build")
         cargo build --release
         cp target/release/client $OUT_DIR/bin
+
+        # Copy test TLS cert/key
+        cp \
+            test/tls/kybertest_cert.pem \
+            test/tls/kybertest_key.pem \
+            $OUT_DIR/bin
+
     ;;
     "clippy")
         cargo clippy -- -D warnings

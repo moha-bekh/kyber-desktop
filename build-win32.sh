@@ -204,6 +204,8 @@ package() {
         $src_bin/libclient.dll \
         $src_bin/libkynput.dll \
         $src_bin/avserver_rtp_stream.lua \
+        $src_bin/kybertest_cert.pem \
+        $src_bin/kybertest_key.pem \
         $stagging_directory
 
     # Strip all exe and dll
@@ -290,6 +292,12 @@ case "$ACTION" in
     "build")
         cargo build --release --target x86_64-pc-windows-gnu
         cp target/x86_64-pc-windows-gnu/release/client.exe $OUT_DIR/bin
+
+        # Copy test TLS cert/key
+        cp \
+            test/tls/kybertest_cert.pem \
+            test/tls/kybertest_key.pem \
+            $OUT_DIR/bin
     ;;
     "clippy")
         cargo clippy --target x86_64-pc-windows-gnu -- -D warnings
