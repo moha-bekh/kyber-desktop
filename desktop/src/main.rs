@@ -17,6 +17,9 @@ use libkynput_rs::{InputType, Pipeline};
 use pipeline_hook::ClientPipelineHook;
 use window::UserEvent;
 
+const STREAMER_HOST: &str = "kybertest";
+const STREAMER_CERT: &str = "kybertest_cert.pem";
+
 fn main() {
     let filter_level = LevelFilter::Info;
     env_logger::Builder::new()
@@ -120,7 +123,9 @@ fn main() {
     };
 
     let config = libclient_rs::Config::default(
+        STREAMER_HOST,
         streamer_ip.as_str(),
+        STREAMER_CERT,
         StreamingProtocol::Rtp,
         &input_pipeline,
         &window_handle,
