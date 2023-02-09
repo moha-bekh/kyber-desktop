@@ -178,6 +178,7 @@ package() {
         $src_bin/avserver \
         $src_bin/client \
         $src_bin/controller \
+        $src_bin/ffmpeg \
         $src_bin/inputserver \
         $src_bin/txproto \
         $src_bin/avserver_rtp_stream.lua \

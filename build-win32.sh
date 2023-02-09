@@ -198,6 +198,7 @@ package() {
         $src_bin/avserver.exe \
         $src_bin/client.exe \
         $src_bin/controller.exe \
+        $src_bin/ffmpeg.exe \
         $src_bin/inputserver.exe \
         $src_bin/service.exe \
         $src_bin/txproto.exe \
