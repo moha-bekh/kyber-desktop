@@ -225,6 +225,7 @@ package() {
         $src_bin/avserver_rtp_stream.lua \
         $src_bin/kybertest_cert.pem \
         $src_bin/kybertest_key.pem \
+        $src_bin/kyber_config.toml \
         $stagging_directory
 
     # Strip all exe and dll
@@ -311,6 +312,11 @@ case "$ACTION" in
     "build")
         cargo build --release --target x86_64-pc-windows-gnu
         cp target/x86_64-pc-windows-gnu/release/client.exe $OUT_DIR/bin
+
+        # Copy default configuration
+        cp \
+            kyber_config.toml \
+            $OUT_DIR/bin
 
         # Copy test TLS cert/key
         cp \

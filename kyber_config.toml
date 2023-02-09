@@ -1,0 +1,2 @@
+[avserver]
+encoder = "nvenc"

@@ -200,6 +200,7 @@ package() {
         $src_bin/txproto \
         $src_bin/avserver_kymux_stream.lua \
         $src_bin/avserver_rtp_stream.lua \
+        $src_bin/kyber_config.toml \
         $stagging_directory/bin
 
     # Copy test TLS cert/key
@@ -293,6 +294,11 @@ case "$ACTION" in
     "build")
         cargo build --release
         cp target/release/client $OUT_DIR/bin
+
+        # Copy default configuration
+        cp \
+            kyber_config.toml \
+            $OUT_DIR/bin
 
         # Copy test TLS cert/key
         cp \
