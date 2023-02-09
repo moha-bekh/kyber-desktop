@@ -11,7 +11,7 @@ use std::sync::Arc;
 use log::{error, info, LevelFilter};
 use winit::event_loop::EventLoop;
 
-use libclient_rs::{Client, StreamingProtocol, WindowHandle};
+use libclient_rs::{Client, StreamingProtocol, VideoCodec, WindowHandle};
 use libkynput_rs::{InputType, Pipeline};
 
 use pipeline_hook::ClientPipelineHook;
@@ -47,6 +47,13 @@ fn main() {
                 .default_value("kymux"),
         )
         .arg(
+            clap::Arg::with_name("video_codec")
+                .long("video_codec")
+                .help("Video codec to use")
+                .value_parser(["h264", "hevc", "av1"])
+                .default_value("h264"),
+        )
+        .arg(
             clap::Arg::with_name("444")
                 .long("444")
                 .help("Enable YUV444")
@@ -74,6 +81,16 @@ fn main() {
     let protocol = match matches.value_of("protocol") {
         Some("rtp") => StreamingProtocol::Rtp,
         Some("kymux") => StreamingProtocol::Kymux,
+        _ => {
+            error!("No valid protocol specified");
+            return;
+        }
+    };
+
+    let video_codec = match matches.value_of("video_codec") {
+        Some("h264") => VideoCodec::H264,
+        Some("hevc") => VideoCodec::HEVC,
+        Some("av1") => VideoCodec::AV1,
         _ => {
             error!("No valid protocol specified");
             return;
@@ -148,6 +165,7 @@ fn main() {
     )
     .unwrap();
 
+    config.set_video_codec(video_codec);
     config.set_yuv444(matches.is_present("444"));
     config.set_audio(matches.get_one("audio").copied().unwrap_or(false));
     config.set_inputs(matches.get_one("inputs").copied().unwrap_or(true));
