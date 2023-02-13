@@ -73,6 +73,13 @@ fn main() {
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("port")
+                .long("port")
+                .help("Port to use for connection")
+                .value_parser(clap::value_parser!(u16))
+                .takes_value(true),
+        )
         .arg(clap::Arg::with_name("STREAMER_IP").required(true).index(1))
         .get_matches();
 
@@ -169,6 +176,10 @@ fn main() {
     config.set_yuv444(matches.is_present("444"));
     config.set_audio(matches.get_one("audio").copied().unwrap_or(false));
     config.set_inputs(matches.get_one("inputs").copied().unwrap_or(true));
+
+    if let Some(port) = matches.get_one("port") {
+        config.set_streamer_port(*port);
+    }
 
     let client = Client::new(&config);
 
