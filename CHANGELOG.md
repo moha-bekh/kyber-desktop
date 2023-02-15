@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file.
 * controller/libkynput: windows_sys is now used and replaces winapi
 * Rust dependencies updated
 * Rust toolchain updated to 1.65.0
+* Add avserver that now uses libtxproto
+* controller: Use libkypc to spawn and communicate inputserver and avserver
+* controller: Switch to HTTPS
+* client: Kymux (QUIC) replaces RTP as the default protocol
+* client: Add --protocol option to choose between Kymux/RTP
+* avserver: Add support of AMD and Intel GPUs on Windows. Not supported when using RTP
+* client: Add --video_codec option to choose between H264/HEVC/AV1. Not supported when using RTP
+* client: Add --port to choose the port to use to connect to a controller
 
 ## [0.7.0] - 2022-10-28
 
