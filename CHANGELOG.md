@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.0] - 2023-02-15
+
 * controller/libkynput: windows_sys is now used and replaces winapi
 * Rust dependencies updated
 * Rust toolchain updated to 1.65.0
