@@ -96,7 +96,7 @@ impl State {
         // to contain within the whole window.
         // Try to contain in a Rect at first, and fallback in the whole window contain
         // if not supported.
-        let ret = if self.window.fullscreen().is_some() {
+        let ret = if grab {
             use winit::dpi::{PhysicalSize, Position, Size};
 
             let pos = Position::Physical(PhysicalPosition::new(

@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 * client: Avoid to send Gamepad events when window focus is lost
 * controller: Fix keyboard flush on Window focus loss/Application exit
+* client: When the cursor is hidden, it is now impossible to go out of the window (0.7 regression)
 
 ## [0.8.0] - 2023-02-15
 
