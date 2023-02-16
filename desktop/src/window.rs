@@ -41,7 +41,6 @@ struct State {
     video_layout: VideoLayout,
     last_cursor_pos: Option<PhysicalPosition<u32>>,
 
-    window_focused: bool,
     cursor_inside_window: bool,
 
     cursor_visible: bool,
@@ -148,8 +147,6 @@ impl State {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
-                self.window_focused = true;
-
                 if !focused {
                     self.input_pipeline
                         .as_ref()
@@ -468,7 +465,6 @@ impl Window {
                 },
                 video_layout,
                 last_cursor_pos: None,
-                window_focused: false,
                 cursor_inside_window: false,
                 cursor_visible: true,
             })),
