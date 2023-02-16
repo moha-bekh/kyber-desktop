@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* client: Avoid to send Gamepad events when window focus is lost
+* controller: Fix keyboard flush on Window focus loss/Application exit
+
 ## [0.8.0] - 2023-02-15
 
 * controller/libkynput: windows_sys is now used and replaces winapi
