@@ -270,6 +270,16 @@ impl HandlerInterface for WinitHandler {
     fn start(&self) {}
 
     fn stop(&self) {}
+
+    fn produced_types(&self) -> Option<Vec<InputType>> {
+        let producable_types = WinitHandler::producable_types();
+
+        if !producable_types.is_empty() {
+            Some(producable_types)
+        } else {
+            None
+        }
+    }
 }
 
 #[cfg(test)]
