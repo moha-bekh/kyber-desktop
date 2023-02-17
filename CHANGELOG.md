@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 * client: Update to winit 0.28.1
 * macOS client: Relative mouse moves can now be received without enabling IOKit
+* macOS client: Correctly scale window size on Retina displays
 
 ## [0.8.1] - 2023-02-20
 

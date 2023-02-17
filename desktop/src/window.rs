@@ -431,7 +431,7 @@ impl Window {
 
         let window = WindowBuilder::new()
             .with_title("Kyber Client")
-            .with_inner_size(winit::dpi::PhysicalSize::new(window_width, window_height))
+            .with_inner_size(winit::dpi::LogicalSize::new(window_width, window_height))
             .build(&event_loop)?;
 
         let mut video_layout = VideoLayout {
