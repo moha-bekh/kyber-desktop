@@ -9,7 +9,7 @@ mod window;
 use std::sync::Arc;
 
 use log::{error, info, LevelFilter};
-use winit::event_loop::EventLoopBuilder;
+use winit::event_loop::EventLoop;
 
 use libclient_rs::{Client, StreamingProtocol, VideoCodec, WindowHandle};
 use libkynput_rs::{InputType, Pipeline};
@@ -105,7 +105,7 @@ fn main() {
     };
 
     // Create window
-    let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
+    let event_loop = EventLoop::<UserEvent>::with_user_event();
 
     let pipeline_hook = Box::new(ClientPipelineHook::new_from_event_loop(
         event_loop.create_proxy(),

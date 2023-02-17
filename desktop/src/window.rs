@@ -6,7 +6,7 @@ use winit::{
     dpi::PhysicalPosition,
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
-    window::{self, CursorGrabMode, CursorRgba, WindowBuilder},
+    window::{self, CursorRgba, WindowBuilder},
 };
 
 use libclient_rs::Client;
@@ -115,12 +115,6 @@ impl State {
         };
 
         if ret.is_err() {
-            let grab = if grab {
-                CursorGrabMode::Confined
-            } else {
-                CursorGrabMode::None
-            };
-
             let ret = self.window.set_cursor_grab(grab);
             if let Err(err) = ret {
                 warn!("Fail during grab_cursor({:?}): {:?}", grab, err);
