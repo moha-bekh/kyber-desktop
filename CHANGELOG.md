@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* client: Update to winit 0.28.1
+* macOS client: Relative mouse moves can now be received without enabling IOKit
+
 ## [0.8.1] - 2023-02-20
 
 * client: Avoid to send Gamepad events when window focus is lost
