@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use winit::event_loop::EventLoopProxy;
 
@@ -7,78 +7,44 @@ use libkynput_rs::{
     Packet,
 };
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::window::UserEvent;
 
-pub struct WindowCursorHandler {
-    cursor: Arc<Mutex<Option<Cursor>>>,
+struct WindowCursorHandler {
+    event_loop_proxy: EventLoopProxy<UserEvent>,
 }
 
 impl WindowCursorHandler {
-    pub fn new() -> Self {
-        Self {
-            cursor: Arc::new(Mutex::new(None)),
-        }
-    }
-
-    pub fn pop_cursor(&self) -> Result<Cursor> {
-        if let Some(cursor) = self.cursor.lock()?.take() {
-            Ok(cursor)
-        } else {
-            Err(Error::Rejected)
-        }
-    }
-
-    pub fn create_proxy(&self, event_loop_proxy: EventLoopProxy<UserEvent>) -> Handler {
-        let proxy = Arc::new(WindowCursorProxy::new(
-            event_loop_proxy,
-            self.cursor.clone(),
-        ));
-        libkynput_rs::create_handler_consumer_instance(proxy)
+    pub fn new(event_loop_proxy: EventLoopProxy<UserEvent>) -> Self {
+        Self { event_loop_proxy }
     }
 }
 
-pub struct WindowCursorProxy {
-    event_loop_proxy: Mutex<EventLoopProxy<UserEvent>>,
-    cursor: Arc<Mutex<Option<Cursor>>>,
-}
-
-impl WindowCursorProxy {
-    fn new(
-        event_loop_proxy: EventLoopProxy<UserEvent>,
-        cursor: Arc<Mutex<Option<Cursor>>>,
-    ) -> Self {
-        Self {
-            event_loop_proxy: Mutex::new(event_loop_proxy),
-            cursor,
-        }
-    }
-}
-
-impl HandlerConsumerInterface for WindowCursorProxy {
+impl HandlerConsumerInterface for WindowCursorHandler {
     fn handled_types(&self) -> Vec<InputType> {
         vec![InputType::Cursor]
     }
 }
 
-impl ConsumerInterface for WindowCursorProxy {
+impl ConsumerInterface for WindowCursorHandler {
     fn consume(&self, pkt: Packet) {
-        let cursor = if let Some(cursor) = Cursor::from_packet(pkt) {
-            cursor
-        } else {
+        let Some(cursor) = Cursor::from_packet(pkt) else {
             return;
         };
 
-        let mut state_cursor = self.cursor.lock().unwrap();
-        *state_cursor = Some(cursor);
-
-        let event_loop_proxy = self.event_loop_proxy.lock().unwrap();
-        event_loop_proxy.send_event(UserEvent::SetCursor).unwrap();
+        self.event_loop_proxy
+            .send_event(UserEvent::SetCursor(cursor))
+            .unwrap();
     }
 }
 
-impl HandlerInterface for WindowCursorProxy {
+impl HandlerInterface for WindowCursorHandler {
     fn start(&self) {}
 
     fn stop(&self) {}
+}
+
+pub fn new_cursor_handler(event_loop_proxy: EventLoopProxy<UserEvent>) -> Result<Handler> {
+    let consumer = Arc::new(WindowCursorHandler::new(event_loop_proxy));
+    Ok(libkynput_rs::create_handler_consumer_instance(consumer))
 }

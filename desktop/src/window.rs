@@ -15,17 +15,17 @@ use libkynput_rs::{Handler, InputType, MouseButton, Packet, Pipeline, RouterProc
 use crate::error::{Error, Result};
 
 use crate::client_proxy::ClientEventProxy;
-use crate::cursor_handler::WindowCursorHandler;
+use crate::cursor_handler;
 use crate::pipeline_hook::{PipelineStateReader, ShortcutType};
 
 use crate::video_layout::{Position, RectSize, VideoLayout};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum UserEvent {
     StopRequest,
     Shortcut(ShortcutType),
     Client(libclient_rs::Event),
-    SetCursor,
+    SetCursor(libkynput_rs::Cursor),
 }
 
 pub type StopRequestCb = Box<dyn Fn() + Send>;
@@ -45,7 +45,6 @@ struct State {
     cursor_inside_window: bool,
 
     cursor_visible: bool,
-    cursor_handler: WindowCursorHandler,
 }
 
 impl State {
@@ -330,9 +329,7 @@ impl State {
                         .set_fullscreen(Some(window::Fullscreen::Borderless(monitor)));
                 }
             }
-            Event::UserEvent(UserEvent::SetCursor) => {
-                let cursor = self.cursor_handler.pop_cursor()?;
-
+            Event::UserEvent(UserEvent::SetCursor(cursor)) => {
                 // MousePosition and MouseMove are always produced on client side.
                 // But only one must be sent, depending of the cursor visibility:
                 // - Cursor visible: Send absolute position
@@ -474,7 +471,6 @@ impl Window {
                 window_focused: false,
                 cursor_inside_window: false,
                 cursor_visible: true,
-                cursor_handler: WindowCursorHandler::new(),
             })),
         })
     }
@@ -488,10 +484,8 @@ impl Window {
     }
 
     pub fn create_cursor_handler(&mut self) -> Result<Handler> {
-        let state = self.state.lock()?;
-        Ok(state
-            .cursor_handler
-            .create_proxy(self.event_loop.create_proxy()))
+        let proxy = self.event_loop.create_proxy();
+        cursor_handler::new_cursor_handler(proxy)
     }
 
     pub fn set_input_handler(
