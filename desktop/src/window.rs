@@ -130,7 +130,7 @@ impl State {
 
     fn handle_event(
         &mut self,
-        event: &Event<UserEvent>,
+        event: Event<UserEvent>,
         control_flow: &mut ControlFlow,
     ) -> Result<()> {
         match event {
@@ -138,7 +138,7 @@ impl State {
                 event: WindowEvent::CloseRequested,
                 window_id,
             } => {
-                if *window_id == self.window.id() {
+                if window_id == self.window.id() {
                     self.stop_client()?;
                 }
             }
@@ -161,7 +161,7 @@ impl State {
                 self.input_pipeline
                     .as_ref()
                     .ok_or(Error::NoPipeline)?
-                    .set_global_processing_state(*focused)?;
+                    .set_global_processing_state(focused)?;
             }
             Event::WindowEvent {
                 event: WindowEvent::CursorEntered { device_id: _ },
@@ -229,7 +229,7 @@ impl State {
             }
             Event::DeviceEvent { event, .. } => {
                 if let Some(handler) = self.input_handler.as_ref() {
-                    handler.consume_device_event(event);
+                    handler.consume_device_event(&event);
                 } else {
                     warn!("DeviceEvent discarded because no input handler is defined");
                 }
@@ -246,9 +246,9 @@ impl State {
                 if let Some(handler) = self.input_handler.as_ref() {
                     handler.consume_window_event(
                         &WindowEvent::KeyboardInput {
-                            device_id: *device_id,
-                            input: *input,
-                            is_synthetic: *is_synthetic,
+                            device_id,
+                            input,
+                            is_synthetic,
                         },
                         self.window.scale_factor(),
                     );
@@ -267,9 +267,9 @@ impl State {
                 if let Some(handler) = self.input_handler.as_ref() {
                     handler.consume_window_event(
                         &WindowEvent::MouseInput {
-                            device_id: *device_id,
-                            state: *state,
-                            button: *button,
+                            device_id,
+                            state,
+                            button,
                             modifiers: winit::event::ModifiersState::default(),
                         },
                         self.window.scale_factor(),
@@ -289,9 +289,9 @@ impl State {
                 if let Some(handler) = self.input_handler.as_ref() {
                     handler.consume_window_event(
                         &WindowEvent::MouseWheel {
-                            device_id: *device_id,
-                            delta: *delta,
-                            phase: *phase,
+                            device_id,
+                            delta,
+                            phase,
                             modifiers: winit::event::ModifiersState::default(),
                         },
                         self.window.scale_factor(),
@@ -541,11 +541,8 @@ impl Window {
 
             match self.state.lock() {
                 Ok(mut state) => {
-                    if let Err(err) = state.handle_event(&event, control_flow) {
-                        warn!(
-                            "Event handler failed during processing of {:?}: {:?}",
-                            event, err
-                        );
+                    if let Err(err) = state.handle_event(event, control_flow) {
+                        warn!("Event handler failed during processing: {:?}", err);
                     }
                 }
                 Err(err) => {
