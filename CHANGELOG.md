@@ -5,8 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * client: Update to winit 0.28.1
+* libkynput: Update to xcb 1.2.0. Used on Linux Host to get
+             cursor position and shape
+* libkynput: Update to SDL 2.26.3
+* kymux: A controller and a client can now be started on the same machine
 * macOS client: Relative mouse moves can now be received without enabling IOKit
 * macOS client: Correctly scale window size on Retina displays
+* client: Hostname are now resolved when passed in the commandline
 
 ## [0.8.1] - 2023-02-20
 
