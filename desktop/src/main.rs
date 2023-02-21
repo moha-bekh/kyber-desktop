@@ -181,7 +181,7 @@ fn main() {
         config.set_streamer_port(*port);
     }
 
-    let client = Client::new(&config);
+    let client = Client::new(&config).unwrap();
 
     window.set_client(client.clone()).unwrap();
 

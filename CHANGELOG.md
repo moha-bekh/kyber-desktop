@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 * macOS client: Relative mouse moves can now be received without enabling IOKit
 * macOS client: Correctly scale window size on Retina displays
 * client: Hostname are now resolved when passed in the commandline
+* Client isn't stuck anymore if an error occurs at early startup
 
 ## [0.8.1] - 2023-02-20
 
