@@ -30,6 +30,8 @@ fn main() {
     libkynput_rs::init_logger();
     libclient_rs::init_logger();
 
+    println!("Kyber client. Revision {}", env!("VERGEN_GIT_DESCRIBE"));
+
     let matches = clap::App::new("Streaming client")
         .about("IP of the streamer to connect to")
         .arg(
