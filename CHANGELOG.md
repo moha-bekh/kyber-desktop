@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.0] - 2023-02-23
+
 * client: Update to winit 0.28.1
 * libkynput: Update to xcb 1.2.0. Used on Linux Host to get
              cursor position and shape
