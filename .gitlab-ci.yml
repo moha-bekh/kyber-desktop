@@ -62,10 +62,18 @@ lint:
     - merge_requests
     - tags
   script: |
+    # Configure contrib artifacts
     export ROOTFS_PATH=$(pwd)/rootfs
     cd $ROOTFS_PATH
     ../scripts/change_prefix.sh
     cd -
+    # Set output name
+    if [ -n "$CI_COMMIT_TAG" ]; then
+      export KYBER_STAGGING_DIRECTORY=$KYBER_BASE_DIR-$CI_COMMIT_TAG
+    else
+      export KYBER_STAGGING_DIRECTORY=$KYBER_BASE_DIR-$CI_COMMIT_SHORT_SHA
+    fi
+    # Build
     ./build-linux.sh -s -p -o $ROOTFS_PATH
 
 .test-linux-x86_64-common:
@@ -111,10 +119,10 @@ build-debian-buster-x86_64:
   needs:
     - contrib-debian-buster-x86_64
   variables:
-    KYBER_STAGGING_DIRECTORY: "kyber-debian-buster-x86_64"
+    KYBER_BASE_DIR: "kyber-debian-buster-x86_64"
   artifacts:
     paths:
-      - kyber-debian-buster-x86_64.tar.bz2
+      - kyber-debian-buster-x86_64*.tar.bz2
     expire_in: 1 week
 
 test-debian-buster-x86_64:
@@ -140,10 +148,10 @@ build-ubuntu-jammy-x86_64:
   needs:
     - contrib-ubuntu-jammy-x86_64
   variables:
-    KYBER_STAGGING_DIRECTORY: "kyber-ubuntu-jammy-x86_64"
+    KYBER_BASE_DIR: "kyber-ubuntu-jammy-x86_64"
   artifacts:
     paths:
-      - kyber-ubuntu-jammy-x86_64.tar.bz2
+      - kyber-ubuntu-jammy-x86_64*.tar.bz2
     expire_in: 1 week
 
 contrib-windows-x86_64:
@@ -181,14 +189,22 @@ build-windows-x86_64:
   needs:
     - contrib-windows-x86_64
   script: |
+    # Configure contrib artifacts
     export ROOTFS_PATH=$(pwd)/rootfs
     cd $ROOTFS_PATH
     ../scripts/change_prefix.sh
     cd -
+    # Set output name
+    if [ -n "$CI_COMMIT_TAG" ]; then
+      export KYBER_STAGGING_DIRECTORY=kyber-windows-x86_64-$CI_COMMIT_TAG
+    else
+      export KYBER_STAGGING_DIRECTORY=kyber-windows-x86_64-$CI_COMMIT_SHORT_SHA
+    fi
+    # Build
     ./build-win32.sh -s -p -o $ROOTFS_PATH
   artifacts:
     paths:
-      - kyber-windows-x86_64.zip
+      - kyber-windows-x86_64-*.zip
     expire_in: 1 week
 
 clippy-windows-x86_64:
@@ -246,14 +262,22 @@ clippy-windows-x86_64:
     - merge_requests
     - tags
   script: |
+    # Configure contrib artifacts
     export ROOTFS_PATH=$(pwd)/rootfs
     cd $ROOTFS_PATH
     ../scripts/change_prefix.sh
     cd -
+    # Set output name
+    if [ -n "$CI_COMMIT_TAG" ]; then
+      export KYBER_APP_DIRECTORY=kyber-client-$HOST_ARCH-$CI_COMMIT_TAG.app
+    else
+      export KYBER_APP_DIRECTORY=kyber-client-$HOST_ARCH-$CI_COMMIT_SHORT_SHA.app
+    fi
+    # Build
     ./build-macos.sh -s -p -a $HOST_ARCH -o $ROOTFS_PATH
   artifacts:
     paths:
-      - kyber-client.app.zip
+      - kyber-client-*.app.zip
     expire_in: 1 week
 
 contrib-macos-x86_64:

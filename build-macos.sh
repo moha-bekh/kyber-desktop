@@ -140,7 +140,12 @@ build_deps() {
 
 package() {
     local source_directory=$1
-    local app_dir="kyber-client.app"
+
+    if [[ -z "${KYBER_APP_DIRECTORY}" ]]; then
+        local app_dir="kyber-client.app"
+    else
+        local app_dir="${KYBER_APP_DIRECTORY}"
+    fi
 
     echo "Creating $app_dir from $source_directory"
     mkdir -p $app_dir/Contents/MacOS $app_dir/Contents/Frameworks/plugins
