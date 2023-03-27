@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* kymux: The implementation is now compatible with 32 bits targets.
+         Breaks compatibility with previous versions
+
 ## [0.9.0] - 2023-02-23
 
 * client: Update to winit 0.28.1
