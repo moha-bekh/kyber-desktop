@@ -310,7 +310,11 @@ mod tests {
         let ret = hook.on_packet(&wheel.to_packet(InputTarget::Client));
         assert!(ret.eq(&ret_process_true));
 
-        let position = MousePosition { x: 1, y: 2 };
+        let position = MousePosition {
+            display_id: 43,
+            x: 1,
+            y: 2,
+        };
         let ret = hook.on_packet(&position.to_packet(InputTarget::Client));
         assert!(ret.eq(&ret_process_true));
     }

@@ -209,6 +209,10 @@ impl State {
                 event: WindowEvent::CursorMoved { position, .. },
                 ..
             } => {
+                let Some(display_id) = self.display_id else {
+                    return Ok(());
+                };
+
                 // Cast to our internal representation
                 let position: PhysicalPosition<u32> = PhysicalPosition {
                     x: position.x as _,
@@ -235,8 +239,11 @@ impl State {
                     );
 
                     if let Some(projected_pos) = projected_pos {
-                        input_handler
-                            .send_mouse_position(projected_pos.x as i16, projected_pos.y as i16);
+                        input_handler.send_mouse_position(
+                            display_id,
+                            projected_pos.x as i16,
+                            projected_pos.y as i16,
+                        );
                     }
                 } else {
                     warn!("WindowEvent::CursorMoved discarded because no input handler is defined");

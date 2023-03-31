@@ -197,8 +197,8 @@ impl WinitHandler {
         self.consumer.consume(pkt);
     }
 
-    pub fn send_mouse_position(&self, x: i16, y: i16) {
-        let position = MousePosition { x, y };
+    pub fn send_mouse_position(&self, display_id: u32, x: i16, y: i16) {
+        let position = MousePosition { display_id, x, y };
         let pkt = position.to_packet(InputTarget::Host);
         self.consumer.consume(pkt);
     }
@@ -423,7 +423,11 @@ mod tests {
     fn mouse_position() {
         let mut consumer = MockConsumer::new();
 
-        let move_position = MousePosition { x: 1, y: 2 };
+        let move_position = MousePosition {
+            display_id: 43,
+            x: 1,
+            y: 2,
+        };
         let move_position_pkt = move_position.to_packet(InputTarget::Host);
 
         consumer
@@ -436,7 +440,7 @@ mod tests {
 
         let produced_events = vec![InputType::Keyboard, InputType::MouseMove];
         let handler = WinitHandler::new(consumer.clone(), produced_events.clone()).unwrap();
-        handler.send_mouse_position(1, 2);
+        handler.send_mouse_position(43, 1, 2);
     }
 
     #[test]
