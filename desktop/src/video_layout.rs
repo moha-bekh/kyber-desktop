@@ -1,5 +1,3 @@
-use log::debug;
-
 #[derive(Clone, Copy, Debug)]
 pub struct RectSize {
     pub width: u32,
@@ -21,13 +19,7 @@ pub struct VideoLayout {
 }
 
 impl VideoLayout {
-    pub fn update_display_layout(&mut self, window_size: RectSize) {
-        debug!(
-            "New window size: {}x{}",
-            window_size.width, window_size.height
-        );
-        self.window_size = window_size;
-
+    pub fn update_display_layout(&mut self) {
         let window_ratio = self.window_size.width as f64 / self.window_size.height as f64;
         let stream_ratio = self.host_size.width as f64 / self.host_size.height as f64;
 

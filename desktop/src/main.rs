@@ -82,6 +82,13 @@ fn main() {
                 .value_parser(clap::value_parser!(u16))
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("display_idx")
+                .long("display_idx")
+                .help("Display Id to access")
+                .value_parser(clap::value_parser!(usize))
+                .takes_value(true),
+        )
         .arg(clap::Arg::with_name("STREAMER_IP").required(true).index(1))
         .get_matches();
 
@@ -106,6 +113,7 @@ fn main() {
         }
     };
 
+    let display_index = matches.get_one("display_idx").copied().unwrap_or(0);
     let yuv444 = matches.is_present("444");
     let audio = matches.get_one("audio").copied().unwrap_or(false);
     let inputs = matches.get_one("inputs").copied().unwrap_or(true);
@@ -117,7 +125,8 @@ fn main() {
         event_loop.create_proxy(),
     ));
 
-    let mut window = window::Window::new(event_loop, pipeline_hook.get_state_reader()).unwrap();
+    let mut window =
+        window::Window::new(event_loop, pipeline_hook.get_state_reader(), display_index).unwrap();
 
     let stop_req_cb = window.create_stop_request_cb();
     ctrlc::set_handler(move || {
@@ -180,7 +189,7 @@ fn main() {
     };
 
     let video_config =
-        libclient_rs::VideoSessionConfig::default(&window_handle).unwrap();
+        libclient_rs::VideoSessionConfig::default(&window_handle, display_index).unwrap();
     video_config.set_codec(video_codec);
     video_config.set_yuv444(yuv444);
 

@@ -37,6 +37,10 @@ struct State {
     pipeline_state: PipelineStateReader,
     input_handler: Option<Arc<crate::input_handler::WinitHandler>>,
     video_layout: VideoLayout,
+
+    display_index: usize,
+    display_id: Option<u32>,
+
     last_cursor_pos: Option<PhysicalPosition<u32>>,
 
     cursor_inside_window: bool,
@@ -124,6 +128,17 @@ impl State {
         }
     }
 
+    fn set_host_display_size(&mut self, display: &libclient_rs::Display) {
+        self.display_id = Some(display.id);
+
+        self.video_layout.host_size = RectSize {
+            width: display.width as u32,
+            height: display.height as u32,
+        };
+
+        self.video_layout.update_display_layout();
+    }
+
     fn handle_event(
         &mut self,
         event: Event<UserEvent>,
@@ -181,10 +196,12 @@ impl State {
                 self.window_size.height = size.height;
 
                 debug!("Window resized");
-                self.video_layout.update_display_layout(RectSize {
+                self.video_layout.window_size = RectSize {
                     width: size.width,
                     height: size.height,
-                });
+                };
+
+                self.video_layout.update_display_layout();
 
                 self.grab_cursor(self.window.fullscreen().is_some());
             }
@@ -296,6 +313,19 @@ impl State {
                     );
                 }
             }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::Started { displays })) => {
+                let display = if self.display_index < displays.len() {
+                    &displays[self.display_index]
+                } else {
+                    warn!(
+                        "Display {} is out of range, fallback to first screen",
+                        self.display_index
+                    );
+                    &displays[0]
+                };
+
+                self.set_host_display_size(display);
+            }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::Stopped)) => {
                 *control_flow = ControlFlow::Exit;
             }
@@ -304,12 +334,8 @@ impl State {
                     debug!("Exit fullscreen");
                     self.window.set_fullscreen(None);
 
-                    let window_size = self.window_size;
-
-                    self.video_layout.update_display_layout(RectSize {
-                        width: window_size.width,
-                        height: window_size.height,
-                    });
+                    self.video_layout.window_size = self.window_size;
+                    self.video_layout.update_display_layout();
                 } else {
                     debug!("Enter fullscreen");
 
@@ -318,10 +344,12 @@ impl State {
                     if let Some(monitor) = monitor.as_ref() {
                         let monitor_size = monitor.size();
 
-                        self.video_layout.update_display_layout(RectSize {
+                        self.video_layout.window_size = RectSize {
                             width: monitor_size.width,
                             height: monitor_size.height,
-                        })
+                        };
+
+                        self.video_layout.update_display_layout()
                     }
 
                     self.window
@@ -420,6 +448,7 @@ impl Window {
     pub fn new(
         event_loop: EventLoop<UserEvent>,
         pipeline_state: PipelineStateReader,
+        display_index: usize,
     ) -> Result<Self> {
         // Create Loop + Window
         let window_width: u32 = 800;
@@ -446,10 +475,7 @@ impl Window {
             video_pos: Position { x: 0, y: 0 },
         };
 
-        video_layout.update_display_layout(RectSize {
-            width: window_width,
-            height: window_height,
-        });
+        video_layout.update_display_layout();
 
         Ok(Self {
             event_loop,
@@ -466,6 +492,8 @@ impl Window {
                     height: window_height,
                 },
                 video_layout,
+                display_id: None,
+                display_index,
                 last_cursor_pos: None,
                 cursor_inside_window: false,
                 cursor_visible: true,
