@@ -336,6 +336,27 @@ impl State {
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::Stopped)) => {
                 *control_flow = ControlFlow::Exit;
             }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::DisplayListUpdated {
+                displays,
+            })) => {
+                log::info!("Display list updated");
+                let Some(display_id) = self.display_id else {
+                    return Ok(());
+                };
+
+                let Some(display) = displays.iter().find(|&d| d.id == display_id) else {
+                    warn!("Used display not found in {displays:?}");
+                    return Ok(());
+                };
+
+                self.video_layout.host_size = RectSize {
+                    width: display.width as u32,
+                    height: display.height as u32,
+                };
+
+                self.video_layout.update_display_layout();
+                self.grab_cursor(self.window.fullscreen().is_some());
+            }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::Fullscreen)) => {
                 if self.window.fullscreen().is_some() {
                     debug!("Exit fullscreen");
