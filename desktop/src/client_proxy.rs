@@ -15,7 +15,7 @@ impl ClientEventProxy {
 }
 
 impl EventSink for ClientEventProxy {
-    fn on_event(&self, event: &Event) {
-        self.proxy.send_event(UserEvent::Client(*event)).unwrap();
+    fn on_event(&self, event: Event) {
+        self.proxy.send_event(UserEvent::Client(event)).unwrap();
     }
 }
