@@ -18,7 +18,7 @@ use crate::error::{Error, Result};
 use crate::pipeline_hook::{PipelineStateReader, ShortcutType};
 use crate::video_layout::{Position, RectSize, VideoLayout};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub enum UserEvent {
     StopRequest,
     Shortcut(ShortcutType),

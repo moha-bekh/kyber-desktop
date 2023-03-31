@@ -254,10 +254,18 @@ mod tests {
         let shortcut = SHORTCUT_FULLSCREEN;
         let shortcut_event = ShortcutType::Fullscreen;
 
+        let shortcut_compare = move |e: &UserEvent| {
+            let UserEvent::Shortcut(e) = e else {
+                return false;
+            };
+
+            *e == shortcut_event
+        };
+
         let mut proxy = Box::new(MockProxy::new());
         proxy
             .expect_send_event()
-            .with(predicate::eq(UserEvent::Shortcut(shortcut_event)))
+            .with(predicate::function(shortcut_compare))
             .times(1)
             .returning(|_| Ok(()));
 
