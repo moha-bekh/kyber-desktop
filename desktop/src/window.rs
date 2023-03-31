@@ -150,6 +150,10 @@ impl State {
                         .as_ref()
                         .ok_or(Error::NoPipeline)?
                         .flush_keys()?;
+
+                    self.grab_cursor(false);
+                } else if self.window.fullscreen().is_some() {
+                    self.grab_cursor(true);
                 }
 
                 self.input_pipeline
