@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 * kymux: The implementation is now compatible with 32 bits targets.
          Breaks compatibility with previous versions
+* client: Add --display_idx option to select the display to stream
+* Handle any Host display resolution
+* Handle Host dynamic resolution update
 
 ## [0.9.0] - 2023-02-23
 
