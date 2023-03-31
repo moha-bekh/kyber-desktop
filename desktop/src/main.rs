@@ -106,6 +106,10 @@ fn main() {
         }
     };
 
+    let yuv444 = matches.is_present("444");
+    let audio = matches.get_one("audio").copied().unwrap_or(false);
+    let inputs = matches.get_one("inputs").copied().unwrap_or(true);
+
     // Create window
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
 
@@ -147,7 +151,18 @@ fn main() {
         window.set_input_handler(handler).unwrap();
     }
 
-    // Create client
+    // Create ConnectConfig
+    let connect_config =
+        libclient_rs::ConnectConfig::default(streamer_ip.as_str(), STREAMER_HOST, STREAMER_CERT)
+            .unwrap();
+
+    if let Some(port) = matches.get_one("port") {
+        connect_config.set_streamer_port(*port);
+    }
+
+    // Create StreamSessionConfig
+    let session_config = libclient_rs::StreamingSessionConfig::default(protocol).unwrap();
+
     let window_handle = match window.window_handle() {
         #[cfg(target_os = "linux")]
         raw_window_handle::RawWindowHandle::Xlib(handle) => WindowHandle::from_x11(handle.window),
@@ -164,27 +179,19 @@ fn main() {
         }
     };
 
-    let config = libclient_rs::Config::default(
-        STREAMER_HOST,
-        streamer_ip.as_str(),
-        STREAMER_CERT,
-        protocol,
-        &input_pipeline,
-        &window_handle,
-    )
-    .unwrap();
+    let video_config =
+        libclient_rs::VideoSessionConfig::default(&window_handle).unwrap();
+    video_config.set_codec(video_codec);
+    video_config.set_yuv444(yuv444);
 
-    config.set_video_codec(video_codec);
-    config.set_yuv444(matches.is_present("444"));
-    config.set_audio(matches.get_one("audio").copied().unwrap_or(false));
-    config.set_inputs(matches.get_one("inputs").copied().unwrap_or(true));
+    session_config.set_video(video_config);
+    session_config.set_audio(audio);
 
-    if let Some(port) = matches.get_one("port") {
-        config.set_streamer_port(*port);
-    }
+    let input_config = libclient_rs::InputSessionConfig::default(&input_pipeline).unwrap();
+    session_config.set_input(input_config);
 
-    let client = Client::new(&config).unwrap();
-
+    // Create client
+    let client = Client::new(&connect_config, &session_config).unwrap();
     window.set_client(client.clone()).unwrap();
 
     // Create Shortcuts handler
@@ -192,7 +199,9 @@ fn main() {
 
     // Setup input routine
     // Window => InputRouter
-    window.set_input_pipeline(input_pipeline).unwrap();
+    if inputs {
+        window.set_input_pipeline(input_pipeline).unwrap();
+    }
 
     client.start().unwrap();
 
