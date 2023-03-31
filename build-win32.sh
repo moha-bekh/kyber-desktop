@@ -227,6 +227,7 @@ package() {
         $src_bin/txproto.exe \
         $src_bin/libclient.dll \
         $src_bin/libkynput.dll \
+        $src_bin/avserver_displays.lua \
         $src_bin/avserver_kymux_stream.lua \
         $src_bin/avserver_rtp_stream.lua \
         $src_bin/kybertest_cert.pem \
