@@ -12,12 +12,10 @@ use winit::{
 use libclient_rs::Client;
 use libkynput_rs::{Handler, InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
 
-use crate::error::{Error, Result};
-
 use crate::client_proxy::ClientEventProxy;
 use crate::cursor_handler;
+use crate::error::{Error, Result};
 use crate::pipeline_hook::{PipelineStateReader, ShortcutType};
-
 use crate::video_layout::{Position, RectSize, VideoLayout};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
