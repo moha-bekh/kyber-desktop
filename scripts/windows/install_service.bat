@@ -1,4 +1,4 @@
-sc create kyber binPath=%~dp0\service.exe
+sc create kyber binPath=%~dp0\service.exe start=auto
 
 netsh advfirewall firewall add rule name=KyberController dir=in action=allow program=%~dp0controller.exe enable=yes profile=public
 netsh advfirewall firewall add rule name=KyberAvServer dir=in action=allow program=%~dp0avserver.exe enable=yes profile=public
