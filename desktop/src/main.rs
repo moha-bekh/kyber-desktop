@@ -196,8 +196,10 @@ fn main() {
     session_config.set_video(video_config);
     session_config.set_audio(audio);
 
-    let input_config = libclient_rs::InputSessionConfig::default(&input_pipeline).unwrap();
-    session_config.set_input(input_config);
+    if inputs {
+        let input_config = libclient_rs::InputSessionConfig::default(&input_pipeline).unwrap();
+        session_config.set_input(input_config);
+    }
 
     // Create client
     let client = Client::new(&connect_config, &session_config).unwrap();
@@ -208,9 +210,7 @@ fn main() {
 
     // Setup input routine
     // Window => InputRouter
-    if inputs {
-        window.set_input_pipeline(input_pipeline).unwrap();
-    }
+    window.set_input_pipeline(input_pipeline).unwrap();
 
     client.start().unwrap();
 
