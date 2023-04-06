@@ -167,7 +167,7 @@ contrib-windows-x86_64:
     export KYBER_DIRNAME=rootfs
     export KYBER_PREFIX=$(pwd)/$KYBER_DIRNAME
     # Build contribs
-    ./build-win32.sh -d -o $KYBER_PREFIX
+    ./build-win32.sh -d -w -o $KYBER_PREFIX
     # Prepare rootfs to be shared to other jobs
     cd $KYBER_PREFIX
     ../scripts/change_prefix.sh $(pwd)

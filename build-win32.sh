@@ -21,6 +21,7 @@ OPTIONS:
    -c            Run clippy
    -t            Run tests
    -p            Generate a package of the app
+   -w            Don't spawn cmd.exe when running processes
    -o <path>     Install the built binaries in the absolute path (Default: ./rootfs-x86_64-w64-mingw32)
 EOF
 }
@@ -160,7 +161,7 @@ checkout_deps() {
 build_deps() {
     # Build libkynput
     cd libkynput
-    ./build-win32.sh -o $OUT_DIR
+    ./build-win32.sh $CONSOLE_FLAG -o $OUT_DIR
     cd -
 
     # Build libclient
@@ -170,12 +171,12 @@ build_deps() {
 
     # Build avserver
     cd avserver
-    ./build-win32.sh -o $OUT_DIR
+    ./build-win32.sh $CONSOLE_FLAG-o $OUT_DIR
     cd -
 
     # Build controller
     cd controller
-    ./build-win32.sh -o $OUT_DIR
+    ./build-win32.sh $CONSOLE_FLAG -o $OUT_DIR
     cd -
 }
 
@@ -255,9 +256,10 @@ FETCH_SOURCES=true
 BUILD_DEPS=true
 PACKAGE=false
 ACTION="build"
+CONSOLE_FLAG=""
 OUT_DIR=$(pwd)/rootfs-x86_64-w64-mingw32
 
-while getopts "hnsdctpo:" OPTION
+while getopts "hnsdctpo:w" OPTION
 do
     case $OPTION in
         h)
@@ -284,6 +286,9 @@ do
             ;;
         o)
             OUT_DIR=$OPTARG
+            ;;
+        w)
+            CONSOLE_FLAG="-w"
             ;;
     esac
 done
