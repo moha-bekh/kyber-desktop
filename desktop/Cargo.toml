@@ -22,4 +22,4 @@ mockall = "0.11.3"
 serial_test = "0.9.0"
 
 [build-dependencies]
-vergen = { version = "8.0.0-beta.7", features = ["build", "git", "gix"] }
+vergen = { version = "8.1.1", features = ["build", "git", "gix"] }
