@@ -9,6 +9,11 @@ All notable changes to this project will be documented in this file.
 * client: Add --display_idx option to select the display to stream
 * Handle any Host display resolution
 * Handle Host dynamic resolution update
+* All components are now logging in "log/" folder
+* Windows service:
+    * No cmd.exe are spawned anymore
+    * install_service.bat now configure the service as autostart
+    * install_service.bat correctly setups firewall rules
 
 ## [0.9.0] - 2023-02-23
 
