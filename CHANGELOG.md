@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.10.0] - 2023-04-07
+
 * kymux: The implementation is now compatible with 32 bits targets.
          Breaks compatibility with previous versions
 * client: Add --display_idx option to select the display to stream
