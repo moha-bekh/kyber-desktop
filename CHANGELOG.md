@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* Update Rust dependencies
+
 ## [0.10.0] - 2023-04-07
 
 * kymux: The implementation is now compatible with 32 bits targets.
