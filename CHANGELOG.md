@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.10.1] - 2023-04-17
+
 * Update Rust dependencies
 * Windows host: Correctly inject Ctrl+Alt+Del
 * Windows host: Correctly inject Win+L
