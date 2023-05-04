@@ -1,2 +1,28 @@
 [avserver]
 encoder = "nvenc"
+
+[windows_service.kidd]
+# Enable or disable Kidd
+#
+# Possible values
+# * true: Kidd is enabled
+# * false: Kidd is disabled
+#
+# Default: true
+#enabled = true
+
+# Define the strategy to apply to plug a screen or not
+#
+# Possible values:
+# * "when_no_monitor": Plug a monitor only if there is no monitor plugged
+# * "always": Always plug a monitor
+#
+# Default: "when_no_monitor"
+#plug_strategy = "when_no_monitor"
+
+# Add one or more display mode for the plugged monitor.
+# The section can be specified multiple times to add multiple modes.
+#[[windows_service.kidd.extra_modes]]
+#width = 1920
+#height = 800
+#vsync = 60
