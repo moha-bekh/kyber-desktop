@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.11.0] - 2023-06-02
+
+* Windows host: If Kidd is installed, a virtual monitor is plugged
+                if the PC has no monitor
+
 ## [0.10.1] - 2023-04-17
 
 * Update Rust dependencies
