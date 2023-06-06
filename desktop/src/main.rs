@@ -162,7 +162,7 @@ fn main() {
         Some("hevc") => VideoCodec::HEVC,
         Some("av1") => VideoCodec::AV1,
         _ => {
-            error!("No valid protocol specified");
+            error!("No valid video_codec specified");
             return;
         }
     };
