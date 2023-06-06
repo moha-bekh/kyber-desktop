@@ -12,7 +12,7 @@ use std::sync::Arc;
 use log::{error, info, LevelFilter};
 use winit::event_loop::EventLoopBuilder;
 
-use libclient_rs::{Client, StreamingProtocol, VideoCodec, WindowHandle};
+use libclient_rs::{Client, KymuxVideoProtocol, StreamingProtocol, VideoCodec, WindowHandle};
 use libkynput_rs::{InputType, Pipeline};
 
 use parse_utils::parse_bitrate;
@@ -150,7 +150,7 @@ fn main() {
 
     let protocol = match matches.value_of("protocol") {
         Some("rtp") => StreamingProtocol::Rtp,
-        Some("kymux") => StreamingProtocol::Kymux,
+        Some("kymux") => StreamingProtocol::Kymux(KymuxVideoProtocol::Reliable),
         _ => {
             error!("No valid protocol specified");
             return;
