@@ -158,10 +158,7 @@ impl WinitHandler {
                 match platform::Impl::convert_scancode(event.scancode as u16) {
                     Some(scancode) => {
                         let pressed = convert_element_state(event.state);
-                        let key = KeyboardKey {
-                            scancode: scancode as u16,
-                            pressed,
-                        };
+                        let key = KeyboardKey { scancode, pressed };
                         key.to_packet(InputTarget::Host)
                     }
                     None => return,
