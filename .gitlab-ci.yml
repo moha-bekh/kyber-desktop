@@ -3,7 +3,7 @@ variables:
   DEBIAN_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-bullseye:20230623133751
   UBUNTU_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/ubuntu-jammy:20230623135215
   WIN64_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-win64:20230623134530
-  MACOS_RUST_VERSION: 1.65.0
+  MACOS_RUST_VERSION: 1.70.0
 
 stages:
   - lint
