@@ -2,6 +2,7 @@ mod client_proxy;
 mod cursor_handler;
 mod error;
 mod input_handler;
+mod parse_utils;
 mod pipeline_hook;
 mod video_layout;
 mod window;
@@ -14,6 +15,7 @@ use winit::event_loop::EventLoopBuilder;
 use libclient_rs::{Client, StreamingProtocol, VideoCodec, WindowHandle};
 use libkynput_rs::{InputType, Pipeline};
 
+use parse_utils::parse_bitrate;
 use pipeline_hook::ClientPipelineHook;
 use window::UserEvent;
 
@@ -113,6 +115,12 @@ fn main() {
                 .long("444")
                 .help("Enable YUV444")
                 .takes_value(false),
+        )
+        .arg(
+            clap::Arg::with_name("bitrate")
+                .long("bitrate")
+                .help("Set connection bitrate (Unit: bytes)")
+                .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("audio")
@@ -245,6 +253,10 @@ fn main() {
         libclient_rs::VideoSessionConfig::default(&window_handle, display_index).unwrap();
     video_config.set_codec(video_codec);
     video_config.set_yuv444(yuv444);
+
+    if let Some(bitrate) = matches.get_one::<String>("bitrate") {
+        session_config.set_bitrate(parse_bitrate(bitrate.into()).unwrap());
+    }
 
     session_config.set_video(video_config);
     session_config.set_audio(audio);
