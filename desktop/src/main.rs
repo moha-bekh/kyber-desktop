@@ -90,13 +90,6 @@ fn main() {
     let matches = clap::App::new("Streaming client")
         .about("IP of the streamer to connect to")
         .arg(
-            clap::Arg::with_name("FULLSCREEN")
-                .short('f')
-                .long("fullscreen")
-                .help("Initial fullscreen state")
-                .takes_value(false),
-        )
-        .arg(
             clap::Arg::with_name("protocol")
                 .long("protocol")
                 .help("Protocol to use")
