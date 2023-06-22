@@ -93,7 +93,13 @@ fn main() {
             clap::Arg::with_name("protocol")
                 .long("protocol")
                 .help("Protocol to use")
-                .value_parser(["rtp", "kymux"])
+                .value_parser([
+                    "rtp",
+                    "kymux",
+                    "kymux_reliable",
+                    "kymux_gopstream",
+                    "kymux_unreliable_fec",
+                ])
                 .default_value("kymux"),
         )
         .arg(
@@ -150,7 +156,11 @@ fn main() {
 
     let protocol = match matches.value_of("protocol") {
         Some("rtp") => StreamingProtocol::Rtp,
-        Some("kymux") => StreamingProtocol::Kymux(KymuxVideoProtocol::Reliable),
+        Some("kymux") | Some("kymux_reliable") => {
+            StreamingProtocol::Kymux(KymuxVideoProtocol::Reliable)
+        }
+        Some("kymux_gopstream") => StreamingProtocol::Kymux(KymuxVideoProtocol::GopStream),
+        Some("kymux_unreliable_fec") => StreamingProtocol::Kymux(KymuxVideoProtocol::UnreliableFec),
         _ => {
             error!("No valid protocol specified");
             return;
