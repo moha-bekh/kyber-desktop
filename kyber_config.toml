@@ -6,6 +6,13 @@
 # Default: "nvenc"
 encoder = "nvenc"
 
+# Enable or disable Intra Refresh
+#
+# Only supported when using Kymux + nvenc
+#
+# Default: true
+#intra_refresh = true
+
 [windows_service.kidd]
 # Enable or disable Kidd
 #
