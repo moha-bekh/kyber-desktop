@@ -7,7 +7,12 @@ All notable changes to this project will be documented in this file.
 :warning: This release isn't compatible with 0.10.x and 0.11.x versions. :warning:
 
 * Update libvlc to kymux.15. Based on upstream 36b1865d95
+* kymux: Add new video protocols (Gopstream and UnreliableFec)
 * client: Add --bitrate option to configure the connection bitrate
+* client: Add new possible values for --protocol
+    * kymux_reliable: Same than the existing "kymux" option. Uses a standard Quic stream for video
+    * kymux_gopstream: Enable Gopstream protocol for video
+    * kymux_unreliable_fec: Enable UnreliableFec protocol for video
 
 ## [0.11.0] - 2023-06-02
 
