@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.12.0] - 2023-06-23
+
 :warning: This release isn't compatible with 0.10.x and 0.11.x versions. :warning:
 
 * Update libvlc to kymux.15. Based on upstream 36b1865d95
