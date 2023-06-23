@@ -1,4 +1,9 @@
 [avserver]
+# Configure the video encoder to use
+#
+# Possible values: "x264", "nvenc", "qsv", "amf", "vaapi"
+#
+# Default: "nvenc"
 encoder = "nvenc"
 
 [windows_service.kidd]
