@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* Rust toolchain updated to 1.70.0
+
 ## [0.12.0] - 2023-06-23
 
 :warning: This release isn't compatible with 0.10.x and 0.11.x versions. :warning:
