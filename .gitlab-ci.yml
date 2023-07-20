@@ -1,6 +1,6 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  DEBIAN_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-bullseye:20230623133751
+  DEBIAN_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-bookworm:20230721071624
   UBUNTU_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/ubuntu-jammy:20230623135215
   WIN64_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-win64:20230623134530
   MACOS_RUST_VERSION: 1.70.0
@@ -101,7 +101,7 @@ lint:
     - merge_requests
     - tags
   needs:
-    - contrib-debian-buster-x86_64
+    - contrib-debian-bookworm-x86_64
   script: |
     export ROOTFS_PATH=$(pwd)/rootfs
     cd $ROOTFS_PATH
@@ -109,33 +109,33 @@ lint:
     cd -
     ./build-linux.sh -s -c -o $ROOTFS_PATH
 
-contrib-debian-buster-x86_64:
+contrib-debian-bookworm-x86_64:
   extends: .contrib-linux-x86_64-common
   image: $DEBIAN_IMAGE
 
-build-debian-buster-x86_64:
+build-debian-bookworm-x86_64:
   extends: .build-linux-x86_64-common
   image: $DEBIAN_IMAGE
   needs:
-    - contrib-debian-buster-x86_64
+    - contrib-debian-bookworm-x86_64
   variables:
-    KYBER_BASE_DIR: "kyber-debian-buster-x86_64"
+    KYBER_BASE_DIR: "kyber-debian-bookworm-x86_64"
   artifacts:
     paths:
-      - kyber-debian-buster-x86_64*.tar.bz2
+      - kyber-debian-bookworm-x86_64*.tar.bz2
     expire_in: 1 week
 
-test-debian-buster-x86_64:
+test-debian-bookworm-x86_64:
   extends: .test-linux-x86_64-common
   image: $DEBIAN_IMAGE
   needs:
-    - contrib-debian-buster-x86_64
+    - contrib-debian-bookworm-x86_64
 
-clippy-debian-buster-x86_64:
+clippy-debian-bookworm-x86_64:
   extends: .clippy-linux-x86_64-common
   image: $DEBIAN_IMAGE
   needs:
-    - contrib-debian-buster-x86_64
+    - contrib-debian-bookworm-x86_64
 
 contrib-ubuntu-jammy-x86_64:
   extends: .contrib-linux-x86_64-common

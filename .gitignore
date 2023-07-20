@@ -1,6 +1,6 @@
 avserver
 controller
-kyber-debian-buster-x86_64*
+kyber-debian-bookworm-x86_64*
 kyber-windows-x86_64*
 kymux
 libclient
