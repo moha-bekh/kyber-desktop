@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 * Rust toolchain updated to 1.70.0
 * ci: Debian build now targets Bookworm (12.0)
+* linux: Integrate a correct support of libinput 1.19+
 
 ## [0.12.0] - 2023-06-23
 
