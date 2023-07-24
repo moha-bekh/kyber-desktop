@@ -198,19 +198,19 @@ package() {
 
     # Copy all dll
     cp \
-        $src_bin/avcodec-59.dll \
-        $src_bin/avdevice-59.dll \
-        $src_bin/avfilter-8.dll \
-        $src_bin/avformat-59.dll \
-        $src_bin/avutil-57.dll \
+        $src_bin/avcodec-60.dll \
+        $src_bin/avdevice-60.dll \
+        $src_bin/avfilter-9.dll \
+        $src_bin/avformat-60.dll \
+        $src_bin/avutil-58.dll \
         $src_bin/liblua.dll \
         $src_bin/libtxproto.dll \
         $src_bin/libvlccore.dll \
         $src_bin/libvlc.dll \
-        $src_bin/postproc-56.dll \
+        $src_bin/postproc-57.dll \
         $src_bin/SDL2.dll \
         $src_bin/swresample-4.dll \
-        $src_bin/swscale-6.dll \
+        $src_bin/swscale-7.dll \
         $stagging_directory
 
     cd $src_lib/vlc
