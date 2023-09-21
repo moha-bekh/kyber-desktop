@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file.
 * controller now kills stucked avserver when streaming session stop is requested
 * libkynput: Counter Strike 2 is now playable
 * libkynput: Fix black cursor instead of invisible cursor on VLC 3
-* controller: Add websocket backend
+* controller: Add websocket and webtransport backends
 
 ## [0.12.0] - 2023-06-23
 

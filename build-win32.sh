@@ -113,6 +113,9 @@ checkout_deps() {
     echo "[patch.crates-io]" > .cargo/config.toml
     echo "kymux = { path = \"$KYMUX_PATH/kymux\" }" >> .cargo/config.toml
     echo "kymux_client = { path = \"$KYMUX_PATH/kymux_client\" }" >> .cargo/config.toml
+    echo "kycom = { path = \"$KYMUX_PATH/kyproto/kycom\" }" >> .cargo/config.toml
+    echo "kynet = { path = \"$KYMUX_PATH/kyproto/kynet\" }" >> .cargo/config.toml
+    echo "kyproto = { path = \"$KYMUX_PATH/kyproto/kyproto\" }" >> .cargo/config.toml
     echo "libkynput = { path = \"$LIBKYNPUT_PATH/libkynput\" }" >> .cargo/config.toml
     echo "libkynput-rs = { path = \"$LIBKYNPUT_PATH/libkynput-rs\" }" >> .cargo/config.toml
     echo "libkynput-sys = { path = \"$LIBKYNPUT_PATH/libkynput-rs/libkynput-sys\" }" >> .cargo/config.toml
@@ -156,6 +159,7 @@ checkout_deps() {
     echo "avservice-types = { path = \"$AVSERVER_PATH/avservice-types\" }" >> .cargo/config.toml
     echo "inputservice-types = { path = \"$LIBKYNPUT_PATH/inputservice-types\" }" >> .cargo/config.toml
     echo "kymux = { path = \"$KYMUX_PATH/kymux\" }" >> .cargo/config.toml
+    echo "ls-qpack-sys = { path = \"$KYMUX_PATH/kyproto/external/ls-qpack-rs/ls-qpack-sys\" }" >> .cargo/config.toml
     echo "libkypc = { path = \"$LIBKYPC_PATH\" }" >> .cargo/config.toml
 
     cd -
