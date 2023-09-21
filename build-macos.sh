@@ -121,6 +121,8 @@ checkout_deps() {
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
     echo "kymux = { path = \"$KYMUX_PATH/kymux\" }" >> .cargo/config.toml
+    echo "kymux_client = { path = \"$KYMUX_PATH/kymux_client\" }" >> .cargo/config.toml
+    echo "libkynput = { path = \"$LIBKYNPUT_PATH/libkynput\" }" >> .cargo/config.toml
     echo "libkynput-rs = { path = \"$LIBKYNPUT_PATH/libkynput-rs\" }" >> .cargo/config.toml
     echo "libkynput-sys = { path = \"$LIBKYNPUT_PATH/libkynput-rs/libkynput-sys\" }" >> .cargo/config.toml
 
