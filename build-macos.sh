@@ -152,7 +152,7 @@ package() {
 
     cp \
         $source_directory/bin/client \
-        $source_directory/bin/kybertest_cert.pem \
+        $source_directory/bin/kybertest_rootca.pem \
         $app_dir/Contents/MacOS
 
     cp -a \
@@ -282,7 +282,7 @@ case "$ACTION" in
 
         cp \
             target/$CARGO_TARGET/release/client \
-            test/tls/kybertest_cert.pem \
+            test/tls/kybertest_rootca.pem \
             $OUT_DIR/bin
     ;;
     "clippy")

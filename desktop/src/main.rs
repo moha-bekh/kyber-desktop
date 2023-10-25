@@ -20,7 +20,7 @@ use pipeline_hook::ClientPipelineHook;
 use window::UserEvent;
 
 const STREAMER_HOST: &str = "kybertest";
-const STREAMER_CERT: &str = "kybertest_cert.pem";
+const STREAMER_CERT: &str = "kybertest_rootca.pem";
 
 fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
     use std::path::Path;

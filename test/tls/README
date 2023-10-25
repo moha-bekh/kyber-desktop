@@ -1,2 +1,0 @@
-Command used to generate the certificate:
-$ openssl req -nodes -new -config kybertest.cnf -x509 -newkey rsa:4096 -keyout kybertest_key.pem -out kybertest_cert.pem -days 365 -addext "subjectAltName = DNS:kybertest"

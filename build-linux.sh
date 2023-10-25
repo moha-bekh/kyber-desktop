@@ -214,6 +214,7 @@ package() {
     cp \
         $src_bin/kybertest_cert.pem \
         $src_bin/kybertest_key.pem \
+        $src_bin/kybertest_rootca.pem \
         $stagging_directory/bin
 
     # Copy libraries
@@ -311,6 +312,7 @@ case "$ACTION" in
         cp \
             test/tls/kybertest_cert.pem \
             test/tls/kybertest_key.pem \
+            test/tls/kybertest_rootca.pem \
             $OUT_DIR/bin
 
     ;;

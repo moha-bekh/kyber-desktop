@@ -233,6 +233,7 @@ package() {
         $src_bin/avserver_rtp_stream.lua \
         $src_bin/kybertest_cert.pem \
         $src_bin/kybertest_key.pem \
+        $src_bin/kybertest_rootca.pem \
         $src_bin/kyber_config.toml \
         $stagging_directory
 
@@ -334,6 +335,7 @@ case "$ACTION" in
         cp \
             test/tls/kybertest_cert.pem \
             test/tls/kybertest_key.pem \
+            test/tls/kybertest_rootca.pem \
             $OUT_DIR/bin
     ;;
     "clippy")
