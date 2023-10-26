@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 * avserver: Update ffmpeg to 6.0 and update its dependencies
 * libkynput: Update to SDL 2.28.2
 * kymux: Rework the EndpointId size and generation
+* controller now kills stucked avserver when streaming session stop is requested
 
 ## [0.12.0] - 2023-06-23
 
