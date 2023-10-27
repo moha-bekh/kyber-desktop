@@ -1,4 +1,5 @@
-use std::sync::{Arc, Mutex};
+use std::cell::RefCell;
+use std::sync::Arc;
 
 use log::{debug, warn};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
@@ -468,7 +469,7 @@ impl State {
 
 pub struct Window {
     event_loop: EventLoop<UserEvent>,
-    state: Arc<Mutex<State>>,
+    state: RefCell<State>,
     window_handle: RawWindowHandle,
 }
 
@@ -508,7 +509,7 @@ impl Window {
         Ok(Self {
             event_loop,
             window_handle: window.raw_window_handle(),
-            state: Arc::new(Mutex::new(State {
+            state: RefCell::new(State {
                 client: None,
                 window,
                 input_pipeline: None,
@@ -525,7 +526,7 @@ impl Window {
                 last_cursor_pos: None,
                 cursor_inside_window: false,
                 cursor_visible: true,
-            })),
+            }),
         })
     }
 
@@ -546,13 +547,13 @@ impl Window {
         &mut self,
         handler: Arc<crate::input_handler::WinitHandler>,
     ) -> Result<()> {
-        let mut state = self.state.lock()?;
+        let mut state = self.state.borrow_mut();
         state.input_handler = Some(handler);
         Ok(())
     }
 
     pub fn set_client(&mut self, client: Client) -> Result<()> {
-        let mut state = self.state.lock()?;
+        let mut state = self.state.borrow_mut();
 
         {
             let client_proxy = Box::new(ClientEventProxy::new(self.event_loop.create_proxy()));
@@ -565,7 +566,7 @@ impl Window {
     }
 
     pub fn set_input_pipeline(&self, input_pipeline: Pipeline) -> Result<()> {
-        let mut state = self.state.lock()?;
+        let mut state = self.state.borrow_mut();
 
         // Assume that the default cursor is visible at startup
         input_pipeline.set_type_processing_state(
@@ -587,15 +588,9 @@ impl Window {
         self.event_loop.run(move |event, _, control_flow| {
             *control_flow = ControlFlow::Wait;
 
-            match self.state.lock() {
-                Ok(mut state) => {
-                    if let Err(err) = state.handle_event(event, control_flow) {
-                        warn!("Event handler failed during processing: {:?}", err);
-                    }
-                }
-                Err(err) => {
-                    warn!("Fail to lock state: {:?}", err);
-                }
+            let mut state = self.state.borrow_mut();
+            if let Err(err) = state.handle_event(event, control_flow) {
+                warn!("Event handler failed during processing: {:?}", err);
             }
         });
     }
