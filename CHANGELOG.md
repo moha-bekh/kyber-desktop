@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 :warning: This release isn't compatible with 0.12.x versions. :warning:
 
-* Rust toolchain updated to 1.70.0
+* Rust toolchain updated to 1.73.0
 * ci: Debian build now targets Bookworm (12.0)
 * linux: Integrate a correct support of libinput 1.19+
 * avserver: Update ffmpeg to 6.0 and update its dependencies
