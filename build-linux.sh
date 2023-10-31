@@ -57,6 +57,7 @@ checkout_deps() {
     cd kymux
     git reset --hard
     git checkout $KYMUX_SHA1
+    git submodule update --init --recursive
     cd -
 
     # Checkout libkypc
@@ -71,7 +72,7 @@ checkout_deps() {
     cd libkypc
     git reset --hard
     git checkout $LIBKYPC_SHA1
-    git submodule update
+    git submodule update --init --recursive
     cd -
 
     # Checkout libkynput
@@ -86,7 +87,7 @@ checkout_deps() {
     cd libkynput
     git reset --hard
     git checkout $LIBKYNPUT_SHA1
-    git submodule update
+    git submodule update --init --recursive
 
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
@@ -106,7 +107,7 @@ checkout_deps() {
     echo "Set libclient SHA1 to $LIBCLIENT_SHA1"
     git reset --hard
     git checkout $LIBCLIENT_SHA1
-    git submodule update
+    git submodule update --init --recursive
 
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
@@ -128,7 +129,7 @@ checkout_deps() {
     cd avserver
     git reset --hard
     git checkout $AVSERVER_SHA1
-    git submodule update
+    git submodule update --init --recursive
 
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
@@ -146,7 +147,7 @@ checkout_deps() {
     cd controller
     git reset --hard
     git checkout $CONTROLLER_SHA1
-    git submodule update
+    git submodule update --init --recursive
 
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
