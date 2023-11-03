@@ -149,6 +149,12 @@ fn main() {
                 .value_parser(clap::value_parser!(usize))
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("software_decode")
+                .long("software_decode")
+                .help("Enable video software decoding")
+                .takes_value(false),
+        )
         .arg(clap::Arg::with_name("STREAMER_IP").required(true).index(1))
         .get_matches();
 
@@ -181,6 +187,7 @@ fn main() {
     let yuv444 = matches.is_present("444");
     let audio = matches.get_one("audio").copied().unwrap_or(false);
     let inputs = matches.get_one("inputs").copied().unwrap_or(true);
+    let software_decode = matches.is_present("software_decode");
 
     // Create window
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
@@ -270,6 +277,7 @@ fn main() {
     };
 
     let player_config = libclient_rs::PlayerConfig::default(Some(window_handle)).unwrap();
+    player_config.set_software_decode(software_decode);
 
     // Create client
     let client = Client::new(&connect_config, &session_config, &player_config).unwrap();
