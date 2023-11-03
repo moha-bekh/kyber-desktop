@@ -236,6 +236,23 @@ fn main() {
     // Create StreamSessionConfig
     let session_config = libclient_rs::StreamingSessionConfig::default(protocol).unwrap();
 
+    let video_config = libclient_rs::VideoSessionConfig::default(display_index).unwrap();
+    video_config.set_codec(video_codec);
+    video_config.set_yuv444(yuv444);
+
+    if let Some(bitrate) = matches.get_one::<String>("bitrate") {
+        session_config.set_bitrate(parse_bitrate(bitrate.into()).unwrap());
+    }
+
+    session_config.set_video(video_config);
+    session_config.set_audio(audio);
+
+    if inputs {
+        let input_config = libclient_rs::InputSessionConfig::default(&input_pipeline).unwrap();
+        session_config.set_input(input_config);
+    }
+
+    // Create PlayerConfig
     let window_handle = match window.window_handle() {
         #[cfg(target_os = "linux")]
         raw_window_handle::RawWindowHandle::Xlib(handle) => WindowHandle::from_x11(handle.window),
@@ -252,25 +269,10 @@ fn main() {
         }
     };
 
-    let video_config =
-        libclient_rs::VideoSessionConfig::default(&window_handle, display_index).unwrap();
-    video_config.set_codec(video_codec);
-    video_config.set_yuv444(yuv444);
-
-    if let Some(bitrate) = matches.get_one::<String>("bitrate") {
-        session_config.set_bitrate(parse_bitrate(bitrate.into()).unwrap());
-    }
-
-    session_config.set_video(video_config);
-    session_config.set_audio(audio);
-
-    if inputs {
-        let input_config = libclient_rs::InputSessionConfig::default(&input_pipeline).unwrap();
-        session_config.set_input(input_config);
-    }
+    let player_config = libclient_rs::PlayerConfig::default(Some(window_handle)).unwrap();
 
     // Create client
-    let client = Client::new(&connect_config, &session_config).unwrap();
+    let client = Client::new(&connect_config, &session_config, &player_config).unwrap();
     window.set_client(client.clone()).unwrap();
 
     // Create Shortcuts handler
