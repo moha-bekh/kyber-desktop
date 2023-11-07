@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
+use log::warn;
 use winit::event_loop::EventLoopProxy;
 
 use libkynput_rs::{
-    ConsumerInterface, Cursor, Handler, HandlerConsumerInterface, HandlerInterface, InputType,
-    Packet,
+    ConsumerInterface, Cursor, CursorFormat, Handler, HandlerConsumerInterface, HandlerInterface,
+    InputType, InputTypeMetadata, Packet,
 };
 
 use crate::error::Result;
@@ -42,6 +43,18 @@ impl HandlerInterface for WindowCursorHandler {
     fn start(&self) {}
 
     fn stop(&self) {}
+
+    fn query_type_metadata(&self, type_: InputType) -> Option<InputTypeMetadata> {
+        match type_ {
+            InputType::Cursor => Some(InputTypeMetadata::Cursor {
+                format: CursorFormat::Raw,
+            }),
+            _ => {
+                warn!("Got query_type_metadata() for unexpected type: {type_:?}");
+                None
+            }
+        }
+    }
 }
 
 pub fn new_cursor_handler(event_loop_proxy: EventLoopProxy<UserEvent>) -> Result<Handler> {
