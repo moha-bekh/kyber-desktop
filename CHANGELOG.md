@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* libclient: Correctly set TLS hostnames for Kymux and Websocket connections
+
 ## [0.13.0] - 2023-11-17
 
 :warning: This release isn't compatible with 0.12.x versions. :warning:
