@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ## [0.13.1] - 2023-12-15
 
 * libclient: Correctly set TLS hostnames for Kymux and Websocket connections
+* Update TLS certificates
 
 ## [0.13.0] - 2023-11-17
 
