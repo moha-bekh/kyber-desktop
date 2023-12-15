@@ -20,8 +20,8 @@ It is still possible to force Chrome to connect to a website that has an untrust
 ### Current certificate limitations
 
 A TLS certificate is valid only for a list of DNS or IP. The certificate is currently valid for:
-* `kybertest`
 * `localhost`
+* `*.demo.kyb.re`
 * `office.videolabs.io`
 * `127.0.0.1`
 
@@ -43,22 +43,21 @@ X509v3 Subject Alternative Name:
     DNS:kybertest, DNS:localhost, DNS:office.videolabs.io, IP Address:127.0.0.1, IP Address:192.168.1.19, IP Address:192.168.1.197
 ```
 
-
 ## Command used to generate the certificates
 
 ### Create root certificate
 
 ```
-CANAME=Kyber-RootCA
-openssl genrsa -aes256 -out $CANAME.key 4096
-openssl req -x509 -new -nodes -key $CANAME.key -sha256 -days 1826 -out $CANAME.crt -subj '/CN=Kyber Root CA/C=FR/ST=France/L=Paris/O=Kyber'
+CANAME=kybertest_rootca
+openssl genrsa -aes256 -out ${CANAME}_key.pem 4096
+openssl req -x509 -new -nodes -key ${CANAME}_key.pem -sha256 -days 1826 -out ${CANAME}_cert.pem -subj '/CN=Kyber Root CA/C=FR/ST=France/L=Paris/O=Kyber'
 ```
 
 ### Create the website certificate
 
 ```
 KYBERTEST_CERT=kybertest
-openssl req -new -nodes -out $KYBERTEST_CERT.csr -newkey rsa:4096 -keyout $KYBERTEST_CERT.key -subj '/CN=Kyber/C=FR/ST=France/L=Paris/O=Kyber'
+openssl req -new -nodes -out ${KYBERTEST_CERT}_cert.pem -newkey rsa:4096 -keyout ${KYBERTEST_CERT}_key.pem -subj '/CN=Kyber/C=FR/ST=France/L=Paris/O=Kyber'
 
 cat > $KYBERTEST_CERT.v3.ext << EOF
 authorityKeyIdentifier=keyid,issuer
@@ -66,13 +65,12 @@ basicConstraints=CA:FALSE
 keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = kybertest
-DNS.2 = localhost
+DNS.1 = localhost
+DNS.2 = *.demo.kyb.re
 DNS.3 = office.videolabs.io
+DNS.4 = kybertest
 IP.1 = 127.0.0.1
-IP.2 = 192.168.1.19
-IP.3 = 192.168.1.197
 EOF
 
-openssl x509 -req -in $KYBERTEST_CERT.csr -CA $CANAME.crt -CAkey $CANAME.key -CAcreateserial -out $KYBERTEST_CERT.crt -days 730 -sha256 -extfile $KYBERTEST_CERT.v3.ext
+openssl x509 -req -in ${KYBERTEST_CERT}_cert.pem -CA ${CANAME}_cert.pem -CAkey ${CANAME}_key.pem -CAcreateserial -out ${KYBERTEST_CERT}_cert.pem -days 730 -sha256 -extfile $KYBERTEST_CERT.v3.ext
 ```
