@@ -13,6 +13,14 @@ encoder = "nvenc"
 # Default: true
 #intra_refresh = true
 
+[controller]
+# Listening port
+#
+# Used for the HTTP server (TCP) and Quic connection (UDP)
+#
+# Default: 8080
+#port = 8080
+
 [windows_service.kidd]
 # Enable or disable Kidd
 #

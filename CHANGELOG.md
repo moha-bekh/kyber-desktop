@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* controller: Make listening port configurable in kyber_config.toml
+
 ## [0.13.1] - 2023-12-15
 
 * libclient: Correctly set TLS hostnames for Kymux and Websocket connections
