@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* controller/libclient: Implement connection timeout detection (1 minute) on
+  Control Plane
+
 ## [0.13.2] - 2023-12-18
 
 * controller: Make listening port configurable in kyber_config.toml

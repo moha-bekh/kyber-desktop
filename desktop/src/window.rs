@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::sync::Arc;
 
-use log::{debug, warn};
+use log::{debug, info, warn};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use winit::{
     dpi::PhysicalPosition,
@@ -334,7 +334,8 @@ impl State {
 
                 self.set_host_display_size(display);
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::Stopped)) => {
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::Stopped { reason })) => {
+                info!("Stopped. Reason: {reason:?}");
                 *control_flow = ControlFlow::Exit;
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::DisplayListUpdated {
