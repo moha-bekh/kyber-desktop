@@ -159,7 +159,6 @@ checkout_deps() {
     echo "avservice-types = { path = \"$AVSERVER_PATH/avservice-types\" }" >> .cargo/config.toml
     echo "inputservice-types = { path = \"$LIBKYNPUT_PATH/inputservice-types\" }" >> .cargo/config.toml
     echo "kymux = { path = \"$KYMUX_PATH/kymux\" }" >> .cargo/config.toml
-    echo "ls-qpack-sys = { path = \"$KYMUX_PATH/kyproto/external/ls-qpack-rs/ls-qpack-sys\" }" >> .cargo/config.toml
     echo "libkypc = { path = \"$LIBKYPC_PATH\" }" >> .cargo/config.toml
 
     cd -

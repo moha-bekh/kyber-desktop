@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * Rust toolchain updated to 1.76.0
+* controller: Update wtransport to 0.11.0
 
 ## [0.14.0] - 2024-02-07
 
