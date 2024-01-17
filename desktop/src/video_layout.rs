@@ -66,14 +66,14 @@ impl VideoLayout {
             };
 
             cursor_pos.x = limit_segment(
-                self.video_pos.x,
                 cursor_pos.x,
+                self.video_pos.x,
                 self.video_pos.x + self.video_size.width,
             );
 
             cursor_pos.y = limit_segment(
-                self.video_pos.y,
                 cursor_pos.y,
+                self.video_pos.y,
                 self.video_pos.y + self.video_size.height,
             );
         } else if cursor_pos.x < self.video_pos.x
