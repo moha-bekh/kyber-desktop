@@ -17,7 +17,7 @@ use libkynput_rs::{InputType, Pipeline};
 
 use parse_utils::parse_bitrate;
 use pipeline_hook::ClientPipelineHook;
-use window::UserEvent;
+use window::{ClientConfig, UserEvent};
 
 const STREAMER_HOST: &str = "kybertest";
 const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
@@ -280,8 +280,16 @@ fn main() {
     player_config.set_software_decode(software_decode);
 
     // Create client
-    let client = Client::new(&connect_config, &session_config, &player_config).unwrap();
-    window.set_client(client.clone()).unwrap();
+    let client = Client::new(&connect_config).unwrap();
+    window
+        .set_client(
+            client.clone(),
+            ClientConfig {
+                session_config,
+                player_config,
+            },
+        )
+        .unwrap();
 
     // Create Shortcuts handler
     input_pipeline.set_hook(pipeline_hook).unwrap();
@@ -290,7 +298,7 @@ fn main() {
     // Window => InputRouter
     window.set_input_pipeline(input_pipeline).unwrap();
 
-    client.start().unwrap();
+    client.connect().unwrap();
 
     // Process window loop
     window.run_loop().unwrap();

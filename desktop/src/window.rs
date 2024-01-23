@@ -19,6 +19,11 @@ use crate::error::{Error, Result};
 use crate::pipeline_hook::{PipelineStateReader, ShortcutType};
 use crate::video_layout::{Position, RectSize, VideoLayout};
 
+pub struct ClientConfig {
+    pub session_config: libclient_rs::StreamingSessionConfig,
+    pub player_config: libclient_rs::PlayerConfig,
+}
+
 #[derive(Clone, Debug)]
 pub enum UserEvent {
     StopRequest,
@@ -31,6 +36,7 @@ pub type StopRequestCb = Box<dyn Fn() + Send>;
 
 struct State {
     client: Option<Client>,
+    client_config: Option<ClientConfig>,
     window: winit::window::Window,
     window_size: RectSize,
     input_pipeline: Option<Pipeline>,
@@ -87,7 +93,7 @@ impl State {
 
     fn stop_client(&mut self) -> Result<()> {
         let client = self.client.as_mut().ok_or(Error::NoClient)?;
-        client.stop()?;
+        client.disconnect()?;
         Ok(())
     }
 
@@ -321,7 +327,9 @@ impl State {
                     );
                 }
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::Started { displays })) => {
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnected {
+                displays,
+            })) => {
                 let display = if self.display_index < displays.len() {
                     &displays[self.display_index]
                 } else {
@@ -333,6 +341,15 @@ impl State {
                 };
 
                 self.set_host_display_size(display);
+
+                let client = self.client.as_mut().ok_or(Error::NoClient)?;
+                let client_config = self.client_config.as_ref().ok_or(Error::NoClient)?;
+                client
+                    .start_streaming(&client_config.session_config, &client_config.player_config)?;
+            }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnectFailed)) => {
+                warn!("Control plane connect failed");
+                *control_flow = ControlFlow::Exit;
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::Stopped { reason })) => {
                 info!("Stopped. Reason: {reason:?}");
@@ -512,6 +529,7 @@ impl Window {
             window_handle: window.raw_window_handle(),
             state: RefCell::new(State {
                 client: None,
+                client_config: None,
                 window,
                 input_pipeline: None,
                 supports_relative_mouse: true,
@@ -553,7 +571,7 @@ impl Window {
         Ok(())
     }
 
-    pub fn set_client(&mut self, client: Client) -> Result<()> {
+    pub fn set_client(&mut self, client: Client, config: ClientConfig) -> Result<()> {
         let mut state = self.state.borrow_mut();
 
         {
@@ -562,6 +580,7 @@ impl Window {
         }
 
         state.client = Some(client);
+        state.client_config = Some(config);
 
         Ok(())
     }
