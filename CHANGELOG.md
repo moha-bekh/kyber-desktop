@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 * controller/libclient: Implement connection timeout detection (1 minute) on
   Control Plane
+* Add client lifecycle notifications (connection failed, disconnected + reason)
+* Connection steps are now splitted
+  1. Connect to the Control plane
+  2. Start streaming session
 
 ## [0.13.2] - 2023-12-18
 
