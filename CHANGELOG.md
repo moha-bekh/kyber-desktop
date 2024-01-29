@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 * Connection steps are now splitted
   1. Connect to the Control plane
   2. Start streaming session
+* avserver/win32: Correctly patch NVENC H264 SPS to fix H264 latency issue on
+  Windows Chromium when using hardware decoding
 
 ## [0.13.2] - 2023-12-18
 
