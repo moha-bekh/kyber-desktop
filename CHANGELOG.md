@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.14.0] - 2024-02-07
+
 * controller/libclient: Implement connection timeout detection (1 minute) on
   Control Plane
 * Add client lifecycle notifications (connection failed, disconnected + reason)
