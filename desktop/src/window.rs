@@ -353,6 +353,10 @@ impl State {
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::Stopped { reason })) => {
                 info!("Stopped. Reason: {reason:?}");
+
+                let client = self.client.as_mut().ok_or(Error::NoClient)?;
+                client.stop()?;
+
                 *control_flow = ControlFlow::Exit;
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::DisplayListUpdated {
