@@ -11,8 +11,10 @@ use log::{error, info, LevelFilter};
 use winit::event_loop::EventLoopBuilder;
 
 use libclient_rs::{
-    Client, ConnectConfig, KymuxVideoProtocol, StreamingProtocol, VideoCodec, WindowHandle,
+    Client, ConnectConfig, KymuxVideoProtocol, StreamingProtocol, StreamingSessionConfig,
+    VideoCodec, WindowHandle,
 };
+use libkynput_rs::Pipeline;
 
 use error::Result;
 use parse_utils::parse_bitrate;
@@ -34,6 +36,31 @@ fn create_connect_config(cli_args: &CliArgs) -> Result<ConnectConfig> {
     }
 
     Ok(connect_config)
+}
+
+fn create_streaming_session_config(
+    cli_args: &CliArgs,
+    input_pipeline: &Pipeline,
+) -> Result<StreamingSessionConfig> {
+    let session_config = libclient_rs::StreamingSessionConfig::default(cli_args.protocol)?;
+
+    if let Some(bitrate) = cli_args.bitrate {
+        session_config.set_bitrate(bitrate);
+    }
+
+    let video_config = libclient_rs::VideoSessionConfig::default(cli_args.display_index)?;
+    video_config.set_codec(cli_args.video_codec);
+    video_config.set_yuv444(cli_args.yuv444);
+
+    session_config.set_video(video_config);
+    session_config.set_audio(cli_args.audio);
+
+    if cli_args.inputs {
+        let input_config = libclient_rs::InputSessionConfig::default(input_pipeline)?;
+        session_config.set_input(input_config);
+    }
+
+    Ok(session_config)
 }
 
 fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
@@ -252,23 +279,7 @@ fn main() {
     let connect_config = create_connect_config(&cli_args).unwrap();
 
     // Create StreamSessionConfig
-    let session_config = libclient_rs::StreamingSessionConfig::default(cli_args.protocol).unwrap();
-
-    let video_config = libclient_rs::VideoSessionConfig::default(cli_args.display_index).unwrap();
-    video_config.set_codec(cli_args.video_codec);
-    video_config.set_yuv444(cli_args.yuv444);
-
-    if let Some(bitrate) = cli_args.bitrate {
-        session_config.set_bitrate(bitrate);
-    }
-
-    session_config.set_video(video_config);
-    session_config.set_audio(cli_args.audio);
-
-    if cli_args.inputs {
-        let input_config = libclient_rs::InputSessionConfig::default(&input_pipeline).unwrap();
-        session_config.set_input(input_config);
-    }
+    let session_config = create_streaming_session_config(&cli_args, &input_pipeline).unwrap();
 
     // Create PlayerConfig
     let window_handle = match window.window_handle() {
