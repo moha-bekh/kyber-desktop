@@ -292,8 +292,7 @@ fn main() {
     // Create window
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
 
-    let mut window =
-        window::Window::new(event_loop, cli_args.clone(), cli_args.display_index).unwrap();
+    let mut window = window::Window::new(event_loop, cli_args.clone()).unwrap();
 
     let stop_req_cb = window.create_stop_request_cb();
     ctrlc::set_handler(move || {

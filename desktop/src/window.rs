@@ -52,7 +52,6 @@ struct State {
     window_size: RectSize,
     video_layout: VideoLayout,
 
-    display_index: usize,
     display_id: Option<u32>,
 
     input_ctx: Option<InputContext>,
@@ -412,12 +411,12 @@ impl State {
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnected {
                 displays,
             })) => {
-                let display = if self.display_index < displays.len() {
-                    &displays[self.display_index]
+                let display = if self.cli_args.display_index < displays.len() {
+                    &displays[self.cli_args.display_index]
                 } else {
                     warn!(
                         "Display {} is out of range, fallback to first screen",
-                        self.display_index
+                        self.cli_args.display_index
                     );
                     &displays[0]
                 };
@@ -578,11 +577,7 @@ pub struct Window {
 }
 
 impl Window {
-    pub fn new(
-        event_loop: EventLoop<UserEvent>,
-        cli_args: CliArgs,
-        display_index: usize,
-    ) -> Result<Self> {
+    pub fn new(event_loop: EventLoop<UserEvent>, cli_args: CliArgs) -> Result<Self> {
         // Create Loop + Window
         let window_width: u32 = 800;
         let window_height: u32 = 600;
@@ -627,7 +622,6 @@ impl Window {
                 },
                 video_layout,
                 display_id: None,
-                display_index,
                 input_ctx: None,
                 last_cursor_pos: None,
                 cursor_inside_window: false,
