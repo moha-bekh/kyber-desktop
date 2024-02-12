@@ -10,14 +10,31 @@ mod window;
 use log::{error, info, LevelFilter};
 use winit::event_loop::EventLoopBuilder;
 
-use libclient_rs::{Client, KymuxVideoProtocol, StreamingProtocol, VideoCodec, WindowHandle};
+use libclient_rs::{
+    Client, ConnectConfig, KymuxVideoProtocol, StreamingProtocol, VideoCodec, WindowHandle,
+};
 
+use error::Result;
 use parse_utils::parse_bitrate;
 use pipeline_hook::ClientPipelineHook;
 use window::{ClientConfig, UserEvent};
 
 const STREAMER_HOST: &str = "kybertest";
 const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
+
+fn create_connect_config(cli_args: &CliArgs) -> Result<ConnectConfig> {
+    let connect_config = libclient_rs::ConnectConfig::default(
+        &cli_args.streamer_ip,
+        crate::STREAMER_HOST,
+        crate::STREAMER_CERT,
+    )?;
+
+    if let Some(port) = cli_args.streamer_port {
+        connect_config.set_streamer_port(port);
+    }
+
+    Ok(connect_config)
+}
 
 fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
     use std::path::Path;
@@ -232,16 +249,7 @@ fn main() {
     let input_pipeline = window.set_input_pipeline().unwrap();
 
     // Create ConnectConfig
-    let connect_config = libclient_rs::ConnectConfig::default(
-        cli_args.streamer_ip.as_str(),
-        STREAMER_HOST,
-        STREAMER_CERT,
-    )
-    .unwrap();
-
-    if let Some(port) = cli_args.streamer_port {
-        connect_config.set_streamer_port(port);
-    }
+    let connect_config = create_connect_config(&cli_args).unwrap();
 
     // Create StreamSessionConfig
     let session_config = libclient_rs::StreamingSessionConfig::default(cli_args.protocol).unwrap();
