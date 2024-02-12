@@ -79,6 +79,19 @@ fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
     log4rs::init_config(config).unwrap()
 }
 
+pub struct CliArgs {
+    streamer_ip: String,
+    streamer_port: Option<u16>,
+    protocol: StreamingProtocol,
+    video_codec: VideoCodec,
+    bitrate: Option<u32>,
+    display_index: usize,
+    yuv444: bool,
+    audio: bool,
+    inputs: bool,
+    software_decode: bool,
+}
+
 fn main() {
     let _log_handle = setup_logs("client", LevelFilter::Info);
 
@@ -159,6 +172,7 @@ fn main() {
         .get_matches();
 
     let streamer_ip = String::from(matches.value_of("STREAMER_IP").unwrap());
+    let streamer_port: Option<u16> = matches.get_one("port").copied();
 
     let protocol = match matches.value_of("protocol") {
         Some("rtp") => StreamingProtocol::Rtp,
@@ -183,11 +197,28 @@ fn main() {
         }
     };
 
+    let bitrate = matches
+        .value_of("bitrate")
+        .map(|bitrate| parse_bitrate(bitrate.into()).unwrap());
+
     let display_index = matches.get_one("display_idx").copied().unwrap_or(0);
     let yuv444 = matches.is_present("444");
     let audio = matches.get_one("audio").copied().unwrap_or(false);
     let inputs = matches.get_one("inputs").copied().unwrap_or(true);
     let software_decode = matches.is_present("software_decode");
+
+    let cli_args = CliArgs {
+        streamer_ip: streamer_ip.clone(),
+        streamer_port,
+        protocol,
+        video_codec,
+        bitrate,
+        display_index,
+        yuv444,
+        audio,
+        inputs,
+        software_decode,
+    };
 
     // Create window
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
@@ -196,8 +227,12 @@ fn main() {
         event_loop.create_proxy(),
     ));
 
-    let mut window =
-        window::Window::new(event_loop, pipeline_hook.get_state_reader(), display_index).unwrap();
+    let mut window = window::Window::new(
+        event_loop,
+        pipeline_hook.get_state_reader(),
+        cli_args.display_index,
+    )
+    .unwrap();
 
     let stop_req_cb = window.create_stop_request_cb();
     ctrlc::set_handler(move || {
@@ -232,29 +267,32 @@ fn main() {
     }
 
     // Create ConnectConfig
-    let connect_config =
-        libclient_rs::ConnectConfig::default(streamer_ip.as_str(), STREAMER_HOST, STREAMER_CERT)
-            .unwrap();
+    let connect_config = libclient_rs::ConnectConfig::default(
+        cli_args.streamer_ip.as_str(),
+        STREAMER_HOST,
+        STREAMER_CERT,
+    )
+    .unwrap();
 
-    if let Some(port) = matches.get_one("port") {
-        connect_config.set_streamer_port(*port);
+    if let Some(port) = cli_args.streamer_port {
+        connect_config.set_streamer_port(port);
     }
 
     // Create StreamSessionConfig
-    let session_config = libclient_rs::StreamingSessionConfig::default(protocol).unwrap();
+    let session_config = libclient_rs::StreamingSessionConfig::default(cli_args.protocol).unwrap();
 
-    let video_config = libclient_rs::VideoSessionConfig::default(display_index).unwrap();
-    video_config.set_codec(video_codec);
-    video_config.set_yuv444(yuv444);
+    let video_config = libclient_rs::VideoSessionConfig::default(cli_args.display_index).unwrap();
+    video_config.set_codec(cli_args.video_codec);
+    video_config.set_yuv444(cli_args.yuv444);
 
-    if let Some(bitrate) = matches.get_one::<String>("bitrate") {
-        session_config.set_bitrate(parse_bitrate(bitrate.into()).unwrap());
+    if let Some(bitrate) = cli_args.bitrate {
+        session_config.set_bitrate(bitrate);
     }
 
     session_config.set_video(video_config);
-    session_config.set_audio(audio);
+    session_config.set_audio(cli_args.audio);
 
-    if inputs {
+    if cli_args.inputs {
         let input_config = libclient_rs::InputSessionConfig::default(&input_pipeline).unwrap();
         session_config.set_input(input_config);
     }
@@ -277,7 +315,7 @@ fn main() {
     };
 
     let player_config = libclient_rs::PlayerConfig::default(Some(window_handle)).unwrap();
-    player_config.set_software_decode(software_decode);
+    player_config.set_software_decode(cli_args.software_decode);
 
     // Create client
     let client = Client::new(&connect_config).unwrap();
