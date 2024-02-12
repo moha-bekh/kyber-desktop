@@ -8,19 +8,14 @@ mod video_layout;
 mod window;
 
 use log::{error, info, LevelFilter};
-use raw_window_handle::RawWindowHandle;
 use winit::event_loop::EventLoopBuilder;
 
-use libclient_rs::{
-    Client, ConnectConfig, KymuxVideoProtocol, PlayerConfig, StreamingProtocol,
-    StreamingSessionConfig, VideoCodec, WindowHandle,
-};
-use libkynput_rs::Pipeline;
+use libclient_rs::{Client, ConnectConfig, KymuxVideoProtocol, StreamingProtocol, VideoCodec};
 
 use error::Result;
 use parse_utils::parse_bitrate;
 use pipeline_hook::ClientPipelineHook;
-use window::{ClientConfig, UserEvent};
+use window::UserEvent;
 
 const STREAMER_HOST: &str = "kybertest";
 const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
@@ -37,57 +32,6 @@ fn create_connect_config(cli_args: &CliArgs) -> Result<ConnectConfig> {
     }
 
     Ok(connect_config)
-}
-
-fn create_streaming_session_config(
-    cli_args: &CliArgs,
-    input_pipeline: &Pipeline,
-) -> Result<StreamingSessionConfig> {
-    let session_config = libclient_rs::StreamingSessionConfig::default(cli_args.protocol)?;
-
-    if let Some(bitrate) = cli_args.bitrate {
-        session_config.set_bitrate(bitrate);
-    }
-
-    let video_config = libclient_rs::VideoSessionConfig::default(cli_args.display_index)?;
-    video_config.set_codec(cli_args.video_codec);
-    video_config.set_yuv444(cli_args.yuv444);
-
-    session_config.set_video(video_config);
-    session_config.set_audio(cli_args.audio);
-
-    if cli_args.inputs {
-        let input_config = libclient_rs::InputSessionConfig::default(input_pipeline)?;
-        session_config.set_input(input_config);
-    }
-
-    Ok(session_config)
-}
-
-fn create_player_config(
-    cli_args: &CliArgs,
-    window_handle: RawWindowHandle,
-) -> Result<PlayerConfig> {
-    let window_handle = match window_handle {
-        #[cfg(target_os = "linux")]
-        raw_window_handle::RawWindowHandle::Xlib(handle) => WindowHandle::from_x11(handle.window),
-        #[cfg(target_os = "macos")]
-        raw_window_handle::RawWindowHandle::AppKit(handle) => {
-            WindowHandle::from_ns_view(handle.ns_view as u64)
-        }
-        #[cfg(target_os = "windows")]
-        raw_window_handle::RawWindowHandle::Win32(handle) => {
-            WindowHandle::from_hwnd(handle.hwnd as u64)
-        }
-        _ => {
-            panic!("Platform not supported")
-        }
-    };
-
-    let player_config = libclient_rs::PlayerConfig::default(Some(window_handle))?;
-    player_config.set_software_decode(cli_args.software_decode);
-
-    Ok(player_config)
 }
 
 fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
@@ -300,29 +244,15 @@ fn main() {
     })
     .unwrap();
 
-    // Create InputPipeline
-    let input_pipeline = window.set_input_pipeline().unwrap();
-
-    // Create ConnectConfig
+    // Create client
     let connect_config = create_connect_config(&cli_args).unwrap();
 
-    // Create StreamSessionConfig
-    let session_config = create_streaming_session_config(&cli_args, &input_pipeline).unwrap();
+    if cli_args.inputs {
+        window.create_input_pipeline().unwrap();
+    }
 
-    // Create PlayerConfig
-    let player_config = create_player_config(&cli_args, window.window_handle()).unwrap();
-
-    // Create client
     let client = Client::new(&connect_config).unwrap();
-    window
-        .set_client(
-            client.clone(),
-            ClientConfig {
-                session_config,
-                player_config,
-            },
-        )
-        .unwrap();
+    window.set_client(client.clone()).unwrap();
 
     client.connect().unwrap();
 

@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::sync::Arc;
 
 use log::{debug, info, warn};
-use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
+use raw_window_handle::HasRawWindowHandle;
 use winit::{
     dpi::PhysicalPosition,
     event::{Event, WindowEvent},
@@ -10,7 +10,7 @@ use winit::{
     window::{self, CursorGrabMode, CursorRgba, WindowBuilder},
 };
 
-use libclient_rs::Client;
+use libclient_rs::{Client, PlayerConfig, StreamingSessionConfig, WindowHandle};
 use libkynput_rs::{InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
 
 use crate::client_proxy::ClientEventProxy;
@@ -20,11 +20,6 @@ use crate::input_handler;
 use crate::pipeline_hook::{PipelineStateReader, ShortcutType};
 use crate::video_layout::{Position, RectSize, VideoLayout};
 use crate::{CliArgs, ClientPipelineHook};
-
-pub struct ClientConfig {
-    pub session_config: libclient_rs::StreamingSessionConfig,
-    pub player_config: libclient_rs::PlayerConfig,
-}
 
 #[derive(Clone, Debug)]
 pub enum UserEvent {
@@ -47,7 +42,6 @@ struct State {
     eventloop_proxy: EventLoopProxy<UserEvent>,
     cli_args: CliArgs,
     client: Option<Client>,
-    client_config: Option<ClientConfig>,
     window: winit::window::Window,
     window_size: RectSize,
     video_layout: VideoLayout,
@@ -63,7 +57,7 @@ struct State {
 }
 
 impl State {
-    fn create_input_context(&mut self) -> Result<Pipeline> {
+    fn create_input_context(&mut self) -> Result<()> {
         // Create InputPipeline
         let pipeline_config = libkynput_rs::Config::default_client();
         let input_pipeline = Pipeline::new(pipeline_config);
@@ -110,13 +104,66 @@ impl State {
 
         // Create InputContext
         self.input_ctx = Some(InputContext {
-            pipeline: input_pipeline.clone(),
+            pipeline: input_pipeline,
             state_reader,
             supports_relative_mouse,
             winit_handler,
         });
 
-        Ok(input_pipeline)
+        Ok(())
+    }
+
+    fn create_streaming_session_config(
+        cli_args: &CliArgs,
+        input_ctx: &Option<InputContext>,
+    ) -> Result<StreamingSessionConfig> {
+        let session_config = libclient_rs::StreamingSessionConfig::default(cli_args.protocol)?;
+
+        if let Some(bitrate) = cli_args.bitrate {
+            session_config.set_bitrate(bitrate);
+        }
+
+        let video_config = libclient_rs::VideoSessionConfig::default(cli_args.display_index)?;
+        video_config.set_codec(cli_args.video_codec);
+        video_config.set_yuv444(cli_args.yuv444);
+
+        session_config.set_video(video_config);
+        session_config.set_audio(cli_args.audio);
+
+        if let Some(input_ctx) = input_ctx.as_ref() {
+            let input_config = libclient_rs::InputSessionConfig::default(&input_ctx.pipeline)?;
+            session_config.set_input(input_config);
+        }
+
+        Ok(session_config)
+    }
+
+    fn create_player_config(
+        cli_args: &CliArgs,
+        window: &winit::window::Window,
+    ) -> Result<PlayerConfig> {
+        let window_handle = match window.raw_window_handle() {
+            #[cfg(target_os = "linux")]
+            raw_window_handle::RawWindowHandle::Xlib(handle) => {
+                WindowHandle::from_x11(handle.window)
+            }
+            #[cfg(target_os = "macos")]
+            raw_window_handle::RawWindowHandle::AppKit(handle) => {
+                WindowHandle::from_ns_view(handle.ns_view as u64)
+            }
+            #[cfg(target_os = "windows")]
+            raw_window_handle::RawWindowHandle::Win32(handle) => {
+                WindowHandle::from_hwnd(handle.hwnd as u64)
+            }
+            _ => {
+                panic!("Platform not supported")
+            }
+        };
+
+        let player_config = libclient_rs::PlayerConfig::default(Some(window_handle))?;
+        player_config.set_software_decode(cli_args.software_decode);
+
+        Ok(player_config)
     }
 
     fn mouse_button_filter_pressed(pkt: &Packet) -> bool {
@@ -424,9 +471,12 @@ impl State {
                 self.set_host_display_size(display);
 
                 let client = self.client.as_mut().ok_or(Error::NoClient)?;
-                let client_config = self.client_config.as_ref().ok_or(Error::NoClient)?;
-                client
-                    .start_streaming(&client_config.session_config, &client_config.player_config)?;
+
+                let player_config = Self::create_player_config(&self.cli_args, &self.window)?;
+                let session_config =
+                    Self::create_streaming_session_config(&self.cli_args, &self.input_ctx)?;
+
+                client.start_streaming(&session_config, &player_config)?;
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnectFailed)) => {
                 warn!("Control plane connect failed");
@@ -573,7 +623,6 @@ impl State {
 pub struct Window {
     event_loop: EventLoop<UserEvent>,
     state: RefCell<State>,
-    window_handle: RawWindowHandle,
 }
 
 impl Window {
@@ -609,12 +658,10 @@ impl Window {
 
         Ok(Self {
             event_loop,
-            window_handle: window.raw_window_handle(),
             state: RefCell::new(State {
                 eventloop_proxy,
                 cli_args,
                 client: None,
-                client_config: None,
                 window,
                 window_size: RectSize {
                     width: window_width,
@@ -638,7 +685,7 @@ impl Window {
         })
     }
 
-    pub fn set_client(&mut self, client: Client, config: ClientConfig) -> Result<()> {
+    pub fn set_client(&mut self, client: Client) -> Result<()> {
         let mut state = self.state.borrow_mut();
 
         {
@@ -647,18 +694,15 @@ impl Window {
         }
 
         state.client = Some(client);
-        state.client_config = Some(config);
 
         Ok(())
     }
 
-    pub fn set_input_pipeline(&self) -> Result<Pipeline> {
+    pub fn create_input_pipeline(&self) -> Result<()> {
         let mut state = self.state.borrow_mut();
-        state.create_input_context()
-    }
+        state.create_input_context()?;
 
-    pub fn window_handle(&self) -> RawWindowHandle {
-        self.window_handle
+        Ok(())
     }
 
     pub fn run_loop(self) -> Result<()> {
