@@ -6,7 +6,7 @@ use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use winit::{
     dpi::PhysicalPosition,
     event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoop},
+    event_loop::{ControlFlow, EventLoop, EventLoopProxy},
     window::{self, CursorGrabMode, CursorRgba, WindowBuilder},
 };
 
@@ -42,6 +42,7 @@ struct InputContext {
 }
 
 struct State {
+    eventloop_proxy: EventLoopProxy<UserEvent>,
     client: Option<Client>,
     client_config: Option<ClientConfig>,
     window: winit::window::Window,
@@ -546,10 +547,13 @@ impl Window {
 
         video_layout.update_display_layout();
 
+        let eventloop_proxy = event_loop.create_proxy();
+
         Ok(Self {
             event_loop,
             window_handle: window.raw_window_handle(),
             state: RefCell::new(State {
+                eventloop_proxy,
                 client: None,
                 client_config: None,
                 window,
