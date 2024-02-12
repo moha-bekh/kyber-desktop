@@ -34,20 +34,24 @@ pub enum UserEvent {
 
 pub type StopRequestCb = Box<dyn Fn() + Send>;
 
+struct InputContext {
+    pipeline: Pipeline,
+    state_reader: PipelineStateReader,
+    winit_handler: Option<Arc<crate::input_handler::WinitHandler>>,
+    supports_relative_mouse: bool,
+}
+
 struct State {
     client: Option<Client>,
     client_config: Option<ClientConfig>,
     window: winit::window::Window,
     window_size: RectSize,
-    input_pipeline: Option<Pipeline>,
-    supports_relative_mouse: bool,
-    pipeline_state: PipelineStateReader,
-    input_handler: Option<Arc<crate::input_handler::WinitHandler>>,
     video_layout: VideoLayout,
 
     display_index: usize,
     display_id: Option<u32>,
 
+    input_ctx: Option<InputContext>,
     last_cursor_pos: Option<PhysicalPosition<u32>>,
 
     cursor_inside_window: bool,
@@ -69,20 +73,22 @@ impl State {
     fn handle_cursor_inside_window(&mut self, inside: bool) -> Result<()> {
         self.cursor_inside_window = inside;
 
-        let pipeline = self.input_pipeline.as_ref().ok_or(Error::NoPipeline)?;
+        let input_ctx = self.input_ctx.as_ref().ok_or(Error::NoPipeline)?;
 
         let types = [InputType::MouseMove, InputType::MouseWheel];
         for t in types {
-            pipeline.set_type_processing_state(t, RouterProcessingState::from_boolean(inside))?;
+            input_ctx
+                .pipeline
+                .set_type_processing_state(t, RouterProcessingState::from_boolean(inside))?;
         }
 
         if inside {
-            pipeline.set_type_processing_state(
+            input_ctx.pipeline.set_type_processing_state(
                 InputType::MouseButton,
                 RouterProcessingState::from_boolean(true),
             )?;
         } else {
-            pipeline.set_type_processing_state(
+            input_ctx.pipeline.set_type_processing_state(
                 InputType::MouseButton,
                 RouterProcessingState::from_callback(Box::new(Self::mouse_button_filter_pressed)),
             )?;
@@ -167,21 +173,17 @@ impl State {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
+                let input_ctx = self.input_ctx.as_ref().ok_or(Error::NoPipeline)?;
+
                 if !focused {
-                    self.input_pipeline
-                        .as_ref()
-                        .ok_or(Error::NoPipeline)?
-                        .flush_keys()?;
+                    input_ctx.pipeline.flush_keys()?;
 
                     self.grab_cursor(false);
                 } else if self.window.fullscreen().is_some() {
                     self.grab_cursor(true);
                 }
 
-                self.input_pipeline
-                    .as_ref()
-                    .ok_or(Error::NoPipeline)?
-                    .set_global_processing_state(focused)?;
+                input_ctx.pipeline.set_global_processing_state(focused)?;
             }
             Event::WindowEvent {
                 event: WindowEvent::CursorEntered { device_id: _ },
@@ -220,6 +222,10 @@ impl State {
                     return Ok(());
                 };
 
+                let Some(input_ctx) = self.input_ctx.as_ref() else {
+                    return Ok(());
+                };
+
                 // Cast to our internal representation
                 let position: PhysicalPosition<u32> = PhysicalPosition {
                     x: position.x as _,
@@ -236,17 +242,17 @@ impl State {
                 self.last_cursor_pos = Some(position);
 
                 // Project and send the position if an handler is defined
-                if let Some(input_handler) = self.input_handler.as_ref() {
+                if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
                     let projected_pos = self.video_layout.local_to_host(
                         Position {
                             x: position.x,
                             y: position.y,
                         },
-                        self.pipeline_state.has_one_mouse_button_pressed(),
+                        input_ctx.state_reader.has_one_mouse_button_pressed(),
                     );
 
                     if let Some(projected_pos) = projected_pos {
-                        input_handler.send_mouse_position(
+                        winit_handler.send_mouse_position(
                             display_id,
                             projected_pos.x as i16,
                             projected_pos.y as i16,
@@ -257,8 +263,12 @@ impl State {
                 }
             }
             Event::DeviceEvent { event, .. } => {
-                if let Some(handler) = self.input_handler.as_ref() {
-                    handler.consume_device_event(&event);
+                let Some(input_ctx) = self.input_ctx.as_ref() else {
+                    return Ok(());
+                };
+
+                if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
+                    winit_handler.consume_device_event(&event);
                 } else {
                     warn!("DeviceEvent discarded because no input handler is defined");
                 }
@@ -272,8 +282,12 @@ impl State {
                     },
                 ..
             } => {
-                if let Some(handler) = self.input_handler.as_ref() {
-                    handler.consume_window_event(
+                let Some(input_ctx) = self.input_ctx.as_ref() else {
+                    return Ok(());
+                };
+
+                if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
+                    winit_handler.consume_window_event(
                         &WindowEvent::KeyboardInput {
                             device_id,
                             input,
@@ -293,8 +307,12 @@ impl State {
                     },
                 ..
             } => {
-                if let Some(handler) = self.input_handler.as_ref() {
-                    handler.consume_window_event(
+                let Some(input_ctx) = self.input_ctx.as_ref() else {
+                    return Ok(());
+                };
+
+                if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
+                    winit_handler.consume_window_event(
                         &WindowEvent::MouseInput {
                             device_id,
                             state,
@@ -315,8 +333,12 @@ impl State {
                     },
                 ..
             } => {
-                if let Some(handler) = self.input_handler.as_ref() {
-                    handler.consume_window_event(
+                let Some(input_ctx) = self.input_ctx.as_ref() else {
+                    return Ok(());
+                };
+
+                if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
+                    winit_handler.consume_window_event(
                         &WindowEvent::MouseWheel {
                             device_id,
                             delta,
@@ -412,7 +434,7 @@ impl State {
                 // But only one must be sent, depending of the cursor visibility:
                 // - Cursor visible: Send absolute position
                 // - Cursor not visible: Send relative moves
-                let pipeline = self.input_pipeline.as_ref().ok_or(Error::NoPipeline)?;
+                let input_ctx = self.input_ctx.as_ref().ok_or(Error::NoPipeline)?;
 
                 if cursor.visible {
                     // Cursor must be restored before updating its shape.
@@ -454,12 +476,12 @@ impl State {
                         self.grab_cursor(false);
                     }
 
-                    if self.supports_relative_mouse {
-                        pipeline.set_type_processing_state(
+                    if input_ctx.supports_relative_mouse {
+                        input_ctx.pipeline.set_type_processing_state(
                             InputType::MousePosition,
                             RouterProcessingState::from_boolean(true),
                         )?;
-                        pipeline.set_type_processing_state(
+                        input_ctx.pipeline.set_type_processing_state(
                             InputType::MouseMove,
                             RouterProcessingState::from_boolean(false),
                         )?;
@@ -468,12 +490,12 @@ impl State {
                     self.window.set_cursor_visible(false);
                     self.grab_cursor(true);
 
-                    if self.supports_relative_mouse {
-                        pipeline.set_type_processing_state(
+                    if input_ctx.supports_relative_mouse {
+                        input_ctx.pipeline.set_type_processing_state(
                             InputType::MousePosition,
                             RouterProcessingState::from_boolean(false),
                         )?;
-                        pipeline.set_type_processing_state(
+                        input_ctx.pipeline.set_type_processing_state(
                             InputType::MouseMove,
                             RouterProcessingState::from_boolean(true),
                         )?;
@@ -496,11 +518,7 @@ pub struct Window {
 }
 
 impl Window {
-    pub fn new(
-        event_loop: EventLoop<UserEvent>,
-        pipeline_state: PipelineStateReader,
-        display_index: usize,
-    ) -> Result<Self> {
+    pub fn new(event_loop: EventLoop<UserEvent>, display_index: usize) -> Result<Self> {
         // Create Loop + Window
         let window_width: u32 = 800;
         let window_height: u32 = 600;
@@ -535,10 +553,6 @@ impl Window {
                 client: None,
                 client_config: None,
                 window,
-                input_pipeline: None,
-                supports_relative_mouse: true,
-                pipeline_state,
-                input_handler: None,
                 window_size: RectSize {
                     width: window_width,
                     height: window_height,
@@ -546,6 +560,7 @@ impl Window {
                 video_layout,
                 display_id: None,
                 display_index,
+                input_ctx: None,
                 last_cursor_pos: None,
                 cursor_inside_window: false,
                 cursor_visible: true,
@@ -566,15 +581,6 @@ impl Window {
         cursor_handler::new_cursor_handler(proxy)
     }
 
-    pub fn set_input_handler(
-        &mut self,
-        handler: Arc<crate::input_handler::WinitHandler>,
-    ) -> Result<()> {
-        let mut state = self.state.borrow_mut();
-        state.input_handler = Some(handler);
-        Ok(())
-    }
-
     pub fn set_client(&mut self, client: Client, config: ClientConfig) -> Result<()> {
         let mut state = self.state.borrow_mut();
 
@@ -589,17 +595,27 @@ impl Window {
         Ok(())
     }
 
-    pub fn set_input_pipeline(&self, input_pipeline: Pipeline) -> Result<()> {
-        let mut state = self.state.borrow_mut();
-
+    pub fn set_input_pipeline(
+        &self,
+        pipeline: Pipeline,
+        state_reader: PipelineStateReader,
+        winit_handler: Option<Arc<crate::input_handler::WinitHandler>>,
+    ) -> Result<()> {
         // Assume that the default cursor is visible at startup
-        input_pipeline.set_type_processing_state(
+        pipeline.set_type_processing_state(
             InputType::MouseMove,
             RouterProcessingState::from_boolean(false),
         )?;
 
-        state.supports_relative_mouse = input_pipeline.produces_type(InputType::MouseMove);
-        state.input_pipeline = Some(input_pipeline);
+        let supports_relative_mouse = pipeline.produces_type(InputType::MouseMove);
+
+        let mut state = self.state.borrow_mut();
+        state.input_ctx = Some(InputContext {
+            pipeline,
+            state_reader,
+            winit_handler,
+            supports_relative_mouse,
+        });
 
         Ok(())
     }

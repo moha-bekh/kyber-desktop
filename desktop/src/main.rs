@@ -222,17 +222,9 @@ fn main() {
 
     // Create window
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
+    let eventloop_proxy = event_loop.create_proxy();
 
-    let pipeline_hook = Box::new(ClientPipelineHook::new_from_event_loop(
-        event_loop.create_proxy(),
-    ));
-
-    let mut window = window::Window::new(
-        event_loop,
-        pipeline_hook.get_state_reader(),
-        cli_args.display_index,
-    )
-    .unwrap();
+    let mut window = window::Window::new(event_loop, cli_args.display_index).unwrap();
 
     let stop_req_cb = window.create_stop_request_cb();
     ctrlc::set_handler(move || {
@@ -244,6 +236,12 @@ fn main() {
     let pipeline_config = libkynput_rs::Config::default_client();
     let input_pipeline = Pipeline::new(pipeline_config);
 
+    let pipeline_hook = Box::new(ClientPipelineHook::new_from_event_loop(eventloop_proxy));
+
+    let state_reader = pipeline_hook.get_state_reader();
+
+    input_pipeline.set_hook(pipeline_hook).unwrap();
+
     input_pipeline
         .plug_handler(window.create_cursor_handler().unwrap())
         .unwrap();
@@ -253,7 +251,7 @@ fn main() {
         .filter(|&&t| !input_pipeline.produces_type(t))
         .copied()
         .collect();
-    if !missing_types.is_empty() {
+    let winit_handler = if !missing_types.is_empty() {
         info!("Winit will be used to produce types {:?}", missing_types);
         let handler = Arc::new(
             input_handler::WinitHandler::new(input_pipeline.get_input_sink(), missing_types)
@@ -263,8 +261,15 @@ fn main() {
         input_pipeline
             .plug_handler(libkynput_rs::create_handler_instance(handler.clone()))
             .unwrap();
-        window.set_input_handler(handler).unwrap();
-    }
+
+        Some(handler)
+    } else {
+        None
+    };
+
+    window
+        .set_input_pipeline(input_pipeline.clone(), state_reader, winit_handler)
+        .unwrap();
 
     // Create ConnectConfig
     let connect_config = libclient_rs::ConnectConfig::default(
@@ -328,13 +333,6 @@ fn main() {
             },
         )
         .unwrap();
-
-    // Create Shortcuts handler
-    input_pipeline.set_hook(pipeline_hook).unwrap();
-
-    // Setup input routine
-    // Window => InputRouter
-    window.set_input_pipeline(input_pipeline).unwrap();
 
     client.connect().unwrap();
 
