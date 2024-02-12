@@ -19,7 +19,7 @@ use crate::error::{Error, Result};
 use crate::input_handler;
 use crate::pipeline_hook::{PipelineStateReader, ShortcutType};
 use crate::video_layout::{Position, RectSize, VideoLayout};
-use crate::ClientPipelineHook;
+use crate::{CliArgs, ClientPipelineHook};
 
 pub struct ClientConfig {
     pub session_config: libclient_rs::StreamingSessionConfig,
@@ -45,6 +45,7 @@ struct InputContext {
 
 struct State {
     eventloop_proxy: EventLoopProxy<UserEvent>,
+    cli_args: CliArgs,
     client: Option<Client>,
     client_config: Option<ClientConfig>,
     window: winit::window::Window,
@@ -577,7 +578,11 @@ pub struct Window {
 }
 
 impl Window {
-    pub fn new(event_loop: EventLoop<UserEvent>, display_index: usize) -> Result<Self> {
+    pub fn new(
+        event_loop: EventLoop<UserEvent>,
+        cli_args: CliArgs,
+        display_index: usize,
+    ) -> Result<Self> {
         // Create Loop + Window
         let window_width: u32 = 800;
         let window_height: u32 = 600;
@@ -612,6 +617,7 @@ impl Window {
             window_handle: window.raw_window_handle(),
             state: RefCell::new(State {
                 eventloop_proxy,
+                cli_args,
                 client: None,
                 client_config: None,
                 window,

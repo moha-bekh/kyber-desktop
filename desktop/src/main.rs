@@ -147,6 +147,7 @@ fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
     log4rs::init_config(config).unwrap()
 }
 
+#[derive(Clone)]
 pub struct CliArgs {
     streamer_ip: String,
     streamer_port: Option<u16>,
@@ -291,7 +292,8 @@ fn main() {
     // Create window
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
 
-    let mut window = window::Window::new(event_loop, cli_args.display_index).unwrap();
+    let mut window =
+        window::Window::new(event_loop, cli_args.clone(), cli_args.display_index).unwrap();
 
     let stop_req_cb = window.create_stop_request_cb();
     ctrlc::set_handler(move || {
