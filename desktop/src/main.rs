@@ -10,29 +10,14 @@ mod window;
 use log::{error, info, LevelFilter};
 use winit::event_loop::EventLoopBuilder;
 
-use libclient_rs::{Client, ConnectConfig, KymuxVideoProtocol, StreamingProtocol, VideoCodec};
+use libclient_rs::{KymuxVideoProtocol, StreamingProtocol, VideoCodec};
 
-use error::Result;
 use parse_utils::parse_bitrate;
 use pipeline_hook::ClientPipelineHook;
 use window::UserEvent;
 
 const STREAMER_HOST: &str = "kybertest";
 const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
-
-fn create_connect_config(cli_args: &CliArgs) -> Result<ConnectConfig> {
-    let connect_config = libclient_rs::ConnectConfig::default(
-        &cli_args.streamer_ip,
-        crate::STREAMER_HOST,
-        crate::STREAMER_CERT,
-    )?;
-
-    if let Some(port) = cli_args.streamer_port {
-        connect_config.set_streamer_port(port);
-    }
-
-    Ok(connect_config)
-}
 
 fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
     use std::path::Path;
@@ -91,7 +76,6 @@ fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
     log4rs::init_config(config).unwrap()
 }
 
-#[derive(Clone)]
 pub struct CliArgs {
     streamer_ip: String,
     streamer_port: Option<u16>,
@@ -235,8 +219,9 @@ fn main() {
 
     // Create window
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
+    let eventloop_proxy = event_loop.create_proxy();
 
-    let mut window = window::Window::new(event_loop, cli_args.clone()).unwrap();
+    let mut window = window::Window::new(event_loop, cli_args).unwrap();
 
     let stop_req_cb = window.create_stop_request_cb();
     ctrlc::set_handler(move || {
@@ -244,18 +229,7 @@ fn main() {
     })
     .unwrap();
 
-    // Create client
-    let connect_config = create_connect_config(&cli_args).unwrap();
+    eventloop_proxy.send_event(UserEvent::Start).unwrap();
 
-    if cli_args.inputs {
-        window.create_input_pipeline().unwrap();
-    }
-
-    let client = Client::new(&connect_config).unwrap();
-    window.set_client(client.clone()).unwrap();
-
-    client.connect().unwrap();
-
-    // Process window loop
     window.run_loop().unwrap();
 }

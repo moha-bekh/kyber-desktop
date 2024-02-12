@@ -10,7 +10,7 @@ use winit::{
     window::{self, CursorGrabMode, CursorRgba, WindowBuilder},
 };
 
-use libclient_rs::{Client, PlayerConfig, StreamingSessionConfig, WindowHandle};
+use libclient_rs::{Client, ConnectConfig, PlayerConfig, StreamingSessionConfig, WindowHandle};
 use libkynput_rs::{InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
 
 use crate::client_proxy::ClientEventProxy;
@@ -23,6 +23,7 @@ use crate::{CliArgs, ClientPipelineHook};
 
 #[derive(Clone, Debug)]
 pub enum UserEvent {
+    Start,
     StopRequest,
     Shortcut(ShortcutType),
     Client(libclient_rs::Event),
@@ -114,6 +115,20 @@ impl State {
         Ok(())
     }
 
+    fn create_connect_config(&self) -> Result<ConnectConfig> {
+        let connect_config = libclient_rs::ConnectConfig::default(
+            &self.cli_args.streamer_ip,
+            crate::STREAMER_HOST,
+            crate::STREAMER_CERT,
+        )?;
+
+        if let Some(port) = self.cli_args.streamer_port {
+            connect_config.set_streamer_port(port);
+        }
+
+        Ok(connect_config)
+    }
+
     fn create_streaming_session_config(
         cli_args: &CliArgs,
         input_ctx: &Option<InputContext>,
@@ -165,6 +180,26 @@ impl State {
         player_config.set_software_decode(cli_args.software_decode);
 
         Ok(player_config)
+    }
+
+    fn connect(&mut self) -> Result<()> {
+        // Create Input pipeline
+        if self.cli_args.inputs {
+            self.create_input_context()?;
+            self.handle_focused()?;
+        }
+
+        // Create client
+        let connect_config = self.create_connect_config()?;
+        let client = Client::new(&connect_config)?;
+
+        let client_proxy = Box::new(ClientEventProxy::new(self.eventloop_proxy.clone()));
+        client.set_event_handler(client_proxy)?;
+
+        client.connect()?;
+        self.client = Some(client);
+
+        Ok(())
     }
 
     fn mouse_button_filter_pressed(pkt: &Packet) -> bool {
@@ -294,6 +329,9 @@ impl State {
                 if window_id == self.window.id() {
                     self.stop_client()?;
                 }
+            }
+            Event::UserEvent(UserEvent::Start) => {
+                self.connect()?;
             }
             Event::UserEvent(UserEvent::StopRequest) => {
                 self.stop_client()?;
@@ -698,26 +736,6 @@ impl Window {
         Box::new(move || {
             proxy.send_event(UserEvent::StopRequest).unwrap();
         })
-    }
-
-    pub fn set_client(&mut self, client: Client) -> Result<()> {
-        let mut state = self.state.borrow_mut();
-
-        {
-            let client_proxy = Box::new(ClientEventProxy::new(self.event_loop.create_proxy()));
-            client.set_event_handler(client_proxy)?;
-        }
-
-        state.client = Some(client);
-
-        Ok(())
-    }
-
-    pub fn create_input_pipeline(&self) -> Result<()> {
-        let mut state = self.state.borrow_mut();
-        state.create_input_context()?;
-
-        Ok(())
     }
 
     pub fn run_loop(self) -> Result<()> {
