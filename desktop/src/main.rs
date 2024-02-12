@@ -8,11 +8,12 @@ mod video_layout;
 mod window;
 
 use log::{error, info, LevelFilter};
+use raw_window_handle::RawWindowHandle;
 use winit::event_loop::EventLoopBuilder;
 
 use libclient_rs::{
-    Client, ConnectConfig, KymuxVideoProtocol, StreamingProtocol, StreamingSessionConfig,
-    VideoCodec, WindowHandle,
+    Client, ConnectConfig, KymuxVideoProtocol, PlayerConfig, StreamingProtocol,
+    StreamingSessionConfig, VideoCodec, WindowHandle,
 };
 use libkynput_rs::Pipeline;
 
@@ -61,6 +62,32 @@ fn create_streaming_session_config(
     }
 
     Ok(session_config)
+}
+
+fn create_player_config(
+    cli_args: &CliArgs,
+    window_handle: RawWindowHandle,
+) -> Result<PlayerConfig> {
+    let window_handle = match window_handle {
+        #[cfg(target_os = "linux")]
+        raw_window_handle::RawWindowHandle::Xlib(handle) => WindowHandle::from_x11(handle.window),
+        #[cfg(target_os = "macos")]
+        raw_window_handle::RawWindowHandle::AppKit(handle) => {
+            WindowHandle::from_ns_view(handle.ns_view as u64)
+        }
+        #[cfg(target_os = "windows")]
+        raw_window_handle::RawWindowHandle::Win32(handle) => {
+            WindowHandle::from_hwnd(handle.hwnd as u64)
+        }
+        _ => {
+            panic!("Platform not supported")
+        }
+    };
+
+    let player_config = libclient_rs::PlayerConfig::default(Some(window_handle))?;
+    player_config.set_software_decode(cli_args.software_decode);
+
+    Ok(player_config)
 }
 
 fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
@@ -282,24 +309,7 @@ fn main() {
     let session_config = create_streaming_session_config(&cli_args, &input_pipeline).unwrap();
 
     // Create PlayerConfig
-    let window_handle = match window.window_handle() {
-        #[cfg(target_os = "linux")]
-        raw_window_handle::RawWindowHandle::Xlib(handle) => WindowHandle::from_x11(handle.window),
-        #[cfg(target_os = "macos")]
-        raw_window_handle::RawWindowHandle::AppKit(handle) => {
-            WindowHandle::from_ns_view(handle.ns_view as u64)
-        }
-        #[cfg(target_os = "windows")]
-        raw_window_handle::RawWindowHandle::Win32(handle) => {
-            WindowHandle::from_hwnd(handle.hwnd as u64)
-        }
-        _ => {
-            panic!("Platform not supported")
-        }
-    };
-
-    let player_config = libclient_rs::PlayerConfig::default(Some(window_handle)).unwrap();
-    player_config.set_software_decode(cli_args.software_decode);
+    let player_config = create_player_config(&cli_args, window.window_handle()).unwrap();
 
     // Create client
     let client = Client::new(&connect_config).unwrap();
