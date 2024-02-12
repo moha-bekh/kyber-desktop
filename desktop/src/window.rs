@@ -11,13 +11,15 @@ use winit::{
 };
 
 use libclient_rs::Client;
-use libkynput_rs::{Handler, InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
+use libkynput_rs::{InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
 
 use crate::client_proxy::ClientEventProxy;
 use crate::cursor_handler;
 use crate::error::{Error, Result};
+use crate::input_handler;
 use crate::pipeline_hook::{PipelineStateReader, ShortcutType};
 use crate::video_layout::{Position, RectSize, VideoLayout};
+use crate::ClientPipelineHook;
 
 pub struct ClientConfig {
     pub session_config: libclient_rs::StreamingSessionConfig,
@@ -61,6 +63,62 @@ struct State {
 }
 
 impl State {
+    fn create_input_context(&mut self) -> Result<Pipeline> {
+        // Create InputPipeline
+        let pipeline_config = libkynput_rs::Config::default_client();
+        let input_pipeline = Pipeline::new(pipeline_config);
+        let cursor_handler = cursor_handler::new_cursor_handler(self.eventloop_proxy.clone())?;
+
+        input_pipeline.plug_handler(cursor_handler)?;
+
+        let missing_types: Vec<InputType> = input_handler::WinitHandler::producable_types()
+            .iter()
+            .filter(|&&t| !input_pipeline.produces_type(t))
+            .copied()
+            .collect();
+
+        let winit_handler = if !missing_types.is_empty() {
+            info!("Winit will be used to produce types {:?}", missing_types);
+            let winit_handler = Arc::new(input_handler::WinitHandler::new(
+                input_pipeline.get_input_sink(),
+                missing_types,
+            )?);
+
+            input_pipeline
+                .plug_handler(libkynput_rs::create_handler_instance(winit_handler.clone()))?;
+
+            Some(winit_handler)
+        } else {
+            None
+        };
+
+        // Assume that the default cursor is visible at startup
+        input_pipeline.set_type_processing_state(
+            InputType::MouseMove,
+            RouterProcessingState::from_boolean(false),
+        )?;
+
+        let supports_relative_mouse = input_pipeline.produces_type(InputType::MouseMove);
+
+        // Create Shortcuts handler
+        let pipeline_hook = Box::new(ClientPipelineHook::new_from_event_loop(
+            self.eventloop_proxy.clone(),
+        ));
+
+        let state_reader = pipeline_hook.get_state_reader();
+        input_pipeline.set_hook(pipeline_hook)?;
+
+        // Create InputContext
+        self.input_ctx = Some(InputContext {
+            pipeline: input_pipeline.clone(),
+            state_reader,
+            supports_relative_mouse,
+            winit_handler,
+        });
+
+        Ok(input_pipeline)
+    }
+
     fn mouse_button_filter_pressed(pkt: &Packet) -> bool {
         match MouseButton::from_packet(pkt) {
             Some(mouse_button) => !mouse_button.pressed,
@@ -580,11 +638,6 @@ impl Window {
         })
     }
 
-    pub fn create_cursor_handler(&mut self) -> Result<Handler> {
-        let proxy = self.event_loop.create_proxy();
-        cursor_handler::new_cursor_handler(proxy)
-    }
-
     pub fn set_client(&mut self, client: Client, config: ClientConfig) -> Result<()> {
         let mut state = self.state.borrow_mut();
 
@@ -599,29 +652,9 @@ impl Window {
         Ok(())
     }
 
-    pub fn set_input_pipeline(
-        &self,
-        pipeline: Pipeline,
-        state_reader: PipelineStateReader,
-        winit_handler: Option<Arc<crate::input_handler::WinitHandler>>,
-    ) -> Result<()> {
-        // Assume that the default cursor is visible at startup
-        pipeline.set_type_processing_state(
-            InputType::MouseMove,
-            RouterProcessingState::from_boolean(false),
-        )?;
-
-        let supports_relative_mouse = pipeline.produces_type(InputType::MouseMove);
-
+    pub fn set_input_pipeline(&self) -> Result<Pipeline> {
         let mut state = self.state.borrow_mut();
-        state.input_ctx = Some(InputContext {
-            pipeline,
-            state_reader,
-            winit_handler,
-            supports_relative_mouse,
-        });
-
-        Ok(())
+        state.create_input_context()
     }
 
     pub fn window_handle(&self) -> RawWindowHandle {

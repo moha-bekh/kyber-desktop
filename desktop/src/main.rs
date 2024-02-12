@@ -7,13 +7,10 @@ mod pipeline_hook;
 mod video_layout;
 mod window;
 
-use std::sync::Arc;
-
 use log::{error, info, LevelFilter};
 use winit::event_loop::EventLoopBuilder;
 
 use libclient_rs::{Client, KymuxVideoProtocol, StreamingProtocol, VideoCodec, WindowHandle};
-use libkynput_rs::{InputType, Pipeline};
 
 use parse_utils::parse_bitrate;
 use pipeline_hook::ClientPipelineHook;
@@ -222,7 +219,6 @@ fn main() {
 
     // Create window
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
-    let eventloop_proxy = event_loop.create_proxy();
 
     let mut window = window::Window::new(event_loop, cli_args.display_index).unwrap();
 
@@ -233,43 +229,7 @@ fn main() {
     .unwrap();
 
     // Create InputPipeline
-    let pipeline_config = libkynput_rs::Config::default_client();
-    let input_pipeline = Pipeline::new(pipeline_config);
-
-    let pipeline_hook = Box::new(ClientPipelineHook::new_from_event_loop(eventloop_proxy));
-
-    let state_reader = pipeline_hook.get_state_reader();
-
-    input_pipeline.set_hook(pipeline_hook).unwrap();
-
-    input_pipeline
-        .plug_handler(window.create_cursor_handler().unwrap())
-        .unwrap();
-
-    let missing_types: Vec<InputType> = input_handler::WinitHandler::producable_types()
-        .iter()
-        .filter(|&&t| !input_pipeline.produces_type(t))
-        .copied()
-        .collect();
-    let winit_handler = if !missing_types.is_empty() {
-        info!("Winit will be used to produce types {:?}", missing_types);
-        let handler = Arc::new(
-            input_handler::WinitHandler::new(input_pipeline.get_input_sink(), missing_types)
-                .unwrap(),
-        );
-
-        input_pipeline
-            .plug_handler(libkynput_rs::create_handler_instance(handler.clone()))
-            .unwrap();
-
-        Some(handler)
-    } else {
-        None
-    };
-
-    window
-        .set_input_pipeline(input_pipeline.clone(), state_reader, winit_handler)
-        .unwrap();
+    let input_pipeline = window.set_input_pipeline().unwrap();
 
     // Create ConnectConfig
     let connect_config = libclient_rs::ConnectConfig::default(
