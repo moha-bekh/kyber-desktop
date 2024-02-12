@@ -12,6 +12,7 @@ use crate::window::UserEvent;
 
 const SCANCODE_UNKNOWN: u16 = 0;
 const SCANCODE_F: u16 = 33;
+const SCANCODE_R: u16 = 19;
 const SCANCODE_LCTRL: u16 = 29;
 const SCANCODE_LALT: u16 = 56;
 
@@ -19,10 +20,12 @@ const SCANCODE_LALT: u16 = 56;
 const SCANCODE_COUNT: usize = 512;
 
 const SHORTCUT_FULLSCREEN: &[u16] = &[SCANCODE_F, SCANCODE_LCTRL, SCANCODE_LALT];
+const SHORTCUT_RESTART_STREAM: &[u16] = &[SCANCODE_R, SCANCODE_LCTRL, SCANCODE_LALT];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ShortcutType {
     Fullscreen,
+    RestartStreaming,
 }
 
 struct InternalState {
@@ -54,6 +57,8 @@ impl InternalState {
 
         if self.check_shortcut(SHORTCUT_FULLSCREEN) {
             Some(ShortcutType::Fullscreen)
+        } else if self.check_shortcut(SHORTCUT_RESTART_STREAM) {
+            Some(ShortcutType::RestartStreaming)
         } else {
             None
         }

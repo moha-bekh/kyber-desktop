@@ -534,6 +534,22 @@ impl State {
                 warn!("Control plane connect failed");
                 *control_flow = ControlFlow::Exit;
             }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::StreamingStopped)) => {
+                info!("Streaming stopped. Restart streaming");
+
+                // Create Input pipeline
+                if self.cli_args.inputs {
+                    self.create_input_context()?;
+                    self.handle_focused()?;
+                }
+
+                let client = self.client.as_mut().ok_or(Error::NoClient)?;
+
+                let streaming_config =
+                    Self::create_streaming_session_config(&self.cli_args, &self.input_ctx)?;
+                let player_config = Self::create_player_config(&self.cli_args, &self.window)?;
+                client.start_streaming(&streaming_config, &player_config)?;
+            }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::Stopped { reason })) => {
                 info!("Stopped. Reason: {reason:?}");
 
@@ -589,6 +605,14 @@ impl State {
                     self.window
                         .set_fullscreen(Some(window::Fullscreen::Borderless(monitor)));
                 }
+            }
+            Event::UserEvent(UserEvent::Shortcut(ShortcutType::RestartStreaming)) => {
+                info!("Restart streaming requested");
+
+                self.input_ctx = None;
+
+                let client = self.client.as_mut().ok_or(Error::NoClient)?;
+                client.stop_streaming()?;
             }
             Event::UserEvent(UserEvent::SetCursor(cursor)) => {
                 // MousePosition and MouseMove are always produced on client side.
