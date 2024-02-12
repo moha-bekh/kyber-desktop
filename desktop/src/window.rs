@@ -44,6 +44,7 @@ struct State {
     client: Option<Client>,
     window: winit::window::Window,
     window_size: RectSize,
+    focused: bool,
     video_layout: VideoLayout,
 
     display_id: Option<u32>,
@@ -176,6 +177,28 @@ impl State {
         }
     }
 
+    fn handle_focused(&mut self) -> Result<()> {
+        if !self.focused {
+            self.input_ctx
+                .as_ref()
+                .ok_or(Error::NoPipeline)?
+                .pipeline
+                .flush_keys()?;
+
+            self.grab_cursor(false);
+        } else if self.window.fullscreen().is_some() {
+            self.grab_cursor(true);
+        }
+
+        self.input_ctx
+            .as_ref()
+            .ok_or(Error::NoPipeline)?
+            .pipeline
+            .set_global_processing_state(self.focused)?;
+
+        Ok(())
+    }
+
     fn handle_cursor_inside_window(&mut self, inside: bool) -> Result<()> {
         self.cursor_inside_window = inside;
 
@@ -279,17 +302,8 @@ impl State {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
-                let input_ctx = self.input_ctx.as_ref().ok_or(Error::NoPipeline)?;
-
-                if !focused {
-                    input_ctx.pipeline.flush_keys()?;
-
-                    self.grab_cursor(false);
-                } else if self.window.fullscreen().is_some() {
-                    self.grab_cursor(true);
-                }
-
-                input_ctx.pipeline.set_global_processing_state(focused)?;
+                self.focused = focused;
+                self.handle_focused()?;
             }
             Event::WindowEvent {
                 event: WindowEvent::CursorEntered { device_id: _ },
@@ -667,6 +681,7 @@ impl Window {
                     width: window_width,
                     height: window_height,
                 },
+                focused: false,
                 video_layout,
                 display_id: None,
                 input_ctx: None,
