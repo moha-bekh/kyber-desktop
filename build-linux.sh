@@ -210,9 +210,6 @@ package() {
         $src_bin/ffmpeg \
         $src_bin/inputserver \
         $src_bin/txproto \
-        $src_bin/avserver_displays.lua \
-        $src_bin/avserver_kymux_stream.lua \
-        $src_bin/avserver_rtp_stream.lua \
         $src_bin/kyber_config.toml \
         $stagging_directory/bin
 

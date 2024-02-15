@@ -210,7 +210,7 @@ package() {
         $src_bin/avformat-60.dll \
         $src_bin/avutil-58.dll \
         $src_bin/liblua.dll \
-        $src_bin/libtxproto.dll \
+        $src_bin/libtxproto-0.dll \
         $src_bin/libvlccore.dll \
         $src_bin/libvlc.dll \
         $src_bin/postproc-57.dll \
@@ -234,9 +234,6 @@ package() {
         $src_bin/txproto.exe \
         $src_bin/libclient.dll \
         $src_bin/libkynput.dll \
-        $src_bin/avserver_displays.lua \
-        $src_bin/avserver_kymux_stream.lua \
-        $src_bin/avserver_rtp_stream.lua \
         $src_bin/kybertest_cert.pem \
         $src_bin/kybertest_key.pem \
         $src_bin/kybertest_rootca_cert.pem \

@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 * controller: Add /stop_streaming endpoint
 * controller: Fix racy kymux stop. Should fix the remaining 403 errors
               when starting kymux
+* avserver: Integrate libtxproto
+* avserver: Encoder selection now applies also to RTP backend
 
 ## [0.14.0] - 2024-02-07
 
