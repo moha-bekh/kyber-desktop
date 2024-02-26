@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* Rust toolchain updated to 1.76.0
+
 ## [0.14.0] - 2024-02-07
 
 * controller/libclient: Implement connection timeout detection (1 minute) on
