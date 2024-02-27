@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 * controller: Update wtransport to 0.11.0
 * controller/cors: Allow Access-Control-Allow-Credentials
 * controller: Add /stop_streaming endpoint
+* controller: Fix racy kymux stop. Should fix the remaining 403 errors
+              when starting kymux
 
 ## [0.14.0] - 2024-02-07
 
