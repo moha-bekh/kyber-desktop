@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
               when starting kymux
 * avserver: Integrate libtxproto
 * avserver: Encoder selection now applies also to RTP backend
+* avserver: Detect Initialization/Acquisition/Encoding errors and forward them
+            to the application
 
 ## [0.14.0] - 2024-02-07
 

@@ -579,6 +579,13 @@ impl State {
                 self.video_layout.update_display_layout();
                 self.grab_cursor(self.window.fullscreen().is_some());
             }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::StreamerPipelineEvent {
+                type_,
+                stage,
+                event,
+            })) => {
+                info!("Got StreamerPipelineEvent. Type: {type_:?} - Stage: {stage:?} - Event: {event:?}");
+            }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::Fullscreen)) => {
                 if self.window.fullscreen().is_some() {
                     debug!("Exit fullscreen");
