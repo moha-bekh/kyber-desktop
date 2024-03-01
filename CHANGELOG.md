@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 * kymux/kycom: Fix TcpStream read error
 * controller/libclient: Implement connection timeout detection (1 minute) on
   Data Plane. The event is only logged for now
+* libclient: Stop if Data Plane connection fails, or if streaming start fails
 
 ## [0.14.0] - 2024-02-07
 

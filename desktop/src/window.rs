@@ -534,8 +534,16 @@ impl State {
                 warn!("Control plane connect failed");
                 *control_flow = ControlFlow::Exit;
             }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::DataPlaneConnectFailed)) => {
+                warn!("Data plane connect failed");
+                *control_flow = ControlFlow::Exit;
+            }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::DataPlaneClosed)) => {
                 warn!("Data plane closed");
+            }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::StreamingStartFailed)) => {
+                warn!("Streaming start failed");
+                *control_flow = ControlFlow::Exit;
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::StreamingStopped)) => {
                 info!("Streaming stopped. Restart streaming");
