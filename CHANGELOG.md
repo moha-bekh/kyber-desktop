@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 * avserver: Encoder selection now applies also to RTP backend
 * avserver: Detect Initialization/Acquisition/Encoding errors and forward them
             to the application
+* controller: Forward avserver crash to the application
 
 ## [0.14.0] - 2024-02-07
 
