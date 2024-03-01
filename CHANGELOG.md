@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 * avserver: Detect Initialization/Acquisition/Encoding errors and forward them
             to the application
 * controller: Forward avserver crash to the application
+* kymux/kycom: Fix TcpStream read error
 
 ## [0.14.0] - 2024-02-07
 
