@@ -16,6 +16,8 @@ All notable changes to this project will be documented in this file.
             to the application
 * controller: Forward avserver crash to the application
 * kymux/kycom: Fix TcpStream read error
+* controller/libclient: Implement connection timeout detection (1 minute) on
+  Data Plane. The event is only logged for now
 
 ## [0.14.0] - 2024-02-07
 
