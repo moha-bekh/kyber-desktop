@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
   Data Plane. The event is only logged for now
 * libclient: Stop if Data Plane connection fails, or if streaming start fails
 * libclient/macos: Use ffmpeg 5.1.1 (like Windows) instead of master
+* avserver: Support yuv444p for hevc and av1 when using nvenc
 
 ## [0.14.0] - 2024-02-07
 
