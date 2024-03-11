@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* avserver: Support yuv444p for hevc when using qsv
+* avserver/win32: Update nv-codec-headers to n12.1.14.0
+* avserver/win32: Update vpl to v2.10.1
+* avserver/win32: Update amf to 1.4.33
+* avserver: Update ffmpeg to 6.1.1
+
 ## [0.15.0] - 2024-03-19
 
 * Rust toolchain updated to 1.76.0
