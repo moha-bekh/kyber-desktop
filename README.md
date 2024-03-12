@@ -101,7 +101,7 @@ cargo install cargo-c
 ```
 brew install \
     m4 nasm openssl@1.1 pkg-config \
-    autotool automake libtool \
+    autoconf automake libtool \
     cmake gettext meson ragel ant help2man
 ```
 
