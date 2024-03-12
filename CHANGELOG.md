@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 * controller/libclient: Implement connection timeout detection (1 minute) on
   Data Plane. The event is only logged for now
 * libclient: Stop if Data Plane connection fails, or if streaming start fails
+* libclient/macos: Use ffmpeg 5.1.1 (like Windows) instead of master
 
 ## [0.14.0] - 2024-02-07
 
