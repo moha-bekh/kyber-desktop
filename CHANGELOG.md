@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 * avserver/win32: Update vpl to v2.10.1
 * avserver/win32: Update amf to 1.4.33
 * avserver: Update ffmpeg to 6.1.1
+* libclient: Update VLC. Kymux branch is now based on dfd6d83e50
 
 ## [0.15.0] - 2024-03-19
 
