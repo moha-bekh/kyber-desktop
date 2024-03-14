@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use keycode::{KeyMap, KeyMapping};
 use winit::dpi::{LogicalPosition, PhysicalPosition};
 
-use libkynput_rs::{InputType, MouseWheel};
+use libkynput_rs::{InputType, MouseButtonType, MouseWheel};
 
 use super::WinitEventType;
 
@@ -31,6 +31,15 @@ impl super::PlatformImpl for Impl {
         MouseWheel {
             dx: -horizontal,
             dy: -vertical,
+        }
+    }
+
+    fn convert_window_mouse_button(button: &winit::event::MouseButton) -> Option<MouseButtonType> {
+        match button {
+            winit::event::MouseButton::Left => Some(MouseButtonType::Left),
+            winit::event::MouseButton::Right => Some(MouseButtonType::Right),
+            winit::event::MouseButton::Middle => Some(MouseButtonType::Middle),
+            _ => None,
         }
     }
 

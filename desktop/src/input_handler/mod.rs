@@ -37,6 +37,10 @@ trait PlatformImpl {
         None
     }
 
+    fn convert_window_mouse_button(_button: &winit::event::MouseButton) -> Option<MouseButtonType> {
+        None
+    }
+
     fn convert_mouse_wheel(horizontal: f32, vertical: f32) -> MouseWheel;
 
     fn convert_mouse_wheel_pixel_delta(
@@ -221,11 +225,8 @@ impl WinitHandler {
                 }
             }
             WindowEvent::MouseInput { state, button, .. } => {
-                let btn = match button {
-                    winit::event::MouseButton::Left => MouseButtonType::Left,
-                    winit::event::MouseButton::Right => MouseButtonType::Right,
-                    winit::event::MouseButton::Middle => MouseButtonType::Middle,
-                    _ => return,
+                let Some(btn) = platform::Impl::convert_window_mouse_button(button) else {
+                    return;
                 };
 
                 let button = MouseButton {
