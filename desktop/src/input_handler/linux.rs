@@ -58,6 +58,8 @@ impl super::PlatformImpl for Impl {
             1 => Some(MouseButtonType::Left),
             2 => Some(MouseButtonType::Middle),
             3 => Some(MouseButtonType::Right),
+            8 => Some(MouseButtonType::Side),
+            9 => Some(MouseButtonType::Extra),
             _ => None,
         }
     }

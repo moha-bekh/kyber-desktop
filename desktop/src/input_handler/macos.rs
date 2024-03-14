@@ -39,6 +39,8 @@ impl super::PlatformImpl for Impl {
             winit::event::MouseButton::Left => Some(MouseButtonType::Left),
             winit::event::MouseButton::Right => Some(MouseButtonType::Right),
             winit::event::MouseButton::Middle => Some(MouseButtonType::Middle),
+            winit::event::MouseButton::Other(3) => Some(MouseButtonType::Side),
+            winit::event::MouseButton::Other(4) => Some(MouseButtonType::Extra),
             _ => None,
         }
     }
