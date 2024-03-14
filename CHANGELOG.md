@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 * libclient: Stop if Data Plane connection fails, or if streaming start fails
 * libclient/macos: Use ffmpeg 5.1.1 (like Windows) instead of master
 * avserver: Support yuv444p for hevc when using nvenc
+* libkynput: Handle Side/Extra MouseButtonType
 
 ## [0.14.0] - 2024-02-07
 
