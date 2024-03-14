@@ -33,6 +33,10 @@ trait PlatformImpl {
 
     fn convert_scancode(scancode: u16) -> Option<u16>;
 
+    fn convert_device_mouse_button(_button: u32) -> Option<MouseButtonType> {
+        None
+    }
+
     fn convert_mouse_wheel(horizontal: f32, vertical: f32) -> MouseWheel;
 
     fn convert_mouse_wheel_pixel_delta(
@@ -66,15 +70,6 @@ fn convert_element_state(state: winit::event::ElementState) -> bool {
     match state {
         winit::event::ElementState::Pressed => true,
         winit::event::ElementState::Released => false,
-    }
-}
-
-fn convert_mouse_button(button: u32) -> Option<MouseButtonType> {
-    match button {
-        1 => Some(MouseButtonType::Left),
-        2 => Some(MouseButtonType::Middle),
-        3 => Some(MouseButtonType::Right),
-        _ => None,
     }
 }
 
@@ -164,14 +159,16 @@ impl WinitHandler {
                     None => return,
                 }
             }
-            DeviceEvent::Button { button, state } => match convert_mouse_button(*button) {
-                Some(button) => {
-                    let pressed = convert_element_state(*state);
-                    let button = MouseButton { button, pressed };
-                    button.to_packet(InputTarget::Host)
+            DeviceEvent::Button { button, state } => {
+                match platform::Impl::convert_device_mouse_button(*button) {
+                    Some(button) => {
+                        let pressed = convert_element_state(*state);
+                        let button = MouseButton { button, pressed };
+                        button.to_packet(InputTarget::Host)
+                    }
+                    None => return,
                 }
-                None => return,
-            },
+            }
             DeviceEvent::MouseWheel {
                 delta: MouseScrollDelta::LineDelta(horizontal, vertical),
             } => {
@@ -309,7 +306,7 @@ mod tests {
         use std::collections::HashMap;
 
         use super::WinitEventType;
-        use libkynput_rs::{InputType, MouseWheel};
+        use libkynput_rs::{InputType, MouseButtonType, MouseWheel};
 
         pub static mut PROVIDE_ALL_EVENTS: bool = false;
 
@@ -346,6 +343,15 @@ mod tests {
                 MouseWheel {
                     dx: horizontal + 2.0,
                     dy: vertical + 2.0,
+                }
+            }
+
+            fn convert_device_mouse_button(button: u32) -> Option<MouseButtonType> {
+                match button {
+                    1 => Some(MouseButtonType::Left),
+                    2 => Some(MouseButtonType::Middle),
+                    3 => Some(MouseButtonType::Right),
+                    _ => None,
                 }
             }
         }
@@ -404,15 +410,6 @@ mod tests {
         let handler =
             WinitHandler::new(consumer.clone(), expected_produced_events.clone()).unwrap();
         compare_vectors(handler.produced_types, produced_events);
-    }
-
-    #[test]
-    #[serial]
-    fn mouse_button_mapping() {
-        assert_eq!(convert_mouse_button(1), Some(MouseButtonType::Left));
-        assert_eq!(convert_mouse_button(2), Some(MouseButtonType::Middle));
-        assert_eq!(convert_mouse_button(3), Some(MouseButtonType::Right));
-        assert_eq!(convert_mouse_button(4), None);
     }
 
     #[test]

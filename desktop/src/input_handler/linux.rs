@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use keycode::{KeyMap, KeyMapping};
 
-use libkynput_rs::{InputType, MouseWheel};
+use libkynput_rs::{InputType, MouseButtonType, MouseWheel};
 
 use super::WinitEventType;
 
@@ -50,6 +50,15 @@ impl super::PlatformImpl for Impl {
                 dx: horizontal / 10.0,
                 dy: vertical / 10.0,
             }
+        }
+    }
+
+    fn convert_device_mouse_button(button: u32) -> Option<MouseButtonType> {
+        match button {
+            1 => Some(MouseButtonType::Left),
+            2 => Some(MouseButtonType::Middle),
+            3 => Some(MouseButtonType::Right),
+            _ => None,
         }
     }
 }
