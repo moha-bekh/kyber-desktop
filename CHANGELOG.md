@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 * libkynput: Handle Side/Extra MouseButtonType
 * txproto: Avoid to drop encoded frames when network is slow. Drop acquired
   frames instead
+* kymux: Correctly handle write during congestion, when using wtransport backend
 
 ## [0.14.0] - 2024-02-07
 
