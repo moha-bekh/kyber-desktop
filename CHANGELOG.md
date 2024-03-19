@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 * libclient: Update VLC. Kymux branch is now based on dfd6d83e50
 * vlc: Use AudioRegulator on Windows/Linux/macOS
 * desktop: Audio is now enabled by default
+* Update Rust dependencies
 
 ## [0.15.0] - 2024-03-19
 

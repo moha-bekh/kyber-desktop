@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-async-trait = "0.1.51"
-clap = "3.2.8"
-ctrlc = "3.2.1"
+async-trait = "0.1.78"
+clap = "3.2.22"
+ctrlc = "3.4.4"
 keycode = "0.3.0"
-libc = "0.2.107"
-log = "0.4.14"
-log4rs = "1.2.0"
+libc = "0.2.153"
+log = "0.4.21"
+log4rs = "1.3.0"
 raw-window-handle = "0.5.0"
 
 libclient-rs = "0.1.0"
@@ -18,8 +18,8 @@ libkynput-rs = "0.1.0"
 winit = { version = "0.28.1", features = ["x11"] }
 
 [dev-dependencies]
-mockall = "0.11.3"
-serial_test = "0.9.0"
+mockall = "0.12.1"
+serial_test = "3.0.0"
 
 [build-dependencies]
-vergen = { version = "8.1.1", features = ["build", "git", "gix"] }
+vergen = { version = "8.3.1", features = ["build", "git", "gix"] }
