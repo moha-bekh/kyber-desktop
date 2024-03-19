@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.15.0] - 2024-03-19
+
 * Rust toolchain updated to 1.76.0
 * controller: Update wtransport to 0.11.0
 * controller/cors: Allow Access-Control-Allow-Credentials
