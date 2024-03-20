@@ -200,7 +200,7 @@ fn main() {
 
     let display_index = matches.get_one("display_idx").copied().unwrap_or(0);
     let yuv444 = matches.is_present("444");
-    let audio = matches.get_one("audio").copied().unwrap_or(false);
+    let audio = matches.get_one("audio").copied().unwrap_or(true);
     let inputs = matches.get_one("inputs").copied().unwrap_or(true);
     let software_decode = matches.is_present("software_decode");
 
