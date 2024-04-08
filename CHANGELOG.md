@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 * vlc: Use AudioRegulator on Windows/Linux/macOS
 * desktop: Audio is now enabled by default
 * Update Rust dependencies
+* kymux: Revert timeout detection
 
 ## [0.15.0] - 2024-03-19
 
