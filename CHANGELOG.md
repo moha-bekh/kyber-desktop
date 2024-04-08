@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 * desktop: Audio is now enabled by default
 * Update Rust dependencies
 * kymux: Revert timeout detection
+* libclient: Stop websocket on ControlPlaneClosed
+* libclient: Log PlayerConfig on start_streaming()
 
 ## [0.15.0] - 2024-03-19
 
