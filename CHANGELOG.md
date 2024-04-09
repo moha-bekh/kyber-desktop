@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 * kymux: Revert timeout detection
 * libclient: Stop websocket on ControlPlaneClosed
 * libclient: Log PlayerConfig on start_streaming()
+* avserver: Improve initialization logs in dxgi and packet_sink
 
 ## [0.15.0] - 2024-03-19
 
