@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.16.0] - 2024-04-18
+
 * avserver: Support yuv444p for hevc when using qsv
 * avserver/win32: Update nv-codec-headers to n12.1.14.0
 * avserver/win32: Update vpl to v2.10.1
