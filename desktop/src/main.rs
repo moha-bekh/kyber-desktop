@@ -108,6 +108,7 @@ fn main() {
                     "kymux",
                     "kymux_reliable",
                     "kymux_gopstream",
+                    "kymux_unreliable",
                     "kymux_unreliable_fec",
                 ])
                 .default_value("kymux"),
@@ -177,6 +178,7 @@ fn main() {
             StreamingProtocol::Kymux(KymuxVideoProtocol::Reliable)
         }
         Some("kymux_gopstream") => StreamingProtocol::Kymux(KymuxVideoProtocol::GopStream),
+        Some("kymux_unreliable") => StreamingProtocol::Kymux(KymuxVideoProtocol::Unreliable),
         Some("kymux_unreliable_fec") => StreamingProtocol::Kymux(KymuxVideoProtocol::UnreliableFec),
         _ => {
             error!("No valid protocol specified");

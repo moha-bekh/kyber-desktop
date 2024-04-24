@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * kymux: Fix unreliable header size
+* desktop: Expose kymux_unreliable protocol
 
 ## [0.16.0] - 2024-04-18
 
