@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* kymux: Fix unreliable header size
+
 ## [0.16.0] - 2024-04-18
 
 * avserver: Support yuv444p for hevc when using qsv
