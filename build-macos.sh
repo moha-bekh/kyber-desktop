@@ -154,7 +154,7 @@ package() {
     fi
 
     echo "Creating $app_dir from $source_directory"
-    mkdir -p $app_dir/Contents/MacOS $app_dir/Contents/Frameworks/plugins
+    mkdir -p $app_dir/Contents/MacOS $app_dir/Contents/Frameworks/plugins $app_dir/Contents/Resources
 
     cp \
         $source_directory/bin/client \
@@ -170,6 +170,15 @@ package() {
         $app_dir/Contents/Frameworks/
 
     find "$source_directory/lib/vlc/plugins" -name 'lib*_plugin.dylib' -exec cp -a {} $app_dir/Contents/Frameworks/plugins \;
+
+    # Copy resources
+    cp \
+        $source_directory/share/kyber/Info.plist \
+        $app_dir/Contents
+
+    cp \
+        $source_directory/share/kyber/kyber.icns \
+        $app_dir/Contents/Resources
 
     # Prepare bundle dylib fixes
     KYAUDIOREG_NAME=libkyaudioreg.0.1.dylib
@@ -295,6 +304,16 @@ case "$ACTION" in
             target/$CARGO_TARGET/release/client \
             test/tls/kybertest_rootca_cert.pem \
             $OUT_DIR/bin
+        
+        mkdir -p $OUT_DIR/share/kyber
+
+        cp \
+            desktop/res/Info.plist \
+            $OUT_DIR/share/kyber
+
+        cp \
+            desktop/res/kyber.icns \
+            $OUT_DIR/share/kyber
     ;;
     "clippy")
         cargo clippy --target $CARGO_TARGET -- -D warnings

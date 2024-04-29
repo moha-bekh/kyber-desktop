@@ -5,6 +5,7 @@ pub enum Error {
     IO(std::io::Error),
     WindowOs(winit::error::OsError),
     ThreadPanicked,
+    IconLoad,
     NoClient,
     UnknownWindow,
     Winit,

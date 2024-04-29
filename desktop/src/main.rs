@@ -3,6 +3,7 @@
 mod client_proxy;
 mod error;
 mod event_loop;
+mod icon;
 mod inputs;
 mod parse_utils;
 mod window;
@@ -12,6 +13,7 @@ use winit::event_loop::EventLoopBuilder;
 
 use libclient_rs::{KymuxVideoProtocol, StreamingProtocol, VideoCodec};
 
+use error::{Error, Result};
 use event_loop::UserEvent;
 use parse_utils::parse_bitrate;
 
@@ -257,7 +259,9 @@ fn main() {
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
     let eventloop_proxy = event_loop.create_proxy();
 
-    let mut event_loop = event_loop::EventLoopWrapper::new(event_loop, cli_args).unwrap();
+    let icon = icon::load_icon().ok();
+
+    let mut event_loop = event_loop::EventLoopWrapper::new(event_loop, cli_args, icon).unwrap();
 
     let stop_req_cb = event_loop.create_stop_request_cb();
     ctrlc::set_handler(move || {

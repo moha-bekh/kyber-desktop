@@ -9,7 +9,7 @@ use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop, EventLoopProxy, EventLoopWindowTarget},
     monitor::MonitorHandle,
-    window::WindowBuilder,
+    window::{Icon, WindowBuilder},
 };
 
 use libclient_rs::{
@@ -62,6 +62,7 @@ struct State {
     cli_args: CliArgs,
     client: Option<Client>,
     input_ctx: Option<Arc<InputContext>>,
+    icon: Option<Icon>,
     windows: WindowsStateMachine<WindowControlWinit>,
 }
 
@@ -114,6 +115,7 @@ impl State {
 
         let window_builder = WindowBuilder::new()
             .with_title("Kyber Client")
+            .with_window_icon(self.icon.clone())
             .with_inner_size(window_size);
 
         let window_builder = if let Some(window_position) = window_position {
@@ -535,7 +537,11 @@ pub struct EventLoopWrapper {
 }
 
 impl EventLoopWrapper {
-    pub fn new(event_loop: EventLoop<UserEvent>, cli_args: CliArgs) -> Result<Self> {
+    pub fn new(
+        event_loop: EventLoop<UserEvent>,
+        cli_args: CliArgs,
+        icon: Option<Icon>,
+    ) -> Result<Self> {
         let eventloop_proxy = event_loop.create_proxy();
 
         Ok(Self {
@@ -545,6 +551,7 @@ impl EventLoopWrapper {
                 cli_args,
                 client: None,
                 input_ctx: None,
+                icon,
                 windows: WindowsStateMachine::<WindowControlWinit>::new(),
             }),
         })

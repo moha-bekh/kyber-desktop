@@ -201,6 +201,7 @@ package() {
 
     mkdir -p "$stagging_directory/bin"
     mkdir -p "$stagging_directory/lib"
+    mkdir -p "$stagging_directory/share"
 
     # Copy bin directory
     cp \
@@ -219,6 +220,11 @@ package() {
         $src_bin/kybertest_key.pem \
         $src_bin/kybertest_rootca_cert.pem \
         $stagging_directory/bin
+
+    # Copy ressources
+    cp \
+        $source_directory/share/kyber.ico \
+        $stagging_directory/share
 
     # Copy libraries
     cd $source_directory
@@ -318,6 +324,10 @@ case "$ACTION" in
             test/tls/kybertest_rootca_cert.pem \
             $OUT_DIR/bin
 
+        # Copy ressources
+        cp \
+            desktop/res/kyber.ico \
+            $OUT_DIR/share
     ;;
     "clippy")
         cargo clippy -- -D warnings

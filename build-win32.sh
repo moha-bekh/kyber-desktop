@@ -252,6 +252,11 @@ package() {
         $BASE_DIR/scripts/windows/uninstall_service.bat \
         $stagging_directory
 
+    # Copy ressources
+    cp \
+        desktop/res/kyber.ico \
+        $stagging_directory
+
     local zipname=$(basename $stagging_directory).zip
     echo "Creating ${zipname}"
     zip -r ${zipname} $stagging_directory
