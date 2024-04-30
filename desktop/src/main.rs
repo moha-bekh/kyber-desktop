@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "win32-hide-console", windows_subsystem = "windows")]
+
 mod client_proxy;
 mod cursor_handler;
 mod error;

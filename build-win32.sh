@@ -262,6 +262,7 @@ BUILD_DEPS=true
 PACKAGE=false
 ACTION="build"
 CONSOLE_FLAG=""
+HIDE_CONSOLE_FEATURE=""
 OUT_DIR=$(pwd)/rootfs-x86_64-w64-mingw32
 
 while getopts "hnsdctpo:w" OPTION
@@ -294,6 +295,7 @@ do
             ;;
         w)
             CONSOLE_FLAG="-w"
+            HIDE_CONSOLE_FEATURE="--features win32-hide-console"
             ;;
     esac
 done
@@ -327,7 +329,11 @@ fi
 # Run action
 case "$ACTION" in
     "build")
-        cargo build --release --target x86_64-pc-windows-gnu
+        cargo build \
+            --release \
+            --target x86_64-pc-windows-gnu \
+            $HIDE_CONSOLE_FEATURE
+
         cp target/x86_64-pc-windows-gnu/release/client.exe $OUT_DIR/bin
 
         # Copy default configuration

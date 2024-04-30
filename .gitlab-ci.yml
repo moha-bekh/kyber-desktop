@@ -201,7 +201,7 @@ build-windows-x86_64:
       export KYBER_STAGGING_DIRECTORY=kyber-windows-x86_64-$CI_COMMIT_SHORT_SHA
     fi
     # Build
-    ./build-win32.sh -s -p -o $ROOTFS_PATH
+    ./build-win32.sh -s -p -w -o $ROOTFS_PATH
   artifacts:
     paths:
       - kyber-windows-x86_64-*.zip
