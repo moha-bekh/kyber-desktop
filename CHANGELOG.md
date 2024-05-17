@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 * avserver/win32: Make process DPI aware
 * inputserver/win32: Make process DPI aware
 * desktop: Move the host cursor position to match the local one at startup
+* libclient: Improve start and stop logs
 
 ## [0.16.0] - 2024-04-18
 
