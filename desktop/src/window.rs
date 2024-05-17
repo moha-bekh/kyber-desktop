@@ -316,6 +316,39 @@ impl State {
         self.video_layout.update_display_layout();
     }
 
+    fn send_position(
+        &self,
+        input_ctx: &InputContext,
+        position: PhysicalPosition<i32>,
+        capture_cursor: bool,
+    ) -> Result<()> {
+        let Some(display_id) = self.display_id else {
+            return Ok(());
+        };
+
+        let Some(winit_handler) = input_ctx.winit_handler.as_ref() else {
+            return Ok(());
+        };
+
+        let projected_pos = self.video_layout.local_to_host(
+            Position {
+                x: position.x as u32,
+                y: position.y as u32,
+            },
+            capture_cursor,
+        );
+
+        if let Some(projected_pos) = projected_pos {
+            winit_handler.send_mouse_position(
+                display_id,
+                projected_pos.x as i16,
+                projected_pos.y as i16,
+            );
+        }
+
+        Ok(())
+    }
+
     fn handle_event(
         &mut self,
         event: Event<UserEvent>,
@@ -392,33 +425,13 @@ impl State {
                 self.last_cursor_pos = Some(position);
 
                 // Project and send the position if an handler is defined
-                let Some(display_id) = self.display_id else {
-                    return Ok(());
-                };
-
-                let Some(input_ctx) = self.input_ctx.as_ref() else {
-                    return Ok(());
-                };
-
-                if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
-                    let projected_pos = self.video_layout.local_to_host(
-                        Position {
-                            x: position.x as _,
-                            y: position.y as _,
-                        },
+                if let Some(input_ctx) = self.input_ctx.as_ref() {
+                    self.send_position(
+                        input_ctx,
+                        position,
                         input_ctx.state_reader.has_one_mouse_button_pressed(),
-                    );
-
-                    if let Some(projected_pos) = projected_pos {
-                        winit_handler.send_mouse_position(
-                            display_id,
-                            projected_pos.x as i16,
-                            projected_pos.y as i16,
-                        );
-                    }
-                } else {
-                    warn!("WindowEvent::CursorMoved discarded because no input handler is defined");
-                }
+                    )?;
+                };
             }
             Event::DeviceEvent { event, .. } => {
                 let Some(input_ctx) = self.input_ctx.as_ref() else {
