@@ -376,14 +376,6 @@ impl State {
                 event: WindowEvent::CursorMoved { position, .. },
                 ..
             } => {
-                let Some(display_id) = self.display_id else {
-                    return Ok(());
-                };
-
-                let Some(input_ctx) = self.input_ctx.as_ref() else {
-                    return Ok(());
-                };
-
                 // Cast to our internal representation
                 let position: PhysicalPosition<i32> = PhysicalPosition {
                     x: position.x as _,
@@ -400,6 +392,14 @@ impl State {
                 self.last_cursor_pos = Some(position);
 
                 // Project and send the position if an handler is defined
+                let Some(display_id) = self.display_id else {
+                    return Ok(());
+                };
+
+                let Some(input_ctx) = self.input_ctx.as_ref() else {
+                    return Ok(());
+                };
+
                 if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
                     let projected_pos = self.video_layout.local_to_host(
                         Position {
