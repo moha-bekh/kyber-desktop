@@ -51,7 +51,7 @@ struct State {
     display_id: Option<u32>,
 
     input_ctx: Option<InputContext>,
-    last_cursor_pos: Option<PhysicalPosition<u32>>,
+    last_cursor_pos: Option<PhysicalPosition<i32>>,
 
     cursor_inside_window: bool,
 
@@ -385,7 +385,7 @@ impl State {
                 };
 
                 // Cast to our internal representation
-                let position: PhysicalPosition<u32> = PhysicalPosition {
+                let position: PhysicalPosition<i32> = PhysicalPosition {
                     x: position.x as _,
                     y: position.y as _,
                 };
@@ -403,8 +403,8 @@ impl State {
                 if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
                     let projected_pos = self.video_layout.local_to_host(
                         Position {
-                            x: position.x,
-                            y: position.y,
+                            x: position.x as _,
+                            y: position.y as _,
                         },
                         input_ctx.state_reader.has_one_mouse_button_pressed(),
                     );
@@ -659,7 +659,8 @@ impl State {
 
                         // Store this position because it will be raised by winit after calling
                         // set_cursor_position. This is just a local update, not a real MouseMove
-                        let physical_position = PhysicalPosition::new(position.x, position.y);
+                        let physical_position =
+                            PhysicalPosition::new(position.x as _, position.y as _);
                         self.last_cursor_pos = Some(physical_position);
 
                         self.window.set_cursor_position(physical_position)?;
