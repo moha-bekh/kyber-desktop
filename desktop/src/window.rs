@@ -349,6 +349,36 @@ impl State {
         Ok(())
     }
 
+    fn sync_cursor_position(&self) {
+        let Some(input_ctx) = self.input_ctx.as_ref() else {
+            return;
+        };
+
+        // Wrap host cursor to match the local cursor position.
+        // If cursor was outside the video, assume the cursor was
+        // on the center of the window.
+        let position = self
+            .last_cursor_pos
+            .filter(|position| {
+                let video_size = &self.video_layout.video_size;
+                let video_pos = &self.video_layout.video_pos;
+
+                position.x >= video_pos.x as i32
+                    && position.x < video_size.width as i32
+                    && video_pos.y as i32 >= 0
+                    && position.y < video_size.height as i32
+            })
+            .unwrap_or(PhysicalPosition {
+                x: self.video_layout.window_size.width as i32 / 2,
+                y: self.video_layout.window_size.height as i32 / 2,
+            });
+
+        let ret = self.send_position(input_ctx, position, false);
+        if let Err(err) = ret {
+            warn!("Failed to sync host cursor position: {err:?}");
+        }
+    }
+
     fn handle_event(
         &mut self,
         event: Event<UserEvent>,
@@ -573,6 +603,11 @@ impl State {
                     Self::create_streaming_session_config(&self.cli_args, &self.input_ctx)?;
                 let player_config = Self::create_player_config(&self.cli_args, &self.window)?;
                 client.start_streaming(&streaming_config, &player_config)?;
+            }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::InputServiceConnected)) => {
+                info!("Input service connected");
+
+                self.sync_cursor_position();
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::Stopped { reason })) => {
                 info!("Stopped. Reason: {reason:?}");
