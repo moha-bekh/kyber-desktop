@@ -209,6 +209,7 @@ package() {
         $src_bin/avfilter-9.dll \
         $src_bin/avformat-60.dll \
         $src_bin/avutil-58.dll \
+        $src_bin/kyaudioreg.dll \
         $src_bin/liblua.dll \
         $src_bin/libtxproto-0.dll \
         $src_bin/libvlccore.dll \

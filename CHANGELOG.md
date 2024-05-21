@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* libclient: Integrate kyaudioreg
+
 ## [0.16.1] - 2024-05-21
 
 * kymux: Fix unreliable header size

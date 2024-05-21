@@ -162,6 +162,7 @@ package() {
         $app_dir/Contents/MacOS
 
     cp -a \
+        $source_directory/lib/libkyaudioreg*.dylib \
         $source_directory/lib/liblibkynput*.dylib \
         $source_directory/lib/liblibclient*.dylib \
         $source_directory/lib/libvlc*.dylib \
@@ -171,6 +172,7 @@ package() {
     find "$source_directory/lib/vlc/plugins" -name 'lib*_plugin.dylib' -exec cp -a {} $app_dir/Contents/Frameworks/plugins \;
 
     # Prepare bundle dylib fixes
+    KYAUDIOREG_NAME=libkyaudioreg.0.1.dylib
     LIBKYNPUT_NAME=liblibkynput.0.1.dylib
     LIBCLIENT_NAME=liblibclient.0.1.dylib
     SDL2_NAME=libSDL2-2.0.0.dylib
@@ -179,6 +181,9 @@ package() {
     install_name_tool -add_rpath "@executable_path/../Frameworks/" $app_dir/Contents/MacOS/client
     install_name_tool -change $source_directory/lib/$LIBKYNPUT_NAME @rpath/$LIBKYNPUT_NAME $app_dir/Contents/MacOS/client
     install_name_tool -change $source_directory/lib/$LIBCLIENT_NAME @rpath/$LIBCLIENT_NAME $app_dir/Contents/MacOS/client
+
+    # Fix libkyaudioreg_plugin
+    install_name_tool -change $source_directory/lib/$KYAUDIOREG_NAME @rpath/$KYAUDIOREG_NAME $app_dir/Contents/Frameworks/plugins/libkyaudioreg_plugin.dylib
 
     # Fix libclient
     install_name_tool -change $source_directory/lib/$LIBKYNPUT_NAME @rpath/$LIBKYNPUT_NAME $app_dir/Contents/Frameworks/$LIBCLIENT_NAME
