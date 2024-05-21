@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.16.1] - 2024-05-21
+
 * kymux: Fix unreliable header size
 * desktop: Expose kymux_unreliable protocol
 * macos: Fix window size sometimes being invalid when resizing on macOS 14 Sonoma
