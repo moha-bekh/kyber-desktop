@@ -193,7 +193,7 @@ package() {
 
     local zipname=$(basename $app_dir).zip
     echo "Creating ${zipname}"
-    zip -r ${zipname} $app_dir
+    zip --symlinks -r ${zipname} $app_dir
 }
 
 get_cargo_target()
