@@ -34,11 +34,46 @@ pub enum UserEvent {
 
 pub type StopRequestCb = Box<dyn Fn() + Send>;
 
+fn mouse_button_filter_pressed(pkt: &Packet) -> bool {
+    match MouseButton::from_packet(pkt) {
+        Some(mouse_button) => !mouse_button.pressed,
+        None => {
+            warn!("Expected a MouseButton, got {:?}", pkt.get_type());
+            false
+        }
+    }
+}
+
 struct InputContext {
     pipeline: Pipeline,
     state_reader: PipelineStateReader,
     winit_handler: Option<Arc<crate::input_handler::WinitHandler>>,
     supports_relative_mouse: bool,
+}
+
+impl InputContext {
+    fn handle_cursor_inside_window(&self, inside: bool) -> Result<()> {
+        let types = [InputType::MouseMove, InputType::MouseWheel];
+        for t in types {
+            self
+                .pipeline
+                .set_type_processing_state(t, RouterProcessingState::from_boolean(inside))?;
+        }
+
+        if inside {
+            self.pipeline.set_type_processing_state(
+                InputType::MouseButton,
+                RouterProcessingState::from_boolean(true),
+            )?;
+        } else {
+            self.pipeline.set_type_processing_state(
+                InputType::MouseButton,
+                RouterProcessingState::from_callback(Box::new(mouse_button_filter_pressed)),
+            )?;
+        }
+
+        Ok(())
+    }
 }
 
 struct WindowWrapper {
@@ -290,16 +325,6 @@ impl State {
         Ok(())
     }
 
-    fn mouse_button_filter_pressed(pkt: &Packet) -> bool {
-        match MouseButton::from_packet(pkt) {
-            Some(mouse_button) => !mouse_button.pressed,
-            None => {
-                warn!("Expected a MouseButton, got {:?}", pkt.get_type());
-                false
-            }
-        }
-    }
-
     fn handle_focused(&mut self) -> Result<()> {
         if !self.window.focused {
             self.input_ctx
@@ -318,33 +343,6 @@ impl State {
             .ok_or(Error::NoPipeline)?
             .pipeline
             .set_global_processing_state(self.window.focused)?;
-
-        Ok(())
-    }
-
-    fn handle_cursor_inside_window(&mut self, inside: bool) -> Result<()> {
-        self.window.cursor_inside_window = inside;
-
-        let input_ctx = self.input_ctx.as_ref().ok_or(Error::NoPipeline)?;
-
-        let types = [InputType::MouseMove, InputType::MouseWheel];
-        for t in types {
-            input_ctx
-                .pipeline
-                .set_type_processing_state(t, RouterProcessingState::from_boolean(inside))?;
-        }
-
-        if inside {
-            input_ctx.pipeline.set_type_processing_state(
-                InputType::MouseButton,
-                RouterProcessingState::from_boolean(true),
-            )?;
-        } else {
-            input_ctx.pipeline.set_type_processing_state(
-                InputType::MouseButton,
-                RouterProcessingState::from_callback(Box::new(Self::mouse_button_filter_pressed)),
-            )?;
-        }
 
         Ok(())
     }
@@ -461,13 +459,21 @@ impl State {
                 event: WindowEvent::CursorEntered { device_id: _ },
                 ..
             } => {
-                self.handle_cursor_inside_window(true)?;
+                self.window.cursor_inside_window = true;
+
+                if let Some(input_ctx) = self.input_ctx.as_ref() {
+                    input_ctx.handle_cursor_inside_window(true)?;
+                }
             }
             Event::WindowEvent {
                 event: WindowEvent::CursorLeft { device_id: _ },
                 ..
             } => {
-                self.handle_cursor_inside_window(false)?;
+                self.window.cursor_inside_window = false;
+
+                if let Some(input_ctx) = self.input_ctx.as_ref() {
+                    input_ctx.handle_cursor_inside_window(false)?;
+                }
             }
             Event::WindowEvent {
                 event: WindowEvent::Resized(size),
