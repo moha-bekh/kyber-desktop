@@ -173,6 +173,12 @@ impl WindowWrapper {
         self.window.set_cursor_visible(visible);
     }
 
+    fn set_cursor_position(&self, position: PhysicalPosition<i32>) -> Result<()> {
+        self.window.set_cursor_position(position)?;
+
+        Ok(())
+    }
+
     fn resized(&mut self, size: PhysicalSize<u32>) {
         self.window_size.width = size.width;
         self.window_size.height = size.height;
@@ -808,7 +814,7 @@ impl State {
                             PhysicalPosition::new(position.x as _, position.y as _);
                         self.window.last_cursor_pos = Some(physical_position);
 
-                        self.window.window.set_cursor_position(physical_position)?;
+                        self.window.set_cursor_position(physical_position)?;
                     }
 
                     match cursor.data {
