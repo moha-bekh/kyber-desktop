@@ -233,6 +233,14 @@ impl WindowWrapper {
             && video_pos.y as i32 >= 0
             && position.y < video_size.height as i32
     }
+
+    fn local_to_host(&self, cursor_pos: Position, capture_cursor: bool) -> Option<Position> {
+        self.video_layout.local_to_host(cursor_pos, capture_cursor)
+    }
+
+    fn host_to_local(&self, host_pos: Position) -> Position {
+        self.video_layout.host_to_local(host_pos)
+    }
 }
 
 struct State {
@@ -435,7 +443,7 @@ impl State {
             return Ok(());
         };
 
-        let projected_pos = self.window.video_layout.local_to_host(
+        let projected_pos = self.window.local_to_host(
             Position {
                 x: position.x as u32,
                 y: position.y as u32,
@@ -770,7 +778,7 @@ impl State {
                     // otherwise i32::MAX is sent. Then the client must move its own cursor to
                     // match the host cursor coordinates.
                     if !self.cursor_visible && cursor.x != i32::MAX && cursor.y != i32::MAX {
-                        let position = self.window.video_layout.host_to_local(Position {
+                        let position = self.window.host_to_local(Position {
                             x: cursor.x as u32,
                             y: cursor.y as u32,
                         });
