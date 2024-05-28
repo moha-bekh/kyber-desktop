@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::sync::Arc;
 
 use log::{debug, info, warn};
-use raw_window_handle::HasRawWindowHandle;
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use winit::{
     dpi::{PhysicalPosition, PhysicalSize},
     event::{Event, WindowEvent},
@@ -249,6 +249,10 @@ impl WindowWrapper {
     fn host_to_local(&self, host_pos: Position) -> Position {
         self.video_layout.host_to_local(host_pos)
     }
+
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        self.window.raw_window_handle()
+    }
 }
 
 struct State {
@@ -339,7 +343,8 @@ impl State {
         }
 
         if let Some(display_id) = self.window.display_id {
-            let player_config = Self::create_player_config(&self.cli_args, &self.window.window)?;
+            let player_config =
+                Self::create_player_config(&self.cli_args, self.window.raw_window_handle())?;
 
             let video_config =
                 libclient_rs::VideoSessionConfig::default(display_id, player_config)?;
@@ -363,9 +368,9 @@ impl State {
 
     fn create_player_config(
         cli_args: &CliArgs,
-        window: &winit::window::Window,
+        window_handle: RawWindowHandle,
     ) -> Result<VideoPlayerConfig> {
-        let window_handle = match window.raw_window_handle() {
+        let window_handle = match window_handle {
             #[cfg(target_os = "linux")]
             raw_window_handle::RawWindowHandle::Xlib(handle) => {
                 WindowHandle::from_x11(handle.window)
