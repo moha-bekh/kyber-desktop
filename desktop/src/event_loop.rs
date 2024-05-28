@@ -6,7 +6,7 @@ use raw_window_handle::HasRawWindowHandle;
 use winit::{
     dpi::PhysicalPosition,
     event::{Event, WindowEvent},
-    event_loop::{ControlFlow, EventLoop, EventLoopProxy},
+    event_loop::{ControlFlow, EventLoop, EventLoopProxy, EventLoopWindowTarget},
     window::{self, CursorGrabMode, CursorRgba, WindowBuilder},
 };
 
@@ -49,6 +49,49 @@ struct WindowWrapper {
     display_id: Option<u32>,
     cursor_inside_window: bool,
     last_cursor_pos: Option<PhysicalPosition<i32>>,
+}
+
+impl WindowWrapper {
+    fn new(event_loop: &EventLoopWindowTarget<UserEvent>) -> Result<Self> {
+        let window_width: u32 = 800;
+        let window_height: u32 = 600;
+
+        let window = WindowBuilder::new()
+            .with_title("Kyber Client")
+            .with_inner_size(winit::dpi::LogicalSize::new(window_width, window_height))
+            .build(event_loop)?;
+
+        let mut video_layout = VideoLayout {
+            window_size: RectSize {
+                width: window_width,
+                height: window_height,
+            },
+            host_size: RectSize {
+                width: 1920,
+                height: 1080,
+            },
+            video_size: RectSize {
+                width: 0,
+                height: 0,
+            },
+            video_pos: Position { x: 0, y: 0 },
+        };
+
+        video_layout.update_display_layout();
+
+        Ok(Self {
+            window,
+            window_size: RectSize {
+                width: window_width,
+                height: window_height,
+            },
+            focused: false,
+            video_layout,
+            display_id: None,
+            cursor_inside_window: false,
+            last_cursor_pos: None,
+        })
+    }
 }
 
 struct State {
@@ -780,34 +823,8 @@ pub struct EventLoopWrapper {
 
 impl EventLoopWrapper {
     pub fn new(event_loop: EventLoop<UserEvent>, cli_args: CliArgs) -> Result<Self> {
-        // Create Loop + Window
-        let window_width: u32 = 800;
-        let window_height: u32 = 600;
-
-        let window = WindowBuilder::new()
-            .with_title("Kyber Client")
-            .with_inner_size(winit::dpi::LogicalSize::new(window_width, window_height))
-            .build(&event_loop)?;
-
-        let mut video_layout = VideoLayout {
-            window_size: RectSize {
-                width: window_width,
-                height: window_height,
-            },
-            host_size: RectSize {
-                width: 1920,
-                height: 1080,
-            },
-            video_size: RectSize {
-                width: 0,
-                height: 0,
-            },
-            video_pos: Position { x: 0, y: 0 },
-        };
-
-        video_layout.update_display_layout();
-
         let eventloop_proxy = event_loop.create_proxy();
+        let window = WindowWrapper::new(&event_loop)?;
 
         Ok(Self {
             event_loop,
@@ -817,18 +834,7 @@ impl EventLoopWrapper {
                 client: None,
                 input_ctx: None,
                 cursor_visible: true,
-                window: WindowWrapper {
-                    window,
-                    window_size: RectSize {
-                        width: window_width,
-                        height: window_height,
-                    },
-                    focused: false,
-                    video_layout,
-                    display_id: None,
-                    cursor_inside_window: false,
-                    last_cursor_pos: None,
-                },
+                window,
             }),
         })
     }
