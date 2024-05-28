@@ -11,7 +11,7 @@ use winit::{
 };
 
 use libclient_rs::{Client, ConnectConfig, PlayerConfig, StreamingSessionConfig, WindowHandle};
-use libkynput_rs::{InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
+use libkynput_rs::{CursorData, InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
 
 use crate::client_proxy::ClientEventProxy;
 use crate::cursor_handler;
@@ -714,14 +714,20 @@ impl State {
                         self.window.set_cursor_position(physical_position)?;
                     }
 
-                    if !cursor.data.is_empty() {
-                        self.window.set_cursor_rgba(CursorRgba {
-                            xhot: cursor.xhot,
-                            yhot: cursor.yhot,
-                            width: cursor.width,
-                            height: cursor.height,
-                            data: cursor.data,
-                        });
+                    match cursor.data {
+                        CursorData::Raw(data) => {
+                            self.window.set_cursor_rgba(CursorRgba {
+                                xhot: cursor.xhot,
+                                yhot: cursor.yhot,
+                                width: cursor.width,
+                                height: cursor.height,
+                                data,
+                            });
+                        }
+                        CursorData::Png(_) => {
+                            warn!("Got a PNG cursor");
+                        }
+                        CursorData::None => {}
                     }
 
                     if self.window.fullscreen().is_none() {

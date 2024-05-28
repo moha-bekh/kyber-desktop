@@ -29,7 +29,7 @@ impl HandlerConsumerInterface for WindowCursorHandler {
 
 impl ConsumerInterface for WindowCursorHandler {
     fn consume(&self, pkt: Packet) {
-        let Some(cursor) = Cursor::from_packet(pkt) else {
+        let Some(cursor) = Cursor::from_packet(&pkt) else {
             return;
         };
 
