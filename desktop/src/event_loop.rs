@@ -177,6 +177,17 @@ impl WindowWrapper {
 
         self.video_layout.update_display_layout();
     }
+
+    fn set_host_display_size(&mut self, display: &libclient_rs::Display) {
+        self.display_id = Some(display.id);
+
+        self.video_layout.host_size = RectSize {
+            width: display.width as u32,
+            height: display.height as u32,
+        };
+
+        self.video_layout.update_display_layout();
+    }
 }
 
 struct State {
@@ -363,17 +374,6 @@ impl State {
         let client = self.client.as_mut().ok_or(Error::NoClient)?;
         client.disconnect()?;
         Ok(())
-    }
-
-    fn set_host_display_size(&mut self, display: &libclient_rs::Display) {
-        self.window.display_id = Some(display.id);
-
-        self.window.video_layout.host_size = RectSize {
-            width: display.width as u32,
-            height: display.height as u32,
-        };
-
-        self.window.video_layout.update_display_layout();
     }
 
     fn send_position(
@@ -624,7 +624,7 @@ impl State {
                     &displays[0]
                 };
 
-                self.set_host_display_size(display);
+                self.window.set_host_display_size(display);
 
                 let session_config = self.create_streaming_session_config()?;
 
@@ -686,12 +686,8 @@ impl State {
                     return Ok(());
                 };
 
-                self.window.video_layout.host_size = RectSize {
-                    width: display.width as u32,
-                    height: display.height as u32,
-                };
+                self.window.set_host_display_size(display);
 
-                self.window.video_layout.update_display_layout();
                 self.window
                     .grab_cursor(self.window.window.fullscreen().is_some());
             }
