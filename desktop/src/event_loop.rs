@@ -127,6 +127,10 @@ impl WindowWrapper {
         })
     }
 
+    fn id(&self) -> winit::window::WindowId {
+        self.window.id()
+    }
+
     fn grab_cursor(&self, grab: bool) {
         // The cursor should be contained in the Rect where the video is displayed.
         // However, not all platforms support this feature, and some are only able
@@ -512,7 +516,7 @@ impl State {
                 event: WindowEvent::CloseRequested,
                 window_id,
             } => {
-                if window_id == self.window.window.id() {
+                if window_id == self.window.id() {
                     self.stop_client()?;
                 }
             }
