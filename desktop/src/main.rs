@@ -3,20 +3,20 @@
 mod client_proxy;
 mod cursor_handler;
 mod error;
+mod event_loop;
 mod input_handler;
 mod parse_utils;
 mod pipeline_hook;
 mod video_layout;
-mod window;
 
 use log::{error, info, LevelFilter};
 use winit::event_loop::EventLoopBuilder;
 
 use libclient_rs::{KymuxVideoProtocol, StreamingProtocol, VideoCodec};
 
+use event_loop::UserEvent;
 use parse_utils::parse_bitrate;
 use pipeline_hook::ClientPipelineHook;
-use window::UserEvent;
 
 const STREAMER_HOST: &str = "kybertest";
 const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
@@ -225,7 +225,7 @@ fn main() {
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
     let eventloop_proxy = event_loop.create_proxy();
 
-    let mut event_loop = window::EventLoopWrapper::new(event_loop, cli_args).unwrap();
+    let mut event_loop = event_loop::EventLoopWrapper::new(event_loop, cli_args).unwrap();
 
     let stop_req_cb = event_loop.create_stop_request_cb();
     ctrlc::set_handler(move || {

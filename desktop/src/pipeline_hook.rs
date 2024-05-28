@@ -8,7 +8,7 @@ use libkynput_rs::{InputType, KeyboardKey, MouseButton, MouseButtonType, Packet}
 use libkynput_rs::{RouterHook, RouterHookPacketResult};
 
 use crate::error::{Error, Result};
-use crate::window::UserEvent;
+use crate::event_loop::UserEvent;
 
 const SCANCODE_UNKNOWN: u16 = 0;
 const SCANCODE_F: u16 = 33;

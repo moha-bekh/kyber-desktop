@@ -9,7 +9,7 @@ use libkynput_rs::{
 };
 
 use crate::error::Result;
-use crate::window::UserEvent;
+use crate::event_loop::UserEvent;
 
 struct WindowCursorHandler {
     event_loop_proxy: EventLoopProxy<UserEvent>,
