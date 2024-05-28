@@ -216,6 +216,16 @@ impl WindowWrapper {
                 .set_fullscreen(Some(window::Fullscreen::Borderless(monitor)));
         }
     }
+
+    fn position_inside_video(&self, position: &PhysicalPosition<i32>) -> bool {
+        let video_size = &self.video_layout.video_size;
+        let video_pos = &self.video_layout.video_pos;
+
+        position.x >= video_pos.x as i32
+            && position.x < video_size.width as i32
+            && video_pos.y as i32 >= 0
+            && position.y < video_size.height as i32
+    }
 }
 
 struct State {
@@ -448,15 +458,7 @@ impl State {
         let position = self
             .window
             .last_cursor_pos
-            .filter(|position| {
-                let video_size = &self.window.video_layout.video_size;
-                let video_pos = &self.window.video_layout.video_pos;
-
-                position.x >= video_pos.x as i32
-                    && position.x < video_size.width as i32
-                    && video_pos.y as i32 >= 0
-                    && position.y < video_size.height as i32
-            })
+            .filter(|position| self.window.position_inside_video(position))
             .unwrap_or(PhysicalPosition {
                 x: self.window.video_layout.window_size.width as i32 / 2,
                 y: self.window.video_layout.window_size.height as i32 / 2,
