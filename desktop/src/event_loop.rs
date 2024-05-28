@@ -178,6 +178,13 @@ impl WindowWrapper {
         self.video_layout.update_display_layout();
     }
 
+    fn size(&self) -> PhysicalSize<u32> {
+        PhysicalSize {
+            width: self.window_size.width,
+            height: self.window_size.height,
+        }
+    }
+
     fn set_host_display_size(&mut self, display: &libclient_rs::Display) {
         self.display_id = Some(display.id);
 
@@ -459,9 +466,13 @@ impl State {
             .window
             .last_cursor_pos
             .filter(|position| self.window.position_inside_video(position))
-            .unwrap_or(PhysicalPosition {
-                x: self.window.video_layout.window_size.width as i32 / 2,
-                y: self.window.video_layout.window_size.height as i32 / 2,
+            .unwrap_or_else(|| {
+                let window_size = self.window.size();
+
+                PhysicalPosition {
+                    x: window_size.width as i32 / 2,
+                    y: window_size.height as i32 / 2,
+                }
             });
 
         let ret = self.send_position(input_ctx, position, false);
