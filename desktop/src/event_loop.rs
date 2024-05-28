@@ -188,6 +188,34 @@ impl WindowWrapper {
 
         self.video_layout.update_display_layout();
     }
+
+    fn toggle_fullscreen(&mut self) {
+        if self.window.fullscreen().is_some() {
+            debug!("Exit fullscreen");
+            self.window.set_fullscreen(None);
+
+            self.video_layout.window_size = self.window_size;
+            self.video_layout.update_display_layout();
+        } else {
+            debug!("Enter fullscreen");
+
+            let monitor = self.window.current_monitor();
+
+            if let Some(monitor) = monitor.as_ref() {
+                let monitor_size = monitor.size();
+
+                self.video_layout.window_size = RectSize {
+                    width: monitor_size.width,
+                    height: monitor_size.height,
+                };
+
+                self.video_layout.update_display_layout()
+            }
+
+            self.window
+                .set_fullscreen(Some(window::Fullscreen::Borderless(monitor)));
+        }
+    }
 }
 
 struct State {
@@ -699,32 +727,7 @@ impl State {
                 info!("Got StreamerPipelineEvent. Type: {type_:?} - Stage: {stage:?} - Event: {event:?}");
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::Fullscreen)) => {
-                if self.window.window.fullscreen().is_some() {
-                    debug!("Exit fullscreen");
-                    self.window.window.set_fullscreen(None);
-
-                    self.window.video_layout.window_size = self.window.window_size;
-                    self.window.video_layout.update_display_layout();
-                } else {
-                    debug!("Enter fullscreen");
-
-                    let monitor = self.window.window.current_monitor();
-
-                    if let Some(monitor) = monitor.as_ref() {
-                        let monitor_size = monitor.size();
-
-                        self.window.video_layout.window_size = RectSize {
-                            width: monitor_size.width,
-                            height: monitor_size.height,
-                        };
-
-                        self.window.video_layout.update_display_layout()
-                    }
-
-                    self.window
-                        .window
-                        .set_fullscreen(Some(window::Fullscreen::Borderless(monitor)));
-                }
+                self.window.toggle_fullscreen();
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::RestartStreaming)) => {
                 info!("Restart streaming requested");
