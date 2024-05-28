@@ -41,23 +41,23 @@ struct InputContext {
     supports_relative_mouse: bool,
 }
 
-struct State {
-    eventloop_proxy: EventLoopProxy<UserEvent>,
-    cli_args: CliArgs,
-    client: Option<Client>,
+struct WindowWrapper {
     window: winit::window::Window,
     window_size: RectSize,
     focused: bool,
     video_layout: VideoLayout,
-
     display_id: Option<u32>,
-
-    input_ctx: Option<InputContext>,
-    last_cursor_pos: Option<PhysicalPosition<i32>>,
-
     cursor_inside_window: bool,
+    last_cursor_pos: Option<PhysicalPosition<i32>>,
+}
 
+struct State {
+    eventloop_proxy: EventLoopProxy<UserEvent>,
+    cli_args: CliArgs,
+    client: Option<Client>,
+    input_ctx: Option<InputContext>,
     cursor_visible: bool,
+    window: WindowWrapper,
 }
 
 impl State {
@@ -138,8 +138,8 @@ impl State {
             session_config.set_bitrate(bitrate);
         }
 
-        if let Some(display_id) = self.display_id {
-            let player_config = Self::create_player_config(&self.cli_args, &self.window)?;
+        if let Some(display_id) = self.window.display_id {
+            let player_config = Self::create_player_config(&self.cli_args, &self.window.window)?;
 
             let video_config =
                 libclient_rs::VideoSessionConfig::default(display_id, player_config)?;
@@ -220,7 +220,7 @@ impl State {
     }
 
     fn handle_focused(&mut self) -> Result<()> {
-        if !self.focused {
+        if !self.window.focused {
             self.input_ctx
                 .as_ref()
                 .ok_or(Error::NoPipeline)?
@@ -228,7 +228,7 @@ impl State {
                 .flush_keys()?;
 
             self.grab_cursor(false);
-        } else if self.window.fullscreen().is_some() {
+        } else if self.window.window.fullscreen().is_some() {
             self.grab_cursor(true);
         }
 
@@ -236,13 +236,13 @@ impl State {
             .as_ref()
             .ok_or(Error::NoPipeline)?
             .pipeline
-            .set_global_processing_state(self.focused)?;
+            .set_global_processing_state(self.window.focused)?;
 
         Ok(())
     }
 
     fn handle_cursor_inside_window(&mut self, inside: bool) -> Result<()> {
-        self.cursor_inside_window = inside;
+        self.window.cursor_inside_window = inside;
 
         let input_ctx = self.input_ctx.as_ref().ok_or(Error::NoPipeline)?;
 
@@ -284,18 +284,18 @@ impl State {
             use winit::dpi::{PhysicalSize, Position, Size};
 
             let pos = Position::Physical(PhysicalPosition::new(
-                self.video_layout.video_pos.x as i32,
-                self.video_layout.video_pos.y as i32,
+                self.window.video_layout.video_pos.x as i32,
+                self.window.video_layout.video_pos.y as i32,
             ));
 
             let size = Size::Physical(PhysicalSize::new(
-                self.video_layout.video_size.width,
-                self.video_layout.video_size.height,
+                self.window.video_layout.video_size.width,
+                self.window.video_layout.video_size.height,
             ));
 
-            self.window.set_cursor_rect(Some((pos, size)))
+            self.window.window.set_cursor_rect(Some((pos, size)))
         } else {
-            self.window.set_cursor_rect(None)
+            self.window.window.set_cursor_rect(None)
         };
 
         if ret.is_err() {
@@ -305,7 +305,7 @@ impl State {
                 CursorGrabMode::None
             };
 
-            let ret = self.window.set_cursor_grab(grab);
+            let ret = self.window.window.set_cursor_grab(grab);
             if let Err(err) = ret {
                 warn!("Fail during grab_cursor({:?}): {:?}", grab, err);
             }
@@ -313,14 +313,14 @@ impl State {
     }
 
     fn set_host_display_size(&mut self, display: &libclient_rs::Display) {
-        self.display_id = Some(display.id);
+        self.window.display_id = Some(display.id);
 
-        self.video_layout.host_size = RectSize {
+        self.window.video_layout.host_size = RectSize {
             width: display.width as u32,
             height: display.height as u32,
         };
 
-        self.video_layout.update_display_layout();
+        self.window.video_layout.update_display_layout();
     }
 
     fn send_position(
@@ -329,7 +329,7 @@ impl State {
         position: PhysicalPosition<i32>,
         capture_cursor: bool,
     ) -> Result<()> {
-        let Some(display_id) = self.display_id else {
+        let Some(display_id) = self.window.display_id else {
             return Ok(());
         };
 
@@ -337,7 +337,7 @@ impl State {
             return Ok(());
         };
 
-        let projected_pos = self.video_layout.local_to_host(
+        let projected_pos = self.window.video_layout.local_to_host(
             Position {
                 x: position.x as u32,
                 y: position.y as u32,
@@ -365,10 +365,11 @@ impl State {
         // If cursor was outside the video, assume the cursor was
         // on the center of the window.
         let position = self
+            .window
             .last_cursor_pos
             .filter(|position| {
-                let video_size = &self.video_layout.video_size;
-                let video_pos = &self.video_layout.video_pos;
+                let video_size = &self.window.video_layout.video_size;
+                let video_pos = &self.window.video_layout.video_pos;
 
                 position.x >= video_pos.x as i32
                     && position.x < video_size.width as i32
@@ -376,8 +377,8 @@ impl State {
                     && position.y < video_size.height as i32
             })
             .unwrap_or(PhysicalPosition {
-                x: self.video_layout.window_size.width as i32 / 2,
-                y: self.video_layout.window_size.height as i32 / 2,
+                x: self.window.video_layout.window_size.width as i32 / 2,
+                y: self.window.video_layout.window_size.height as i32 / 2,
             });
 
         let ret = self.send_position(input_ctx, position, false);
@@ -396,7 +397,7 @@ impl State {
                 event: WindowEvent::CloseRequested,
                 window_id,
             } => {
-                if window_id == self.window.id() {
+                if window_id == self.window.window.id() {
                     self.stop_client()?;
                 }
             }
@@ -410,7 +411,7 @@ impl State {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
-                self.focused = focused;
+                self.window.focused = focused;
                 self.handle_focused()?;
             }
             Event::WindowEvent {
@@ -429,18 +430,18 @@ impl State {
                 event: WindowEvent::Resized(size),
                 ..
             } => {
-                self.window_size.width = size.width;
-                self.window_size.height = size.height;
+                self.window.window_size.width = size.width;
+                self.window.window_size.height = size.height;
 
                 debug!("Window resized");
-                self.video_layout.window_size = RectSize {
+                self.window.video_layout.window_size = RectSize {
                     width: size.width,
                     height: size.height,
                 };
 
-                self.video_layout.update_display_layout();
+                self.window.video_layout.update_display_layout();
 
-                self.grab_cursor(self.window.fullscreen().is_some());
+                self.grab_cursor(self.window.window.fullscreen().is_some());
             }
             Event::WindowEvent {
                 event: WindowEvent::CursorMoved { position, .. },
@@ -453,13 +454,13 @@ impl State {
                 };
 
                 // Avoid to send the same MouseMove multiple time
-                if let Some(last_cursor_pos) = self.last_cursor_pos {
+                if let Some(last_cursor_pos) = self.window.last_cursor_pos {
                     if last_cursor_pos.x == position.x && last_cursor_pos.y == position.y {
                         return Ok(());
                     }
                 }
 
-                self.last_cursor_pos = Some(position);
+                self.window.last_cursor_pos = Some(position);
 
                 // Project and send the position if an handler is defined
                 if let Some(input_ctx) = self.input_ctx.as_ref() {
@@ -501,7 +502,7 @@ impl State {
                             input,
                             is_synthetic,
                         },
-                        self.window.scale_factor(),
+                        self.window.window.scale_factor(),
                     );
                 }
             }
@@ -527,7 +528,7 @@ impl State {
                             button,
                             modifiers: winit::event::ModifiersState::default(),
                         },
-                        self.window.scale_factor(),
+                        self.window.window.scale_factor(),
                     );
                 }
             }
@@ -553,7 +554,7 @@ impl State {
                             phase,
                             modifiers: winit::event::ModifiersState::default(),
                         },
-                        self.window.scale_factor(),
+                        self.window.window.scale_factor(),
                     );
                 }
             }
@@ -623,7 +624,7 @@ impl State {
                 displays,
             })) => {
                 log::info!("Display list updated");
-                let Some(display_id) = self.display_id else {
+                let Some(display_id) = self.window.display_id else {
                     return Ok(());
                 };
 
@@ -632,13 +633,13 @@ impl State {
                     return Ok(());
                 };
 
-                self.video_layout.host_size = RectSize {
+                self.window.video_layout.host_size = RectSize {
                     width: display.width as u32,
                     height: display.height as u32,
                 };
 
-                self.video_layout.update_display_layout();
-                self.grab_cursor(self.window.fullscreen().is_some());
+                self.window.video_layout.update_display_layout();
+                self.grab_cursor(self.window.window.fullscreen().is_some());
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::StreamerPipelineEvent {
                 type_,
@@ -648,29 +649,30 @@ impl State {
                 info!("Got StreamerPipelineEvent. Type: {type_:?} - Stage: {stage:?} - Event: {event:?}");
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::Fullscreen)) => {
-                if self.window.fullscreen().is_some() {
+                if self.window.window.fullscreen().is_some() {
                     debug!("Exit fullscreen");
-                    self.window.set_fullscreen(None);
+                    self.window.window.set_fullscreen(None);
 
-                    self.video_layout.window_size = self.window_size;
-                    self.video_layout.update_display_layout();
+                    self.window.video_layout.window_size = self.window.window_size;
+                    self.window.video_layout.update_display_layout();
                 } else {
                     debug!("Enter fullscreen");
 
-                    let monitor = self.window.current_monitor();
+                    let monitor = self.window.window.current_monitor();
 
                     if let Some(monitor) = monitor.as_ref() {
                         let monitor_size = monitor.size();
 
-                        self.video_layout.window_size = RectSize {
+                        self.window.video_layout.window_size = RectSize {
                             width: monitor_size.width,
                             height: monitor_size.height,
                         };
 
-                        self.video_layout.update_display_layout()
+                        self.window.video_layout.update_display_layout()
                     }
 
                     self.window
+                        .window
                         .set_fullscreen(Some(window::Fullscreen::Borderless(monitor)));
                 }
             }
@@ -692,7 +694,7 @@ impl State {
                 if cursor.visible {
                     // Cursor must be restored before updating its shape.
                     // Otherwise on Linux, the default system cursor will be shown.
-                    self.window.set_cursor_visible(true);
+                    self.window.window.set_cursor_visible(true);
 
                     // If cursor wasn't previously visible, it must be moved at the position
                     // indicated by the Host. There is a drift between client cursor position,
@@ -702,7 +704,7 @@ impl State {
                     // otherwise i32::MAX is sent. Then the client must move its own cursor to
                     // match the host cursor coordinates.
                     if !self.cursor_visible && cursor.x != i32::MAX && cursor.y != i32::MAX {
-                        let position = self.video_layout.host_to_local(Position {
+                        let position = self.window.video_layout.host_to_local(Position {
                             x: cursor.x as u32,
                             y: cursor.y as u32,
                         });
@@ -711,14 +713,14 @@ impl State {
                         // set_cursor_position. This is just a local update, not a real MouseMove
                         let physical_position =
                             PhysicalPosition::new(position.x as _, position.y as _);
-                        self.last_cursor_pos = Some(physical_position);
+                        self.window.last_cursor_pos = Some(physical_position);
 
-                        self.window.set_cursor_position(physical_position)?;
+                        self.window.window.set_cursor_position(physical_position)?;
                     }
 
                     match cursor.data {
                         CursorData::Raw(data) => {
-                            self.window.set_cursor_rgba(CursorRgba {
+                            self.window.window.set_cursor_rgba(CursorRgba {
                                 xhot: cursor.xhot,
                                 yhot: cursor.yhot,
                                 width: cursor.width,
@@ -732,7 +734,7 @@ impl State {
                         CursorData::None => {}
                     }
 
-                    if self.window.fullscreen().is_none() {
+                    if self.window.window.fullscreen().is_none() {
                         self.grab_cursor(false);
                     }
 
@@ -747,7 +749,7 @@ impl State {
                         )?;
                     }
                 } else {
-                    self.window.set_cursor_visible(false);
+                    self.window.window.set_cursor_visible(false);
                     self.grab_cursor(true);
 
                     if input_ctx.supports_relative_mouse {
@@ -813,18 +815,20 @@ impl EventLoopWrapper {
                 eventloop_proxy,
                 cli_args,
                 client: None,
-                window,
-                window_size: RectSize {
-                    width: window_width,
-                    height: window_height,
-                },
-                focused: false,
-                video_layout,
-                display_id: None,
                 input_ctx: None,
-                last_cursor_pos: None,
-                cursor_inside_window: false,
                 cursor_visible: true,
+                window: WindowWrapper {
+                    window,
+                    window_size: RectSize {
+                        width: window_width,
+                        height: window_height,
+                    },
+                    focused: false,
+                    video_layout,
+                    display_id: None,
+                    cursor_inside_window: false,
+                    last_cursor_pos: None,
+                },
             }),
         })
     }
