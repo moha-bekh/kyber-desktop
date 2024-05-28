@@ -169,6 +169,10 @@ impl WindowWrapper {
         }
     }
 
+    fn set_cursor_visible(&self, visible: bool) {
+        self.window.set_cursor_visible(visible);
+    }
+
     fn resized(&mut self, size: PhysicalSize<u32>) {
         self.window_size.width = size.width;
         self.window_size.height = size.height;
@@ -783,7 +787,7 @@ impl State {
                 if cursor.visible {
                     // Cursor must be restored before updating its shape.
                     // Otherwise on Linux, the default system cursor will be shown.
-                    self.window.window.set_cursor_visible(true);
+                    self.window.set_cursor_visible(true);
 
                     // If cursor wasn't previously visible, it must be moved at the position
                     // indicated by the Host. There is a drift between client cursor position,
@@ -838,7 +842,7 @@ impl State {
                         )?;
                     }
                 } else {
-                    self.window.window.set_cursor_visible(false);
+                    self.window.set_cursor_visible(false);
                     self.window.grab_cursor(true);
 
                     if input_ctx.supports_relative_mouse {
