@@ -179,6 +179,10 @@ impl WindowWrapper {
         Ok(())
     }
 
+    fn set_cursor_rgba(&self, cursor: CursorRgba) {
+        self.window.set_cursor_rgba(cursor);
+    }
+
     fn resized(&mut self, size: PhysicalSize<u32>) {
         self.window_size.width = size.width;
         self.window_size.height = size.height;
@@ -819,7 +823,7 @@ impl State {
 
                     match cursor.data {
                         CursorData::Raw(data) => {
-                            self.window.window.set_cursor_rgba(CursorRgba {
+                            self.window.set_cursor_rgba(CursorRgba {
                                 xhot: cursor.xhot,
                                 yhot: cursor.yhot,
                                 width: cursor.width,
