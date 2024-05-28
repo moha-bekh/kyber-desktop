@@ -771,12 +771,12 @@ impl State {
     }
 }
 
-pub struct Window {
+pub struct EventLoopWrapper {
     event_loop: EventLoop<UserEvent>,
     state: RefCell<State>,
 }
 
-impl Window {
+impl EventLoopWrapper {
     pub fn new(event_loop: EventLoop<UserEvent>, cli_args: CliArgs) -> Result<Self> {
         // Create Loop + Window
         let window_width: u32 = 800;
@@ -837,7 +837,7 @@ impl Window {
         })
     }
 
-    pub fn run_loop(self) -> Result<()> {
+    pub fn run(self) -> Result<()> {
         self.event_loop.run(move |event, _, control_flow| {
             *control_flow = ControlFlow::Wait;
 

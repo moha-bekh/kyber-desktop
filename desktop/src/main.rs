@@ -225,9 +225,9 @@ fn main() {
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
     let eventloop_proxy = event_loop.create_proxy();
 
-    let mut window = window::Window::new(event_loop, cli_args).unwrap();
+    let mut event_loop = window::EventLoopWrapper::new(event_loop, cli_args).unwrap();
 
-    let stop_req_cb = window.create_stop_request_cb();
+    let stop_req_cb = event_loop.create_stop_request_cb();
     ctrlc::set_handler(move || {
         stop_req_cb();
     })
@@ -235,5 +235,5 @@ fn main() {
 
     eventloop_proxy.send_event(UserEvent::Start).unwrap();
 
-    window.run_loop().unwrap();
+    event_loop.run().unwrap();
 }
