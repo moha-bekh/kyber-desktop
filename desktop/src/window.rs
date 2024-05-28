@@ -10,7 +10,9 @@ use winit::{
     window::{self, CursorGrabMode, CursorRgba, WindowBuilder},
 };
 
-use libclient_rs::{Client, ConnectConfig, PlayerConfig, StreamingSessionConfig, WindowHandle};
+use libclient_rs::{
+    Client, ConnectConfig, StreamingSessionConfig, VideoPlayerConfig, WindowHandle,
+};
 use libkynput_rs::{CursorData, InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
 
 use crate::client_proxy::ClientEventProxy;
@@ -129,24 +131,29 @@ impl State {
         Ok(connect_config)
     }
 
-    fn create_streaming_session_config(
-        cli_args: &CliArgs,
-        input_ctx: &Option<InputContext>,
-    ) -> Result<StreamingSessionConfig> {
-        let session_config = libclient_rs::StreamingSessionConfig::default(cli_args.protocol)?;
+    fn create_streaming_session_config(&self) -> Result<StreamingSessionConfig> {
+        let session_config = libclient_rs::StreamingSessionConfig::default(self.cli_args.protocol)?;
 
-        if let Some(bitrate) = cli_args.bitrate {
+        if let Some(bitrate) = self.cli_args.bitrate {
             session_config.set_bitrate(bitrate);
         }
 
-        let video_config = libclient_rs::VideoSessionConfig::default(cli_args.display_index)?;
-        video_config.set_codec(cli_args.video_codec);
-        video_config.set_yuv444(cli_args.yuv444);
+        if let Some(display_id) = self.display_id {
+            let player_config = Self::create_player_config(&self.cli_args, &self.window)?;
 
-        session_config.set_video(video_config);
-        session_config.set_audio(cli_args.audio);
+            let video_config =
+                libclient_rs::VideoSessionConfig::default(display_id, player_config)?;
+            video_config.set_codec(self.cli_args.video_codec);
+            video_config.set_yuv444(self.cli_args.yuv444);
 
-        if let Some(input_ctx) = input_ctx.as_ref() {
+            session_config.add_video(video_config);
+        } else {
+            warn!("No valid DisplayId found");
+        }
+
+        session_config.set_audio(self.cli_args.audio);
+
+        if let Some(input_ctx) = self.input_ctx.as_ref() {
             let input_config = libclient_rs::InputSessionConfig::default(&input_ctx.pipeline)?;
             session_config.set_input(input_config);
         }
@@ -157,7 +164,7 @@ impl State {
     fn create_player_config(
         cli_args: &CliArgs,
         window: &winit::window::Window,
-    ) -> Result<PlayerConfig> {
+    ) -> Result<VideoPlayerConfig> {
         let window_handle = match window.raw_window_handle() {
             #[cfg(target_os = "linux")]
             raw_window_handle::RawWindowHandle::Xlib(handle) => {
@@ -176,7 +183,7 @@ impl State {
             }
         };
 
-        let player_config = libclient_rs::PlayerConfig::default(Some(window_handle))?;
+        let player_config = libclient_rs::VideoPlayerConfig::default(Some(window_handle))?;
         player_config.set_software_decode(cli_args.software_decode);
 
         Ok(player_config)
@@ -565,13 +572,10 @@ impl State {
 
                 self.set_host_display_size(display);
 
+                let session_config = self.create_streaming_session_config()?;
+
                 let client = self.client.as_mut().ok_or(Error::NoClient)?;
-
-                let player_config = Self::create_player_config(&self.cli_args, &self.window)?;
-                let session_config =
-                    Self::create_streaming_session_config(&self.cli_args, &self.input_ctx)?;
-
-                client.start_streaming(&session_config, &player_config)?;
+                client.start_streaming(&session_config)?;
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnectFailed)) => {
                 warn!("Control plane connect failed");
@@ -597,12 +601,10 @@ impl State {
                     self.handle_focused()?;
                 }
 
-                let client = self.client.as_mut().ok_or(Error::NoClient)?;
+                let streaming_config = self.create_streaming_session_config()?;
 
-                let streaming_config =
-                    Self::create_streaming_session_config(&self.cli_args, &self.input_ctx)?;
-                let player_config = Self::create_player_config(&self.cli_args, &self.window)?;
-                client.start_streaming(&streaming_config, &player_config)?;
+                let client = self.client.as_mut().ok_or(Error::NoClient)?;
+                client.start_streaming(&streaming_config)?;
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::InputServiceConnected)) => {
                 info!("Input service connected");
