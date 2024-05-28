@@ -185,6 +185,10 @@ impl WindowWrapper {
         }
     }
 
+    fn scale_factor(&self) -> f64 {
+        self.window.scale_factor()
+    }
+
     fn set_host_display_size(&mut self, display: &libclient_rs::Display) {
         self.display_id = Some(display.id);
 
@@ -607,7 +611,7 @@ impl State {
                             input,
                             is_synthetic,
                         },
-                        self.window.window.scale_factor(),
+                        self.window.scale_factor(),
                     );
                 }
             }
@@ -633,7 +637,7 @@ impl State {
                             button,
                             modifiers: winit::event::ModifiersState::default(),
                         },
-                        self.window.window.scale_factor(),
+                        self.window.scale_factor(),
                     );
                 }
             }
@@ -659,7 +663,7 @@ impl State {
                             phase,
                             modifiers: winit::event::ModifiersState::default(),
                         },
-                        self.window.window.scale_factor(),
+                        self.window.scale_factor(),
                     );
                 }
             }
