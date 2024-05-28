@@ -196,8 +196,12 @@ impl WindowWrapper {
         self.video_layout.update_display_layout();
     }
 
+    fn is_fullscreen(&self) -> bool {
+        self.window.fullscreen().is_some()
+    }
+
     fn toggle_fullscreen(&mut self) {
-        if self.window.fullscreen().is_some() {
+        if self.is_fullscreen() {
             debug!("Exit fullscreen");
             self.window.set_fullscreen(None);
 
@@ -410,7 +414,7 @@ impl State {
                 .flush_keys()?;
 
             self.window.grab_cursor(false);
-        } else if self.window.window.fullscreen().is_some() {
+        } else if self.window.is_fullscreen() {
             self.window.grab_cursor(true);
         }
 
@@ -542,8 +546,7 @@ impl State {
             } => {
                 self.window.resized(size);
 
-                self.window
-                    .grab_cursor(self.window.window.fullscreen().is_some());
+                self.window.grab_cursor(self.window.is_fullscreen());
             }
             Event::WindowEvent {
                 event: WindowEvent::CursorMoved { position, .. },
@@ -737,8 +740,7 @@ impl State {
 
                 self.window.set_host_display_size(display);
 
-                self.window
-                    .grab_cursor(self.window.window.fullscreen().is_some());
+                self.window.grab_cursor(self.window.is_fullscreen());
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::StreamerPipelineEvent {
                 type_,
@@ -808,7 +810,7 @@ impl State {
                         CursorData::None => {}
                     }
 
-                    if self.window.window.fullscreen().is_none() {
+                    if !self.window.is_fullscreen() {
                         self.window.grab_cursor(false);
                     }
 
