@@ -4,7 +4,7 @@ use std::sync::Arc;
 use log::{debug, info, warn};
 use raw_window_handle::HasRawWindowHandle;
 use winit::{
-    dpi::PhysicalPosition,
+    dpi::{PhysicalPosition, PhysicalSize},
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop, EventLoopProxy, EventLoopWindowTarget},
     window::{self, CursorGrabMode, CursorRgba, WindowBuilder},
@@ -55,8 +55,7 @@ impl InputContext {
     fn handle_cursor_inside_window(&self, inside: bool) -> Result<()> {
         let types = [InputType::MouseMove, InputType::MouseWheel];
         for t in types {
-            self
-                .pipeline
+            self.pipeline
                 .set_type_processing_state(t, RouterProcessingState::from_boolean(inside))?;
         }
 
@@ -135,7 +134,7 @@ impl WindowWrapper {
         // Try to contain in a Rect at first, and fallback in the whole window contain
         // if not supported.
         let ret = if grab {
-            use winit::dpi::{PhysicalSize, Position, Size};
+            use winit::dpi::{Position, Size};
 
             let pos = Position::Physical(PhysicalPosition::new(
                 self.video_layout.video_pos.x as i32,
@@ -164,6 +163,19 @@ impl WindowWrapper {
                 warn!("Fail during grab_cursor({:?}): {:?}", grab, err);
             }
         }
+    }
+
+    fn resized(&mut self, size: PhysicalSize<u32>) {
+        self.window_size.width = size.width;
+        self.window_size.height = size.height;
+
+        debug!("Window resized");
+        self.video_layout.window_size = RectSize {
+            width: size.width,
+            height: size.height,
+        };
+
+        self.video_layout.update_display_layout();
     }
 }
 
@@ -479,16 +491,7 @@ impl State {
                 event: WindowEvent::Resized(size),
                 ..
             } => {
-                self.window.window_size.width = size.width;
-                self.window.window_size.height = size.height;
-
-                debug!("Window resized");
-                self.window.video_layout.window_size = RectSize {
-                    width: size.width,
-                    height: size.height,
-                };
-
-                self.window.video_layout.update_display_layout();
+                self.window.resized(size);
 
                 self.window
                     .grab_cursor(self.window.window.fullscreen().is_some());
