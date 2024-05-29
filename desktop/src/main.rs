@@ -4,7 +4,7 @@ mod client_proxy;
 mod cursor_handler;
 mod error;
 mod event_loop;
-mod input_handler;
+mod inputs;
 mod parse_utils;
 mod pipeline_hook;
 mod video_layout;

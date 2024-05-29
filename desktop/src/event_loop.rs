@@ -18,7 +18,7 @@ use libkynput_rs::{CursorData, InputType, MouseButton, Packet, Pipeline, RouterP
 use crate::client_proxy::ClientEventProxy;
 use crate::cursor_handler;
 use crate::error::{Error, Result};
-use crate::input_handler;
+use crate::inputs::WinitHandler;
 use crate::pipeline_hook::{PipelineStateReader, ShortcutType};
 use crate::video_layout::{Position, RectSize, VideoLayout};
 use crate::{CliArgs, ClientPipelineHook};
@@ -47,7 +47,7 @@ fn mouse_button_filter_pressed(pkt: &Packet) -> bool {
 struct InputContext {
     pipeline: Pipeline,
     state_reader: PipelineStateReader,
-    winit_handler: Option<Arc<crate::input_handler::WinitHandler>>,
+    winit_handler: Option<Arc<WinitHandler>>,
     supports_relative_mouse: bool,
 }
 
@@ -60,7 +60,7 @@ impl InputContext {
 
         input_pipeline.plug_handler(cursor_handler)?;
 
-        let missing_types: Vec<InputType> = input_handler::WinitHandler::producable_types()
+        let missing_types: Vec<InputType> = WinitHandler::producable_types()
             .iter()
             .filter(|&&t| !input_pipeline.produces_type(t))
             .copied()
@@ -68,7 +68,7 @@ impl InputContext {
 
         let winit_handler = if !missing_types.is_empty() {
             info!("Winit will be used to produce types {:?}", missing_types);
-            let winit_handler = Arc::new(input_handler::WinitHandler::new(
+            let winit_handler = Arc::new(WinitHandler::new(
                 input_pipeline.get_input_sink(),
                 missing_types,
             )?);
