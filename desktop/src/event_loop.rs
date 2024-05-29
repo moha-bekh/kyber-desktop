@@ -5,7 +5,7 @@ use log::{debug, info, warn};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use winit::{
     dpi::{PhysicalPosition, PhysicalSize},
-    event::{Event, WindowEvent},
+    event::{DeviceEvent, Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop, EventLoopProxy, EventLoopWindowTarget},
     window::{self, CursorGrabMode, CursorRgba, WindowBuilder},
 };
@@ -132,6 +132,22 @@ impl InputContext {
         };
 
         winit_handler.send_mouse_position(display_id, position.x as i16, position.y as i16);
+    }
+
+    fn consume_device_event(&self, event: &DeviceEvent) {
+        let Some(winit_handler) = self.winit_handler.as_ref() else {
+            return;
+        };
+
+        winit_handler.consume_device_event(event);
+    }
+
+    fn consume_window_event(&self, event: &WindowEvent, scale_factor: f64) {
+        let Some(winit_handler) = self.winit_handler.as_ref() else {
+            return;
+        };
+
+        winit_handler.consume_window_event(event, scale_factor);
     }
 }
 
@@ -604,11 +620,7 @@ impl State {
                     return Ok(());
                 };
 
-                if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
-                    winit_handler.consume_device_event(&event);
-                } else {
-                    warn!("DeviceEvent discarded because no input handler is defined");
-                }
+                input_ctx.consume_device_event(&event);
             }
             Event::WindowEvent {
                 event:
@@ -623,16 +635,14 @@ impl State {
                     return Ok(());
                 };
 
-                if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
-                    winit_handler.consume_window_event(
-                        &WindowEvent::KeyboardInput {
-                            device_id,
-                            input,
-                            is_synthetic,
-                        },
-                        self.window.scale_factor(),
-                    );
-                }
+                input_ctx.consume_window_event(
+                    &WindowEvent::KeyboardInput {
+                        device_id,
+                        input,
+                        is_synthetic,
+                    },
+                    self.window.scale_factor(),
+                );
             }
             Event::WindowEvent {
                 event:
@@ -648,17 +658,15 @@ impl State {
                     return Ok(());
                 };
 
-                if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
-                    winit_handler.consume_window_event(
-                        &WindowEvent::MouseInput {
-                            device_id,
-                            state,
-                            button,
-                            modifiers: winit::event::ModifiersState::default(),
-                        },
-                        self.window.scale_factor(),
-                    );
-                }
+                input_ctx.consume_window_event(
+                    &WindowEvent::MouseInput {
+                        device_id,
+                        state,
+                        button,
+                        modifiers: winit::event::ModifiersState::default(),
+                    },
+                    self.window.scale_factor(),
+                );
             }
             Event::WindowEvent {
                 event:
@@ -674,17 +682,15 @@ impl State {
                     return Ok(());
                 };
 
-                if let Some(winit_handler) = input_ctx.winit_handler.as_ref() {
-                    winit_handler.consume_window_event(
-                        &WindowEvent::MouseWheel {
-                            device_id,
-                            delta,
-                            phase,
-                            modifiers: winit::event::ModifiersState::default(),
-                        },
-                        self.window.scale_factor(),
-                    );
-                }
+                input_ctx.consume_window_event(
+                    &WindowEvent::MouseWheel {
+                        device_id,
+                        delta,
+                        phase,
+                        modifiers: winit::event::ModifiersState::default(),
+                    },
+                    self.window.scale_factor(),
+                );
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnected {
                 displays,
