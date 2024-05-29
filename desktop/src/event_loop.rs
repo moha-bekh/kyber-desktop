@@ -149,6 +149,24 @@ impl InputContext {
 
         winit_handler.consume_window_event(event, scale_factor);
     }
+
+    fn set_mouse_relative(&self, relative: bool) -> Result<()> {
+        if !self.supports_relative_mouse {
+            return Ok(());
+        }
+
+        self.pipeline.set_type_processing_state(
+            InputType::MousePosition,
+            RouterProcessingState::from_boolean(!relative),
+        )?;
+
+        self.pipeline.set_type_processing_state(
+            InputType::MouseMove,
+            RouterProcessingState::from_boolean(relative),
+        )?;
+
+        Ok(())
+    }
 }
 
 struct WindowWrapper {
@@ -794,8 +812,6 @@ impl State {
                 // But only one must be sent, depending of the cursor visibility:
                 // - Cursor visible: Send absolute position
                 // - Cursor not visible: Send relative moves
-                let input_ctx = self.input_ctx.as_ref().ok_or(Error::NoPipeline)?;
-
                 if cursor.visible {
                     // Cursor must be restored before updating its shape.
                     // Otherwise on Linux, the default system cursor will be shown.
@@ -843,29 +859,15 @@ impl State {
                         self.window.grab_cursor(false);
                     }
 
-                    if input_ctx.supports_relative_mouse {
-                        input_ctx.pipeline.set_type_processing_state(
-                            InputType::MousePosition,
-                            RouterProcessingState::from_boolean(true),
-                        )?;
-                        input_ctx.pipeline.set_type_processing_state(
-                            InputType::MouseMove,
-                            RouterProcessingState::from_boolean(false),
-                        )?;
+                    if let Some(input_ctx) = &self.input_ctx {
+                        input_ctx.set_mouse_relative(false)?;
                     }
                 } else {
                     self.window.set_cursor_visible(false);
                     self.window.grab_cursor(true);
 
-                    if input_ctx.supports_relative_mouse {
-                        input_ctx.pipeline.set_type_processing_state(
-                            InputType::MousePosition,
-                            RouterProcessingState::from_boolean(false),
-                        )?;
-                        input_ctx.pipeline.set_type_processing_state(
-                            InputType::MouseMove,
-                            RouterProcessingState::from_boolean(true),
-                        )?;
+                    if let Some(input_ctx) = &self.input_ctx {
+                        input_ctx.set_mouse_relative(true)?;
                     }
                 }
 
