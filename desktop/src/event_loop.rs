@@ -52,6 +52,58 @@ struct InputContext {
 }
 
 impl InputContext {
+    fn new(eventloop_proxy: EventLoopProxy<UserEvent>) -> Result<Self> {
+        // Create InputPipeline
+        let pipeline_config = libkynput_rs::Config::default_client();
+        let input_pipeline = Pipeline::new(pipeline_config);
+        let cursor_handler = cursor_handler::new_cursor_handler(eventloop_proxy.clone())?;
+
+        input_pipeline.plug_handler(cursor_handler)?;
+
+        let missing_types: Vec<InputType> = input_handler::WinitHandler::producable_types()
+            .iter()
+            .filter(|&&t| !input_pipeline.produces_type(t))
+            .copied()
+            .collect();
+
+        let winit_handler = if !missing_types.is_empty() {
+            info!("Winit will be used to produce types {:?}", missing_types);
+            let winit_handler = Arc::new(input_handler::WinitHandler::new(
+                input_pipeline.get_input_sink(),
+                missing_types,
+            )?);
+
+            input_pipeline
+                .plug_handler(libkynput_rs::create_handler_instance(winit_handler.clone()))?;
+
+            Some(winit_handler)
+        } else {
+            None
+        };
+
+        // Assume that the default cursor is visible at startup
+        input_pipeline.set_type_processing_state(
+            InputType::MouseMove,
+            RouterProcessingState::from_boolean(false),
+        )?;
+
+        let supports_relative_mouse = input_pipeline.produces_type(InputType::MouseMove);
+
+        // Create Shortcuts handler
+        let pipeline_hook = Box::new(ClientPipelineHook::new_from_event_loop(eventloop_proxy));
+
+        let state_reader = pipeline_hook.get_state_reader();
+        input_pipeline.set_hook(pipeline_hook)?;
+
+        // Create InputContext
+        Ok(Self {
+            pipeline: input_pipeline,
+            state_reader,
+            supports_relative_mouse,
+            winit_handler,
+        })
+    }
+
     fn handle_cursor_inside_window(&self, inside: bool) -> Result<()> {
         let types = [InputType::MouseMove, InputType::MouseWheel];
         for t in types {
@@ -283,62 +335,6 @@ struct State {
 }
 
 impl State {
-    fn create_input_context(&mut self) -> Result<()> {
-        // Create InputPipeline
-        let pipeline_config = libkynput_rs::Config::default_client();
-        let input_pipeline = Pipeline::new(pipeline_config);
-        let cursor_handler = cursor_handler::new_cursor_handler(self.eventloop_proxy.clone())?;
-
-        input_pipeline.plug_handler(cursor_handler)?;
-
-        let missing_types: Vec<InputType> = input_handler::WinitHandler::producable_types()
-            .iter()
-            .filter(|&&t| !input_pipeline.produces_type(t))
-            .copied()
-            .collect();
-
-        let winit_handler = if !missing_types.is_empty() {
-            info!("Winit will be used to produce types {:?}", missing_types);
-            let winit_handler = Arc::new(input_handler::WinitHandler::new(
-                input_pipeline.get_input_sink(),
-                missing_types,
-            )?);
-
-            input_pipeline
-                .plug_handler(libkynput_rs::create_handler_instance(winit_handler.clone()))?;
-
-            Some(winit_handler)
-        } else {
-            None
-        };
-
-        // Assume that the default cursor is visible at startup
-        input_pipeline.set_type_processing_state(
-            InputType::MouseMove,
-            RouterProcessingState::from_boolean(false),
-        )?;
-
-        let supports_relative_mouse = input_pipeline.produces_type(InputType::MouseMove);
-
-        // Create Shortcuts handler
-        let pipeline_hook = Box::new(ClientPipelineHook::new_from_event_loop(
-            self.eventloop_proxy.clone(),
-        ));
-
-        let state_reader = pipeline_hook.get_state_reader();
-        input_pipeline.set_hook(pipeline_hook)?;
-
-        // Create InputContext
-        self.input_ctx = Some(InputContext {
-            pipeline: input_pipeline,
-            state_reader,
-            supports_relative_mouse,
-            winit_handler,
-        });
-
-        Ok(())
-    }
-
     fn create_connect_config(&self) -> Result<ConnectConfig> {
         let connect_config = libclient_rs::ConnectConfig::default(
             &self.cli_args.streamer_ip,
@@ -415,7 +411,7 @@ impl State {
     fn connect(&mut self) -> Result<()> {
         // Create Input pipeline
         if self.cli_args.inputs {
-            self.create_input_context()?;
+            self.input_ctx = Some(InputContext::new(self.eventloop_proxy.clone())?);
             self.handle_focused()?;
         }
 
@@ -730,7 +726,7 @@ impl State {
 
                 // Create Input pipeline
                 if self.cli_args.inputs {
-                    self.create_input_context()?;
+                    self.input_ctx = Some(InputContext::new(self.eventloop_proxy.clone())?);
                     self.handle_focused()?;
                 }
 
