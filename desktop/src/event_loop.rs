@@ -1,11 +1,10 @@
 use std::cell::RefCell;
-use std::sync::Arc;
 
 use log::{debug, info, warn};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use winit::{
     dpi::{PhysicalPosition, PhysicalSize},
-    event::{DeviceEvent, Event, WindowEvent},
+    event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop, EventLoopProxy, EventLoopWindowTarget},
     window::{self, CursorGrabMode, CursorRgba, WindowBuilder},
 };
@@ -13,11 +12,11 @@ use winit::{
 use libclient_rs::{
     Client, ConnectConfig, StreamingSessionConfig, VideoPlayerConfig, WindowHandle,
 };
-use libkynput_rs::{CursorData, InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
+use libkynput_rs::{CursorData, MouseButton, Packet, Pipeline};
 
 use crate::client_proxy::ClientEventProxy;
 use crate::error::{Error, Result};
-use crate::inputs::{self, ClientPipelineHook, PipelineStateReader, ShortcutType, WinitHandler};
+use crate::inputs::{InputContext, ShortcutType};
 use crate::video_layout::{Position, RectSize, VideoLayout};
 use crate::CliArgs;
 
@@ -39,131 +38,6 @@ fn mouse_button_filter_pressed(pkt: &Packet) -> bool {
             warn!("Expected a MouseButton, got {:?}", pkt.get_type());
             false
         }
-    }
-}
-
-struct InputContext {
-    pipeline: Pipeline,
-    state_reader: PipelineStateReader,
-    winit_handler: Option<Arc<WinitHandler>>,
-    supports_relative_mouse: bool,
-}
-
-impl InputContext {
-    fn new(eventloop_proxy: EventLoopProxy<UserEvent>) -> Result<Self> {
-        // Create InputPipeline
-        let pipeline_config = libkynput_rs::Config::default_client();
-        let input_pipeline = Pipeline::new(pipeline_config);
-        let cursor_handler = inputs::new_cursor_handler(eventloop_proxy.clone())?;
-
-        input_pipeline.plug_handler(cursor_handler)?;
-
-        let missing_types: Vec<InputType> = WinitHandler::producable_types()
-            .iter()
-            .filter(|&&t| !input_pipeline.produces_type(t))
-            .copied()
-            .collect();
-
-        let winit_handler = if !missing_types.is_empty() {
-            info!("Winit will be used to produce types {:?}", missing_types);
-            let winit_handler = Arc::new(WinitHandler::new(
-                input_pipeline.get_input_sink(),
-                missing_types,
-            )?);
-
-            input_pipeline
-                .plug_handler(libkynput_rs::create_handler_instance(winit_handler.clone()))?;
-
-            Some(winit_handler)
-        } else {
-            None
-        };
-
-        // Assume that the default cursor is visible at startup
-        input_pipeline.set_type_processing_state(
-            InputType::MouseMove,
-            RouterProcessingState::from_boolean(false),
-        )?;
-
-        let supports_relative_mouse = input_pipeline.produces_type(InputType::MouseMove);
-
-        // Create Shortcuts handler
-        let pipeline_hook = Box::new(ClientPipelineHook::new_from_event_loop(eventloop_proxy));
-
-        let state_reader = pipeline_hook.get_state_reader();
-        input_pipeline.set_hook(pipeline_hook)?;
-
-        // Create InputContext
-        Ok(Self {
-            pipeline: input_pipeline,
-            state_reader,
-            supports_relative_mouse,
-            winit_handler,
-        })
-    }
-
-    fn handle_cursor_inside_window(&self, inside: bool) -> Result<()> {
-        let types = [InputType::MouseMove, InputType::MouseWheel];
-        for t in types {
-            self.pipeline
-                .set_type_processing_state(t, RouterProcessingState::from_boolean(inside))?;
-        }
-
-        if inside {
-            self.pipeline.set_type_processing_state(
-                InputType::MouseButton,
-                RouterProcessingState::from_boolean(true),
-            )?;
-        } else {
-            self.pipeline.set_type_processing_state(
-                InputType::MouseButton,
-                RouterProcessingState::from_callback(Box::new(mouse_button_filter_pressed)),
-            )?;
-        }
-
-        Ok(())
-    }
-
-    fn send_mouse_position(&self, display_id: u32, position: Position) {
-        let Some(winit_handler) = self.winit_handler.as_ref() else {
-            return;
-        };
-
-        winit_handler.send_mouse_position(display_id, position.x as i16, position.y as i16);
-    }
-
-    fn consume_device_event(&self, event: &DeviceEvent) {
-        let Some(winit_handler) = self.winit_handler.as_ref() else {
-            return;
-        };
-
-        winit_handler.consume_device_event(event);
-    }
-
-    fn consume_window_event(&self, event: &WindowEvent, scale_factor: f64) {
-        let Some(winit_handler) = self.winit_handler.as_ref() else {
-            return;
-        };
-
-        winit_handler.consume_window_event(event, scale_factor);
-    }
-
-    fn set_mouse_relative(&self, relative: bool) -> Result<()> {
-        if !self.supports_relative_mouse {
-            return Ok(());
-        }
-
-        self.pipeline.set_type_processing_state(
-            InputType::MousePosition,
-            RouterProcessingState::from_boolean(!relative),
-        )?;
-
-        self.pipeline.set_type_processing_state(
-            InputType::MouseMove,
-            RouterProcessingState::from_boolean(relative),
-        )?;
-
-        Ok(())
     }
 }
 
@@ -419,7 +293,7 @@ impl State {
         session_config.set_audio(self.cli_args.audio);
 
         if let Some(input_ctx) = self.input_ctx.as_ref() {
-            let input_config = libclient_rs::InputSessionConfig::default(&input_ctx.pipeline)?;
+            let input_config = libclient_rs::InputSessionConfig::default(&input_ctx.pipeline())?;
             session_config.set_input(input_config);
         }
 
@@ -457,7 +331,10 @@ impl State {
     fn connect(&mut self) -> Result<()> {
         // Create Input pipeline
         if self.cli_args.inputs {
-            self.input_ctx = Some(InputContext::new(self.eventloop_proxy.clone())?);
+            let pipeline_config = libkynput_rs::Config::default_client();
+            let pipeline = Pipeline::new(pipeline_config);
+
+            self.input_ctx = Some(InputContext::new(self.eventloop_proxy.clone(), pipeline)?);
             self.handle_focused()?;
         }
 
@@ -483,7 +360,6 @@ impl State {
             self.input_ctx
                 .as_ref()
                 .ok_or(Error::NoPipeline)?
-                .pipeline
                 .flush_keys()?;
 
             window.grab_cursor(false);
@@ -494,7 +370,6 @@ impl State {
         self.input_ctx
             .as_ref()
             .ok_or(Error::NoPipeline)?
-            .pipeline
             .set_global_processing_state(window.focused)?;
 
         Ok(())
@@ -597,7 +472,7 @@ impl State {
                 }
 
                 if let Some(input_ctx) = self.input_ctx.as_ref() {
-                    input_ctx.handle_cursor_inside_window(true)?;
+                    input_ctx.cursor_inside_window(true)?;
                 }
             }
             Event::WindowEvent {
@@ -609,7 +484,7 @@ impl State {
                 }
 
                 if let Some(input_ctx) = self.input_ctx.as_ref() {
-                    input_ctx.handle_cursor_inside_window(false)?;
+                    input_ctx.cursor_inside_window(false)?;
                 }
             }
             Event::WindowEvent {
@@ -647,13 +522,13 @@ impl State {
                     self.send_position(
                         input_ctx,
                         position,
-                        input_ctx.state_reader.has_one_mouse_button_pressed(),
+                        input_ctx.has_one_mouse_button_pressed(),
                     )?;
                 };
             }
             Event::DeviceEvent { event, .. } => {
                 if let Some(input_ctx) = self.input_ctx.as_ref() {
-                    input_ctx.consume_device_event(&event);
+                    input_ctx.device_event(&event);
                 }
             }
             Event::WindowEvent {
@@ -674,7 +549,7 @@ impl State {
                 };
 
                 if let Some(input_ctx) = self.input_ctx.as_ref() {
-                    input_ctx.consume_window_event(
+                    input_ctx.window_event(
                         &WindowEvent::KeyboardInput {
                             device_id,
                             input,
@@ -703,7 +578,7 @@ impl State {
                 };
 
                 if let Some(input_ctx) = self.input_ctx.as_ref() {
-                    input_ctx.consume_window_event(
+                    input_ctx.window_event(
                         &WindowEvent::MouseInput {
                             device_id,
                             state,
@@ -733,7 +608,7 @@ impl State {
                 };
 
                 if let Some(input_ctx) = self.input_ctx.as_ref() {
-                    input_ctx.consume_window_event(
+                    input_ctx.window_event(
                         &WindowEvent::MouseWheel {
                             device_id,
                             delta,
@@ -784,7 +659,11 @@ impl State {
 
                 // Create Input pipeline
                 if self.cli_args.inputs {
-                    self.input_ctx = Some(InputContext::new(self.eventloop_proxy.clone())?);
+                    let pipeline_config = libkynput_rs::Config::default_client();
+                    let pipeline = Pipeline::new(pipeline_config);
+
+                    self.input_ctx =
+                        Some(InputContext::new(self.eventloop_proxy.clone(), pipeline)?);
                     self.handle_focused()?;
                 }
 
