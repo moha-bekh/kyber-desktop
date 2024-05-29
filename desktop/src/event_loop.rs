@@ -16,9 +16,8 @@ use libclient_rs::{
 use libkynput_rs::{CursorData, InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
 
 use crate::client_proxy::ClientEventProxy;
-use crate::cursor_handler;
 use crate::error::{Error, Result};
-use crate::inputs::WinitHandler;
+use crate::inputs::{self, WinitHandler};
 use crate::pipeline_hook::{PipelineStateReader, ShortcutType};
 use crate::video_layout::{Position, RectSize, VideoLayout};
 use crate::{CliArgs, ClientPipelineHook};
@@ -56,7 +55,7 @@ impl InputContext {
         // Create InputPipeline
         let pipeline_config = libkynput_rs::Config::default_client();
         let input_pipeline = Pipeline::new(pipeline_config);
-        let cursor_handler = cursor_handler::new_cursor_handler(eventloop_proxy.clone())?;
+        let cursor_handler = inputs::new_cursor_handler(eventloop_proxy.clone())?;
 
         input_pipeline.plug_handler(cursor_handler)?;
 
