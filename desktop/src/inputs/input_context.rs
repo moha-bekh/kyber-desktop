@@ -10,7 +10,7 @@ use libkynput_rs::{InputType, MouseButton, Packet, Pipeline, RouterProcessingSta
 
 use crate::error::Result;
 use crate::inputs::{self, ClientPipelineHook, PipelineStateReader, WinitHandler};
-use crate::video_layout::Position;
+use crate::window::Position;
 use crate::UserEvent;
 
 pub(crate) struct InputContext {

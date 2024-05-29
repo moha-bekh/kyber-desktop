@@ -17,7 +17,7 @@ use libkynput_rs::{CursorData, MouseButton, Packet, Pipeline};
 use crate::client_proxy::ClientEventProxy;
 use crate::error::{Error, Result};
 use crate::inputs::{InputContext, ShortcutType};
-use crate::video_layout::{Position, RectSize, VideoLayout};
+use crate::window::{Position, RectSize, VideoLayout};
 use crate::CliArgs;
 
 #[derive(Clone, Debug)]

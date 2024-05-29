@@ -5,7 +5,7 @@ mod error;
 mod event_loop;
 mod inputs;
 mod parse_utils;
-mod video_layout;
+mod window;
 
 use log::{error, info, LevelFilter};
 use winit::event_loop::EventLoopBuilder;
