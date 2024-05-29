@@ -125,6 +125,14 @@ impl InputContext {
 
         Ok(())
     }
+
+    fn send_mouse_position(&self, display_id: u32, position: Position) {
+        let Some(winit_handler) = self.winit_handler.as_ref() else {
+            return;
+        };
+
+        winit_handler.send_mouse_position(display_id, position.x as i16, position.y as i16);
+    }
 }
 
 struct WindowWrapper {
@@ -466,10 +474,6 @@ impl State {
             return Ok(());
         };
 
-        let Some(winit_handler) = input_ctx.winit_handler.as_ref() else {
-            return Ok(());
-        };
-
         let projected_pos = self.window.local_to_host(
             Position {
                 x: position.x as u32,
@@ -479,11 +483,7 @@ impl State {
         );
 
         if let Some(projected_pos) = projected_pos {
-            winit_handler.send_mouse_position(
-                display_id,
-                projected_pos.x as i16,
-                projected_pos.y as i16,
-            );
+            input_ctx.send_mouse_position(display_id, projected_pos);
         }
 
         Ok(())
