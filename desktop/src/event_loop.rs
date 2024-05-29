@@ -17,10 +17,9 @@ use libkynput_rs::{CursorData, InputType, MouseButton, Packet, Pipeline, RouterP
 
 use crate::client_proxy::ClientEventProxy;
 use crate::error::{Error, Result};
-use crate::inputs::{self, WinitHandler};
-use crate::pipeline_hook::{PipelineStateReader, ShortcutType};
+use crate::inputs::{self, ClientPipelineHook, PipelineStateReader, ShortcutType, WinitHandler};
 use crate::video_layout::{Position, RectSize, VideoLayout};
-use crate::{CliArgs, ClientPipelineHook};
+use crate::CliArgs;
 
 #[derive(Clone, Debug)]
 pub enum UserEvent {

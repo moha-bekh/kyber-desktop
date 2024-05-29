@@ -5,7 +5,6 @@ mod error;
 mod event_loop;
 mod inputs;
 mod parse_utils;
-mod pipeline_hook;
 mod video_layout;
 
 use log::{error, info, LevelFilter};
@@ -15,7 +14,6 @@ use libclient_rs::{KymuxVideoProtocol, StreamingProtocol, VideoCodec};
 
 use event_loop::UserEvent;
 use parse_utils::parse_bitrate;
-use pipeline_hook::ClientPipelineHook;
 
 const STREAMER_HOST: &str = "kybertest";
 const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
