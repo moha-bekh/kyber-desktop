@@ -181,23 +181,27 @@ impl State {
                 self.windows.cursor_entered(false)?;
             }
             Event::WindowEvent {
-                event: WindowEvent::Resized(size),
+                event:
+                    WindowEvent::Resized {
+                        os_size: Some(os_size),
+                        ..
+                    },
                 ..
             } => {
                 let size = Size {
-                    width: size.width as _,
-                    height: size.height as _,
+                    width: os_size.width,
+                    height: os_size.height,
                 };
 
                 self.windows.resized(size);
             }
             Event::WindowEvent {
-                event: WindowEvent::CursorMoved { position, .. },
+                event: WindowEvent::CursorMoved { os_position, .. },
                 ..
             } => {
                 let position = Position {
-                    x: position.x as _,
-                    y: position.y as _,
+                    x: os_position.x,
+                    y: os_position.y,
                 };
 
                 self.windows.cursor_moved(position)?;

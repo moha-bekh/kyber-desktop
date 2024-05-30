@@ -28,8 +28,8 @@ impl WindowControl for WindowControlWinit {
     }
 
     fn set_cursor_position(&self, position: Position) -> Result<()> {
-        let position = dpi::PhysicalPosition::new(position.x, position.y);
-        self.window.set_cursor_position(position)?;
+        let position = dpi::OsPosition::new(position.x, position.y);
+        self.window.set_cursor_os_position(position)?;
 
         Ok(())
     }
@@ -43,7 +43,7 @@ impl WindowControl for WindowControlWinit {
             return None;
         };
 
-        let size = monitor.size();
+        let size = monitor.os_size();
         Some(Size {
             width: size.width as _,
             height: size.height as _,
@@ -51,7 +51,7 @@ impl WindowControl for WindowControlWinit {
     }
 
     fn inner_size(&self) -> Size {
-        let size = self.window.inner_size();
+        let size = self.window.inner_os_size();
         Size {
             width: size.width as _,
             height: size.height as _,
@@ -81,13 +81,13 @@ impl WindowControl for WindowControlWinit {
 
     fn set_cursor_rect(&self, rect: Option<(Position, Size)>) -> Result<()> {
         let rect = rect.map(|(pos, size)| {
-            let pos = dpi::PhysicalPosition::new(pos.x, pos.y).into();
-            let size = dpi::PhysicalSize::new(size.width, size.height).into();
+            let pos = dpi::OsPosition::new(pos.x, pos.y);
+            let size = dpi::OsSize::new(size.width, size.height);
 
             (pos, size)
         });
 
-        self.window.set_cursor_rect(rect)?;
+        self.window.set_cursor_os_rect(rect)?;
 
         Ok(())
     }
