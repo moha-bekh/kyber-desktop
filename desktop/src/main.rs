@@ -75,13 +75,18 @@ fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
     log4rs::init_config(config).unwrap()
 }
 
+pub enum DisplayParams {
+    Single(usize),
+    Multiple(usize),
+}
+
 pub struct CliArgs {
     streamer_ip: String,
     streamer_port: Option<u16>,
     protocol: StreamingProtocol,
     video_codec: VideoCodec,
     bitrate: Option<u32>,
-    display_index: usize,
+    display_params: DisplayParams,
     yuv444: bool,
     audio: bool,
     inputs: bool,
@@ -160,6 +165,13 @@ fn main() {
                 .takes_value(true),
         )
         .arg(
+            clap::Arg::with_name("display_count")
+                .long("display_count")
+                .help("Display count to stream")
+                .value_parser(clap::value_parser!(usize))
+                .takes_value(true),
+        )
+        .arg(
             clap::Arg::with_name("software_decode")
                 .long("software_decode")
                 .help("Enable video software decoding")
@@ -199,7 +211,20 @@ fn main() {
         .value_of("bitrate")
         .map(|bitrate| parse_bitrate(bitrate.into()).unwrap());
 
-    let display_index = matches.get_one("display_idx").copied().unwrap_or(0);
+    let display_index = matches.get_one("display_idx").copied();
+    let display_count = matches.get_one("display_count").copied();
+
+    let display_params = match (display_index, display_count) {
+        (None, None) => DisplayParams::Single(0),
+        (None, Some(1)) => DisplayParams::Single(0),
+        (Some(display_index), None) => DisplayParams::Single(display_index),
+        (None, Some(display_count)) => DisplayParams::Multiple(display_count),
+        (Some(_), Some(_)) => {
+            error!("display_idx and display_count are mutually exclusive");
+            return;
+        }
+    };
+
     let yuv444 = matches.is_present("444");
     let audio = matches.get_one("audio").copied().unwrap_or(true);
     let inputs = matches.get_one("inputs").copied().unwrap_or(true);
@@ -211,7 +236,7 @@ fn main() {
         protocol,
         video_codec,
         bitrate,
-        display_index,
+        display_params,
         yuv444,
         audio,
         inputs,

@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 * avserver: Allow to overload encoder configuration from kyber_config.toml
 * kymux: Fix duplicate datagram handling with unreliable
 * desktop/win32: Hide console
+* desktop: Add multiscreen support. Can be enabled with option --display_count
 
 ## [0.16.1] - 2024-05-21
 

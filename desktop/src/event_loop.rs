@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::cmp::Ordering;
 use std::sync::Arc;
 
 use log::{info, warn};
@@ -15,11 +16,11 @@ use libclient_rs::{
     Client, ConnectConfig, StreamingSessionConfig, VideoPlayerConfig, WindowHandle,
 };
 
-use crate::client_proxy::ClientEventProxy;
 use crate::error::{Error, Result};
 use crate::inputs::{InputContext, ShortcutType};
 use crate::window::{Position, Size, Window, WindowControlWinit, WindowsStateMachine};
 use crate::CliArgs;
+use crate::{client_proxy::ClientEventProxy, DisplayParams};
 
 #[derive(Clone, Debug)]
 pub enum UserEvent {
@@ -123,6 +124,86 @@ impl State {
         let window = window_builder.build(event_loop)?;
         let window = Window::new(WindowControlWinit::new(window), display)?;
         self.windows.add_window(window);
+
+        Ok(())
+    }
+
+    fn create_multiple_windows(
+        &mut self,
+        event_loop: &EventLoopWindowTarget<UserEvent>,
+        host_displays: &[libclient_rs::Display],
+        requested_display_count: usize,
+    ) -> Result<()> {
+        // Sort host displays
+        let mut host_displays: Vec<_> = host_displays.to_vec();
+        host_displays.sort_by(|a, b| {
+            let y = a.y.partial_cmp(&b.y).unwrap();
+            if let Ordering::Equal = y {
+                a.x.partial_cmp(&b.x).unwrap()
+            } else {
+                y
+            }
+        });
+
+        // Get and sort local displays
+        let mut local_displays: Vec<_> = event_loop.available_monitors().collect();
+        local_displays.sort_by(|a, b| {
+            let y = a.position().y.partial_cmp(&b.position().y).unwrap();
+
+            if let Ordering::Equal = y {
+                a.position().x.partial_cmp(&b.position().x).unwrap()
+            } else {
+                y
+            }
+        });
+
+        // Get the correct display count to get
+        let display_count = [
+            host_displays.len(),
+            local_displays.len(),
+            requested_display_count,
+        ]
+        .iter()
+        .copied()
+        .min()
+        .expect("No display count found");
+
+        // Create all the window and attach them to the displays
+        for i in 0..display_count {
+            let host_display = &host_displays[i];
+            let local_display = &local_displays[i];
+
+            self.create_single_window(event_loop, host_display, Some(local_display.clone()))?;
+        }
+
+        Ok(())
+    }
+
+    fn create_windows(
+        &mut self,
+        event_loop: &EventLoopWindowTarget<UserEvent>,
+        displays: &[libclient_rs::Display],
+    ) -> Result<()> {
+        match &self.cli_args.display_params {
+            DisplayParams::Single(display_idx) => {
+                let display_idx = if *display_idx < displays.len() {
+                    *display_idx
+                } else {
+                    warn!("Display {display_idx} is out of range, fallback to first screen",);
+
+                    0
+                };
+
+                self.create_single_window(
+                    event_loop,
+                    &displays[display_idx],
+                    event_loop.primary_monitor(),
+                )?;
+            }
+            DisplayParams::Multiple(display_count) => {
+                self.create_multiple_windows(event_loop, displays, *display_count)?;
+            }
+        }
 
         Ok(())
     }
@@ -351,17 +432,7 @@ impl State {
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnected {
                 displays,
             })) => {
-                let display = if self.cli_args.display_index < displays.len() {
-                    &displays[self.cli_args.display_index]
-                } else {
-                    warn!(
-                        "Display {} is out of range, fallback to first screen",
-                        self.cli_args.display_index
-                    );
-                    &displays[0]
-                };
-
-                self.create_single_window(event_loop, display, event_loop.primary_monitor())?;
+                self.create_windows(event_loop, &displays)?;
 
                 let session_config = self.create_streaming_session_config()?;
 
