@@ -4,8 +4,10 @@ use std::sync::Arc;
 use log::{info, warn};
 use raw_window_handle::RawWindowHandle;
 use winit::{
+    dpi::{LogicalPosition, LogicalSize},
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop, EventLoopProxy, EventLoopWindowTarget},
+    monitor::MonitorHandle,
     window::WindowBuilder,
 };
 
@@ -51,6 +53,55 @@ impl State {
         }
 
         Ok(connect_config)
+    }
+
+    fn get_initial_window_position(
+        monitor: &winit::monitor::MonitorHandle,
+        window_size: LogicalSize<f64>,
+    ) -> LogicalPosition<f64> {
+        let monitor_pos = monitor.os_position();
+        let monitor_size = monitor.os_size();
+
+        let x_offset = (monitor_size.width - window_size.width) / 2.0;
+        let y_offset = (monitor_size.height - window_size.height) / 2.0;
+
+        winit::dpi::LogicalPosition {
+            x: monitor_pos.x + x_offset,
+            y: monitor_pos.y + y_offset,
+        }
+    }
+
+    fn get_initial_window_size(display: &libclient_rs::Display) -> LogicalSize<f64> {
+        const RATIO: f64 = 1.5;
+        LogicalSize::new(display.width as f64 / RATIO, display.height as f64 / RATIO)
+    }
+
+    fn create_single_window(
+        &mut self,
+        event_loop: &EventLoopWindowTarget<UserEvent>,
+        display: &libclient_rs::Display,
+        monitor: Option<MonitorHandle>,
+    ) -> Result<()> {
+        let window_size = Self::get_initial_window_size(display);
+
+        let window_position =
+            monitor.map(|monitor| Self::get_initial_window_position(&monitor, window_size));
+
+        let window_builder = WindowBuilder::new()
+            .with_title("Kyber Client")
+            .with_inner_size(window_size);
+
+        let window_builder = if let Some(window_position) = window_position {
+            window_builder.with_position(window_position)
+        } else {
+            window_builder
+        };
+
+        let window = window_builder.build(event_loop)?;
+        let window = Window::new(WindowControlWinit::new(window), display)?;
+        self.windows.set_window(window);
+
+        Ok(())
     }
 
     fn create_streaming_session_config(&self) -> Result<StreamingSessionConfig> {
@@ -271,16 +322,7 @@ impl State {
                     &displays[0]
                 };
 
-                let window_width: u32 = 800;
-                let window_height: u32 = 600;
-
-                let window = WindowBuilder::new()
-                    .with_title("Kyber Client")
-                    .with_inner_size(winit::dpi::LogicalSize::new(window_width, window_height))
-                    .build(event_loop)?;
-
-                let window = Window::new(WindowControlWinit::new(window), display)?;
-                self.windows.set_window(window);
+                self.create_single_window(event_loop, display, event_loop.primary_monitor())?;
 
                 let session_config = self.create_streaming_session_config()?;
 
