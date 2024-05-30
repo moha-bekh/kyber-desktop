@@ -15,8 +15,23 @@ pub struct Size {
     pub height: f64,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Position {
     pub x: f64,
     pub y: f64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Rect {
+    pub position: Position,
+    pub size: Size,
+}
+
+impl Rect {
+    fn is_position_inside(&self, pos: &Position) -> bool {
+        pos.x >= self.position.x
+            && pos.x < self.size.width + self.position.x
+            && pos.y >= self.position.y
+            && pos.y < self.size.height + self.position.y
+    }
 }

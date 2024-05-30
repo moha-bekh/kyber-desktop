@@ -1,8 +1,8 @@
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
-use winit::{
-    dpi,
-    window::{self, CursorGrabMode, CursorRgba},
-};
+use winit::{dpi, window::Fullscreen};
+
+use libkynput_rs::{Cursor, CursorData};
+use log::warn;
 
 use super::{Position, Size};
 use crate::error::Result;
@@ -34,8 +34,22 @@ impl WindowControl for WindowControlWinit {
         Ok(())
     }
 
-    fn set_cursor_rgba(&self, cursor: CursorRgba) {
-        self.window.set_cursor_rgba(cursor);
+    fn set_cursor_rgba(&self, cursor: Cursor) {
+        match cursor.data {
+            CursorData::Raw(data) => {
+                self.window.set_cursor_rgba(winit::window::CursorRgba {
+                    xhot: cursor.xhot,
+                    yhot: cursor.yhot,
+                    width: cursor.width,
+                    height: cursor.height,
+                    data,
+                });
+            }
+            CursorData::Png(_) => {
+                warn!("Got a PNG cursor");
+            }
+            CursorData::None => {}
+        }
     }
 
     fn monitor_size(&self) -> Option<Size> {
@@ -47,6 +61,17 @@ impl WindowControl for WindowControlWinit {
         Some(Size {
             width: size.width as _,
             height: size.height as _,
+        })
+    }
+
+    fn inner_position(&self) -> Option<Position> {
+        let Ok(position) = self.window.inner_os_position() else {
+            return None;
+        };
+
+        Some(Position {
+            x: position.x,
+            y: position.y,
         })
     }
 
@@ -65,7 +90,7 @@ impl WindowControl for WindowControlWinit {
     fn set_fullscreen(&self, fullscreen: bool) {
         if fullscreen {
             self.window
-                .set_fullscreen(Some(window::Fullscreen::Borderless(None)));
+                .set_fullscreen(Some(Fullscreen::Borderless(None)));
         } else {
             self.window.set_fullscreen(None);
         }
@@ -92,9 +117,23 @@ impl WindowControl for WindowControlWinit {
         Ok(())
     }
 
-    fn set_cursor_grab(&self, mode: CursorGrabMode) -> Result<()> {
+    fn set_cursor_grab(&self, grab: bool) -> Result<()> {
+        let mode = if grab {
+            if cfg!(target_os = "macos") {
+                winit::window::CursorGrabMode::Locked
+            } else {
+                winit::window::CursorGrabMode::Confined
+            }
+        } else {
+            winit::window::CursorGrabMode::None
+        };
+
         self.window.set_cursor_grab(mode)?;
 
         Ok(())
+    }
+
+    fn gain_focus(&self) {
+        self.window.focus_window();
     }
 }

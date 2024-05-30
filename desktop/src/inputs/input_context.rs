@@ -1,3 +1,4 @@
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use log::{info, warn};
@@ -18,6 +19,7 @@ pub(crate) struct InputContext {
     state_reader: PipelineStateReader,
     winit_handler: Option<Arc<WinitHandler>>,
     supports_relative_mouse: bool,
+    relative_mouse: AtomicBool,
 }
 
 impl InputContext {
@@ -67,6 +69,7 @@ impl InputContext {
             pipeline,
             state_reader,
             supports_relative_mouse,
+            relative_mouse: AtomicBool::new(false),
             winit_handler,
         })
     }
@@ -146,10 +149,17 @@ impl InputContext {
             RouterProcessingState::from_boolean(relative),
         )?;
 
+        self.relative_mouse.store(relative, Ordering::Relaxed);
+
         Ok(())
     }
 
+    pub(crate) fn mouse_relative(&self) -> bool {
+        self.relative_mouse.load(Ordering::Relaxed)
+    }
+
     pub(crate) fn flush_keys(&self) -> Result<()> {
+        info!("Flush keys");
         self.pipeline.flush_keys()?;
 
         Ok(())

@@ -99,7 +99,7 @@ impl State {
 
         let window = window_builder.build(event_loop)?;
         let window = Window::new(WindowControlWinit::new(window), display)?;
-        self.windows.set_window(window);
+        self.windows.add_window(window);
 
         Ok(())
     }
@@ -111,7 +111,7 @@ impl State {
             session_config.set_bitrate(bitrate);
         }
 
-        if let Some(window) = self.windows.window().as_ref() {
+        for window in self.windows.iter_windows() {
             let player_config =
                 Self::create_player_config(&self.cli_args, window.raw_window_handle())?;
 
@@ -121,8 +121,6 @@ impl State {
             video_config.set_yuv444(self.cli_args.yuv444);
 
             session_config.add_video(video_config);
-        } else {
-            warn!("No valid DisplayId found");
         }
 
         session_config.set_audio(self.cli_args.audio);
@@ -214,24 +212,28 @@ impl State {
                 self.stop_client()?;
             }
             Event::WindowEvent {
+                window_id,
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
-                self.windows.focused(focused)?;
+                self.windows.focused(window_id, focused)?;
             }
             Event::WindowEvent {
+                window_id,
                 event: WindowEvent::CursorEntered { device_id: _ },
                 ..
             } => {
-                self.windows.cursor_entered(true)?;
+                self.windows.cursor_entered(window_id, true)?;
             }
             Event::WindowEvent {
+                window_id,
                 event: WindowEvent::CursorLeft { device_id: _ },
                 ..
             } => {
-                self.windows.cursor_entered(false)?;
+                self.windows.cursor_entered(window_id, false)?;
             }
             Event::WindowEvent {
+                window_id,
                 event:
                     WindowEvent::Resized {
                         os_size: Some(os_size),
@@ -244,9 +246,10 @@ impl State {
                     height: os_size.height,
                 };
 
-                self.windows.resized(size);
+                self.windows.resized(window_id, size);
             }
             Event::WindowEvent {
+                window_id,
                 event: WindowEvent::CursorMoved { os_position, .. },
                 ..
             } => {
@@ -255,12 +258,13 @@ impl State {
                     y: os_position.y,
                 };
 
-                self.windows.cursor_moved(position)?;
+                self.windows.cursor_moved(window_id, position)?;
             }
             Event::DeviceEvent { event, .. } => {
                 self.windows.device_event(event);
             }
             Event::WindowEvent {
+                window_id,
                 event:
                     WindowEvent::KeyboardInput {
                         device_id,
@@ -269,13 +273,17 @@ impl State {
                     },
                 ..
             } => {
-                self.windows.window_event(WindowEvent::KeyboardInput {
-                    device_id,
-                    input,
-                    is_synthetic,
-                });
+                self.windows.window_event(
+                    window_id,
+                    WindowEvent::KeyboardInput {
+                        device_id,
+                        input,
+                        is_synthetic,
+                    },
+                );
             }
             Event::WindowEvent {
+                window_id,
                 event:
                     WindowEvent::MouseInput {
                         device_id,
@@ -285,14 +293,18 @@ impl State {
                     },
                 ..
             } => {
-                self.windows.window_event(WindowEvent::MouseInput {
-                    device_id,
-                    state,
-                    button,
-                    modifiers: winit::event::ModifiersState::default(),
-                });
+                self.windows.window_event(
+                    window_id,
+                    WindowEvent::MouseInput {
+                        device_id,
+                        state,
+                        button,
+                        modifiers: winit::event::ModifiersState::default(),
+                    },
+                );
             }
             Event::WindowEvent {
+                window_id,
                 event:
                     WindowEvent::MouseWheel {
                         device_id,
@@ -302,12 +314,15 @@ impl State {
                     },
                 ..
             } => {
-                self.windows.window_event(WindowEvent::MouseWheel {
-                    device_id,
-                    delta,
-                    phase,
-                    modifiers: winit::event::ModifiersState::default(),
-                });
+                self.windows.window_event(
+                    window_id,
+                    WindowEvent::MouseWheel {
+                        device_id,
+                        delta,
+                        phase,
+                        modifiers: winit::event::ModifiersState::default(),
+                    },
+                );
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnected {
                 displays,

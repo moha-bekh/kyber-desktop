@@ -4,8 +4,9 @@ pub enum Error {
     WindowOs(winit::error::OsError),
     Rejected,
     ThreadPanicked,
-    NoPipeline,
     NoClient,
+    UnknownWindow,
+    Winit,
     Libclient(libclient_rs::Error),
     Input(libkynput_rs::Error),
     // Window errors
