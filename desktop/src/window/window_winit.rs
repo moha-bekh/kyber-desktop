@@ -1,9 +1,10 @@
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use winit::{
-    dpi::{PhysicalPosition, PhysicalSize},
+    dpi,
     window::{self, CursorGrabMode, CursorRgba},
 };
 
+use super::{Position, Size};
 use crate::error::Result;
 use crate::window::WindowControl;
 
@@ -26,7 +27,8 @@ impl WindowControl for WindowControlWinit {
         self.window.set_cursor_visible(visible);
     }
 
-    fn set_cursor_position(&self, position: PhysicalPosition<i32>) -> Result<()> {
+    fn set_cursor_position(&self, position: Position) -> Result<()> {
+        let position = dpi::PhysicalPosition::new(position.x, position.y);
         self.window.set_cursor_position(position)?;
 
         Ok(())
@@ -36,16 +38,24 @@ impl WindowControl for WindowControlWinit {
         self.window.set_cursor_rgba(cursor);
     }
 
-    fn monitor_size(&self) -> Option<PhysicalSize<u32>> {
+    fn monitor_size(&self) -> Option<Size> {
         let Some(monitor) = self.window.current_monitor() else {
             return None;
         };
 
-        Some(monitor.size())
+        let size = monitor.size();
+        Some(Size {
+            width: size.width as _,
+            height: size.height as _,
+        })
     }
 
-    fn inner_size(&self) -> PhysicalSize<u32> {
-        self.window.inner_size()
+    fn inner_size(&self) -> Size {
+        let size = self.window.inner_size();
+        Size {
+            width: size.width as _,
+            height: size.height as _,
+        }
     }
 
     fn is_fullscreen(&self) -> bool {
@@ -69,10 +79,14 @@ impl WindowControl for WindowControlWinit {
         self.window.scale_factor()
     }
 
-    fn set_cursor_rect(
-        &self,
-        rect: Option<(winit::dpi::Position, winit::dpi::Size)>,
-    ) -> Result<()> {
+    fn set_cursor_rect(&self, rect: Option<(Position, Size)>) -> Result<()> {
+        let rect = rect.map(|(pos, size)| {
+            let pos = dpi::PhysicalPosition::new(pos.x, pos.y).into();
+            let size = dpi::PhysicalSize::new(size.width, size.height).into();
+
+            (pos, size)
+        });
+
         self.window.set_cursor_rect(rect)?;
 
         Ok(())

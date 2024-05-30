@@ -1,49 +1,39 @@
-#[derive(Clone, Copy, Debug)]
-pub struct RectSize {
-    pub width: u32,
-    pub height: u32,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct Position {
-    pub x: u32,
-    pub y: u32,
-}
+use super::{Position, Size};
 
 #[derive(Clone, Copy, Debug)]
 pub struct VideoLayout {
-    pub window_size: RectSize,
-    pub host_size: RectSize,
-    pub video_size: RectSize,
+    pub window_size: Size,
+    pub host_size: Size,
+    pub video_size: Size,
     pub video_pos: Position,
 }
 
 impl VideoLayout {
     pub fn update_display_layout(&mut self) {
-        let window_ratio = self.window_size.width as f64 / self.window_size.height as f64;
-        let stream_ratio = self.host_size.width as f64 / self.host_size.height as f64;
+        let window_ratio = self.window_size.width / self.window_size.height;
+        let stream_ratio = self.host_size.width / self.host_size.height;
 
         if window_ratio > stream_ratio {
             // Vertical black bars
-            self.video_size = RectSize {
-                width: (self.window_size.height as f64 * stream_ratio) as u32,
+            self.video_size = Size {
+                width: self.window_size.height * stream_ratio,
                 height: self.window_size.height,
             };
 
             self.video_pos = Position {
-                x: (self.window_size.width - self.video_size.width) / 2,
-                y: 0,
+                x: (self.window_size.width - self.video_size.width) / 2.0,
+                y: 0.0,
             };
         } else {
             // Horizontal black bars
-            self.video_size = RectSize {
+            self.video_size = Size {
                 width: self.window_size.width,
-                height: (self.window_size.width as f64 / stream_ratio) as u32,
+                height: self.window_size.width / stream_ratio,
             };
 
             self.video_pos = Position {
-                x: 0,
-                y: (self.window_size.height - self.video_size.height) / 2,
+                x: 0.0,
+                y: (self.window_size.height - self.video_size.height) / 2.0,
             };
         }
     }
@@ -93,20 +83,20 @@ impl VideoLayout {
             y: cursor_pos.y - self.video_pos.y,
         };
 
-        let scale = self.host_size.width as f64 / self.video_size.width as f64;
+        let scale = self.host_size.width / self.video_size.width;
 
         Some(Position {
-            x: (local_video_pos.x as f64 * scale) as u32,
-            y: (local_video_pos.y as f64 * scale) as u32,
+            x: local_video_pos.x * scale,
+            y: local_video_pos.y * scale,
         })
     }
 
-    pub fn host_to_local(&self, host_pos: Position) -> Position {
-        let scale = self.video_size.width as f64 / self.host_size.width as f64;
+    pub fn host_to_local(&self, host_pos: &Position) -> Position {
+        let scale = self.video_size.width / self.host_size.width;
 
         Position {
-            x: self.video_pos.x + (host_pos.x as f64 * scale) as u32,
-            y: self.video_pos.y + (host_pos.y as f64 * scale) as u32,
+            x: self.video_pos.x + host_pos.x * scale,
+            y: self.video_pos.y + host_pos.y * scale,
         }
     }
 }

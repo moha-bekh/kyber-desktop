@@ -2,14 +2,13 @@ use std::sync::{Arc, Weak};
 
 use log::warn;
 use winit::{
-    dpi::{PhysicalPosition, PhysicalSize},
     event::{DeviceEvent, WindowEvent},
     window::CursorRgba,
 };
 
 use libkynput_rs::CursorData;
 
-use super::{Position, Window, WindowControl};
+use super::{Position, Size, Window, WindowControl};
 use crate::error::{Error, Result};
 use crate::inputs::InputContext;
 
@@ -79,20 +78,14 @@ where
     pub(crate) fn send_position(
         &self,
         input_ctx: &Arc<InputContext>,
-        position: PhysicalPosition<i32>,
+        position: Position,
         capture_cursor: bool,
     ) -> Result<()> {
         let Some(window) = &self.window else {
             return Ok(());
         };
 
-        let projected_pos = window.local_to_host(
-            Position {
-                x: position.x as u32,
-                y: position.y as u32,
-            },
-            capture_cursor,
-        );
+        let projected_pos = window.local_to_host(&position, capture_cursor);
 
         let Some(projected_pos) = projected_pos else {
             return Ok(());
@@ -117,9 +110,9 @@ where
             .unwrap_or_else(|| {
                 let window_size = window.size();
 
-                PhysicalPosition {
-                    x: window_size.width as i32 / 2,
-                    y: window_size.height as i32 / 2,
+                Position {
+                    x: window_size.width / 2.0,
+                    y: window_size.height / 2.0,
                 }
             });
 
@@ -131,13 +124,7 @@ where
         }
     }
 
-    pub(crate) fn cursor_moved(&mut self, position: PhysicalPosition<f64>) -> Result<()> {
-        // Cast to our internal representation
-        let position: PhysicalPosition<i32> = PhysicalPosition {
-            x: position.x as _,
-            y: position.y as _,
-        };
-
+    pub(crate) fn cursor_moved(&mut self, position: Position) -> Result<()> {
         // Avoid to send the same MouseMove multiple time
         if let Some(window) = &mut self.window {
             if let Some(last_cursor_pos) = window.last_cursor_pos() {
@@ -169,7 +156,7 @@ where
         Ok(())
     }
 
-    pub(crate) fn resized(&mut self, size: PhysicalSize<u32>) {
+    pub(crate) fn resized(&mut self, size: Size) {
         if let Some(window) = &mut self.window {
             window.resized(size);
             window.grab_cursor(window.is_fullscreen());
@@ -238,16 +225,15 @@ where
             // otherwise i32::MAX is sent. Then the client must move its own cursor to
             // match the host cursor coordinates.
             if !self.cursor_visible && cursor.x != i32::MAX && cursor.y != i32::MAX {
-                let position = window.host_to_local(Position {
-                    x: cursor.x as u32,
-                    y: cursor.y as u32,
+                let position = window.host_to_local(&Position {
+                    x: cursor.x as _,
+                    y: cursor.y as _,
                 });
 
                 // Store this position because it will be raised by winit after calling
                 // set_cursor_position. This is just a local update, not a real MouseMove
-                let physical_position = PhysicalPosition::new(position.x as _, position.y as _);
-                window.set_last_cursor_pos(physical_position);
-                window.set_cursor_position(physical_position)?;
+                window.set_last_cursor_pos(position);
+                window.set_cursor_position(position)?;
             }
 
             match cursor.data {

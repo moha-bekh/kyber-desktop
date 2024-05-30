@@ -16,7 +16,7 @@ use libclient_rs::{
 use crate::client_proxy::ClientEventProxy;
 use crate::error::{Error, Result};
 use crate::inputs::{InputContext, ShortcutType};
-use crate::window::{Window, WindowControlWinit, WindowsStateMachine};
+use crate::window::{Position, Size, Window, WindowControlWinit, WindowsStateMachine};
 use crate::CliArgs;
 
 #[derive(Clone, Debug)]
@@ -184,12 +184,22 @@ impl State {
                 event: WindowEvent::Resized(size),
                 ..
             } => {
+                let size = Size {
+                    width: size.width as _,
+                    height: size.height as _,
+                };
+
                 self.windows.resized(size);
             }
             Event::WindowEvent {
                 event: WindowEvent::CursorMoved { position, .. },
                 ..
             } => {
+                let position = Position {
+                    x: position.x as _,
+                    y: position.y as _,
+                };
+
                 self.windows.cursor_moved(position)?;
             }
             Event::DeviceEvent { event, .. } => {
