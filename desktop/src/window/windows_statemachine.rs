@@ -645,4 +645,20 @@ where
 
         Ok(())
     }
+
+    pub(crate) fn left_button_released(&self) {
+        let Some(cursor) = self.active_cursor.clone() else {
+            return;
+        };
+
+        let Some(window) = self
+            .windows
+            .iter()
+            .find(|window| window.last_cursor_pos().is_some())
+        else {
+            return;
+        };
+
+        window.set_cursor_rgba((*cursor).clone());
+    }
 }

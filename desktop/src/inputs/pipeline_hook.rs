@@ -158,6 +158,10 @@ where
             }
             InputType::MouseButton => {
                 if let Some(btn) = MouseButton::from_packet(pkt) {
+                    if btn.button == MouseButtonType::Left && !btn.pressed {
+                        _ = self.event_proxy.send_event(UserEvent::LeftButtonReleased);
+                    }
+
                     state.handle_mouse_button(&btn);
                 }
 
@@ -195,7 +199,20 @@ mod tests {
 
     #[test]
     fn mouse_state() {
-        let proxy = MockProxy::new();
+        let userevent_compare = move |e: &UserEvent| {
+            if let UserEvent::LeftButtonReleased = e {
+                true
+            } else {
+                false
+            }
+        };
+
+        let mut proxy = MockProxy::new();
+        proxy
+            .expect_send_event()
+            .with(predicate::function(userevent_compare))
+            .times(1)
+            .returning(|_| Ok(()));
 
         let hook = ClientPipelineHook::new(proxy);
 

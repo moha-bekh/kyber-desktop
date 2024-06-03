@@ -29,6 +29,7 @@ pub enum UserEvent {
     Shortcut(ShortcutType),
     Client(libclient_rs::Event),
     SetCursor(libkynput_rs::Cursor),
+    LeftButtonReleased,
 }
 
 pub(crate) trait EventProxy: Send + 'static {
@@ -513,6 +514,9 @@ impl State {
             }
             Event::UserEvent(UserEvent::SetCursor(cursor)) => {
                 self.windows.set_cursor(cursor)?;
+            }
+            Event::UserEvent(UserEvent::LeftButtonReleased) => {
+                self.windows.left_button_released();
             }
             _ => {}
         }
