@@ -86,11 +86,10 @@ impl InputContext {
     }
 
     pub(crate) fn cursor_inside_window(&self, inside: bool) -> Result<()> {
-        let types = [InputType::MouseMove, InputType::MouseWheel];
-        for t in types {
-            self.pipeline
-                .set_type_processing_state(t, RouterProcessingState::from_boolean(inside))?;
-        }
+        self.pipeline.set_type_processing_state(
+            InputType::MouseWheel,
+            RouterProcessingState::from_boolean(inside),
+        )?;
 
         if inside {
             self.pipeline.set_type_processing_state(
