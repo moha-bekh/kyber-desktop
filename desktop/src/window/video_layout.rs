@@ -58,13 +58,13 @@ impl VideoLayout {
             cursor_pos.x = limit_segment(
                 cursor_pos.x,
                 self.video_pos.x,
-                self.video_pos.x + self.video_size.width,
+                self.video_pos.x + self.video_size.width - 1.0,
             );
 
             cursor_pos.y = limit_segment(
                 cursor_pos.y,
                 self.video_pos.y,
-                self.video_pos.y + self.video_size.height,
+                self.video_pos.y + self.video_size.height - 1.0,
             );
         } else if cursor_pos.x < self.video_pos.x
             || cursor_pos.x >= self.video_size.width + self.video_pos.x
