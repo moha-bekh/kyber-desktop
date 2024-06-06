@@ -1,7 +1,7 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   DEBIAN_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-bookworm:20240226122118
-  UBUNTU_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/ubuntu-jammy:20240226124114
+  UBUNTU_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/ubuntu-noble:20240618121355
   WIN64_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-win64:20240226123357
   MACOS_RUST_VERSION: 1.76.0
 
@@ -137,21 +137,21 @@ clippy-debian-bookworm-x86_64:
   needs:
     - contrib-debian-bookworm-x86_64
 
-contrib-ubuntu-jammy-x86_64:
+contrib-ubuntu-noble-x86_64:
   extends: .contrib-linux-x86_64-common
   image: $UBUNTU_IMAGE
   when: manual
 
-build-ubuntu-jammy-x86_64:
+build-ubuntu-noble-x86_64:
   extends: .build-linux-x86_64-common
   image: $UBUNTU_IMAGE
   needs:
-    - contrib-ubuntu-jammy-x86_64
+    - contrib-ubuntu-noble-x86_64
   variables:
-    KYBER_BASE_DIR: "kyber-ubuntu-jammy-x86_64"
+    KYBER_BASE_DIR: "kyber-ubuntu-noble-x86_64"
   artifacts:
     paths:
-      - kyber-ubuntu-jammy-x86_64*.tar.bz2
+      - kyber-ubuntu-noble-x86_64*.tar.bz2
     expire_in: 1 week
 
 contrib-windows-x86_64:
