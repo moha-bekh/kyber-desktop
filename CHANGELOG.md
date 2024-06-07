@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * libclient: Integrate kyaudioreg
+* avserver: Allow to overload encoder configuration from kyber_config.toml
 
 ## [0.16.1] - 2024-05-21
 
