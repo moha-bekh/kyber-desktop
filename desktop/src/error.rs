@@ -1,12 +1,14 @@
+use crate::event_loop::UserEvent;
+
 #[derive(Debug)]
 pub enum Error {
     IO(std::io::Error),
     WindowOs(winit::error::OsError),
-    Rejected,
     ThreadPanicked,
     NoClient,
     UnknownWindow,
     Winit,
+    WinitEventLoopClosed,
     Libclient(libclient_rs::Error),
     Input(libkynput_rs::Error),
     // Window errors
@@ -46,6 +48,12 @@ impl From<libkynput_rs::Error> for Error {
 impl From<winit::error::ExternalError> for Error {
     fn from(err: winit::error::ExternalError) -> Error {
         Error::WindowFailed(err)
+    }
+}
+
+impl From<winit::event_loop::EventLoopClosed<UserEvent>> for Error {
+    fn from(_: winit::event_loop::EventLoopClosed<UserEvent>) -> Error {
+        Error::WinitEventLoopClosed
     }
 }
 

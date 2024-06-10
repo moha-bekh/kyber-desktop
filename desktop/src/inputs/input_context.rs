@@ -2,17 +2,14 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use log::{info, warn};
-use winit::{
-    event::{DeviceEvent, WindowEvent},
-    event_loop::EventLoopProxy,
-};
+use winit::event::{DeviceEvent, WindowEvent};
 
 use libkynput_rs::{InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
 
 use crate::error::Result;
+use crate::event_loop::EventProxy;
 use crate::inputs::{self, ClientPipelineHook, PipelineStateReader, WinitHandler};
 use crate::window::Position;
-use crate::UserEvent;
 
 pub(crate) struct InputContext {
     pipeline: Pipeline,
@@ -23,10 +20,10 @@ pub(crate) struct InputContext {
 }
 
 impl InputContext {
-    pub(crate) fn new(
-        eventloop_proxy: EventLoopProxy<UserEvent>,
-        pipeline: Pipeline,
-    ) -> Result<Self> {
+    pub(crate) fn new<T>(eventloop_proxy: T, pipeline: Pipeline) -> Result<Self>
+    where
+        T: Clone + EventProxy,
+    {
         // Create InputPipeline
         let cursor_handler = inputs::new_cursor_handler(eventloop_proxy.clone())?;
 
@@ -59,7 +56,7 @@ impl InputContext {
         let supports_relative_mouse = pipeline.produces_type(InputType::MouseMove);
 
         // Create Shortcuts handler
-        let pipeline_hook = Box::new(ClientPipelineHook::new_from_event_loop(eventloop_proxy));
+        let pipeline_hook = Box::new(ClientPipelineHook::new(eventloop_proxy));
 
         let state_reader = pipeline_hook.get_state_reader();
         pipeline.set_hook(pipeline_hook)?;

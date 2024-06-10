@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use log::warn;
-use winit::event_loop::EventLoopProxy;
 
 use libkynput_rs::{
     ConsumerInterface, Cursor, CursorFormat, Handler, HandlerConsumerInterface, HandlerInterface,
@@ -9,25 +8,37 @@ use libkynput_rs::{
 };
 
 use crate::error::Result;
-use crate::event_loop::UserEvent;
+use crate::event_loop::{EventProxy, UserEvent};
 
-struct WindowCursorHandler {
-    event_loop_proxy: EventLoopProxy<UserEvent>,
+struct WindowCursorHandler<T>
+where
+    T: EventProxy,
+{
+    event_loop_proxy: T,
 }
 
-impl WindowCursorHandler {
-    pub fn new(event_loop_proxy: EventLoopProxy<UserEvent>) -> Self {
+impl<T> WindowCursorHandler<T>
+where
+    T: EventProxy,
+{
+    pub fn new(event_loop_proxy: T) -> Self {
         Self { event_loop_proxy }
     }
 }
 
-impl HandlerConsumerInterface for WindowCursorHandler {
+impl<T> HandlerConsumerInterface for WindowCursorHandler<T>
+where
+    T: EventProxy,
+{
     fn handled_types(&self) -> Vec<InputType> {
         vec![InputType::Cursor]
     }
 }
 
-impl ConsumerInterface for WindowCursorHandler {
+impl<T> ConsumerInterface for WindowCursorHandler<T>
+where
+    T: EventProxy,
+{
     fn consume(&self, pkt: Packet) {
         let Some(cursor) = Cursor::from_packet(&pkt) else {
             return;
@@ -39,7 +50,10 @@ impl ConsumerInterface for WindowCursorHandler {
     }
 }
 
-impl HandlerInterface for WindowCursorHandler {
+impl<T> HandlerInterface for WindowCursorHandler<T>
+where
+    T: EventProxy,
+{
     fn start(&self) {}
 
     fn stop(&self) {}
@@ -57,7 +71,10 @@ impl HandlerInterface for WindowCursorHandler {
     }
 }
 
-pub fn new_cursor_handler(event_loop_proxy: EventLoopProxy<UserEvent>) -> Result<Handler> {
+pub fn new_cursor_handler<T>(event_loop_proxy: T) -> Result<Handler>
+where
+    T: EventProxy,
+{
     let consumer = Arc::new(WindowCursorHandler::new(event_loop_proxy));
     Ok(libkynput_rs::create_handler_consumer_instance(consumer))
 }

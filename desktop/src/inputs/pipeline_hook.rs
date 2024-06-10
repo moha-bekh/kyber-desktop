@@ -2,13 +2,11 @@ use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
 use log::{debug, warn};
-use winit::event_loop::EventLoopProxy;
 
 use libkynput_rs::{InputType, KeyboardKey, MouseButton, MouseButtonType, Packet};
 use libkynput_rs::{RouterHook, RouterHookPacketResult};
 
-use crate::error::{Error, Result};
-use crate::event_loop::UserEvent;
+use crate::event_loop::{EventProxy, UserEvent};
 
 const SCANCODE_UNKNOWN: u16 = 0;
 const SCANCODE_F: u16 = 33;
@@ -93,38 +91,21 @@ impl PipelineStateReader {
     }
 }
 
-trait WindowProxy: Send {
-    fn send_event(&self, event: UserEvent) -> Result<()>;
-}
-
-struct WindowProxyImpl {
-    window_proxy: EventLoopProxy<UserEvent>,
-}
-
-impl WindowProxy for WindowProxyImpl {
-    fn send_event(&self, event: UserEvent) -> Result<()> {
-        self.window_proxy.send_event(event).map_err(|e| {
-            warn!("Send failed: {:?}", e);
-            Error::Rejected
-        })?;
-
-        Ok(())
-    }
-}
-
-pub struct ClientPipelineHook {
-    window_proxy: Box<dyn WindowProxy>,
+pub struct ClientPipelineHook<T>
+where
+    T: EventProxy,
+{
+    event_proxy: T,
     state: Arc<Mutex<InternalState>>,
 }
 
-impl ClientPipelineHook {
-    pub fn new_from_event_loop(window_proxy: EventLoopProxy<UserEvent>) -> Self {
-        Self::new(Box::new(WindowProxyImpl { window_proxy }))
-    }
-
-    fn new(window_proxy: Box<dyn WindowProxy>) -> Self {
+impl<T> ClientPipelineHook<T>
+where
+    T: EventProxy,
+{
+    pub fn new(event_proxy: T) -> Self {
         Self {
-            window_proxy,
+            event_proxy,
             state: Arc::new(Mutex::new(InternalState::new())),
         }
     }
@@ -136,7 +117,10 @@ impl ClientPipelineHook {
     }
 }
 
-impl RouterHook for ClientPipelineHook {
+impl<T> RouterHook for ClientPipelineHook<T>
+where
+    T: EventProxy,
+{
     fn on_packet(&self, pkt: &Packet) -> RouterHookPacketResult {
         let mut state = match self.state.lock() {
             Ok(state) => state,
@@ -153,7 +137,7 @@ impl RouterHook for ClientPipelineHook {
                 if let Some(key) = KeyboardKey::from_packet(pkt) {
                     match state.handle_shortcut(&key) {
                         Some(shortcut) => {
-                            let ret = self.window_proxy.send_event(UserEvent::Shortcut(shortcut));
+                            let ret = self.event_proxy.send_event(UserEvent::Shortcut(shortcut));
                             if let Err(err) = ret {
                                 warn!("Fail to send shortcut event: {:?}", err);
                             }
@@ -198,19 +182,20 @@ mod tests {
 
     use super::*;
     use crate::error::Result;
+    use crate::event_loop::EventProxy;
 
     mock! {
-        Proxy {
+        pub Proxy {
         }
 
-        impl WindowProxy for Proxy {
+        impl EventProxy for Proxy {
             fn send_event(&self, event: UserEvent) -> Result<()>;
         }
     }
 
     #[test]
     fn mouse_state() {
-        let proxy = Box::new(MockProxy::new());
+        let proxy = MockProxy::new();
 
         let hook = ClientPipelineHook::new(proxy);
 
@@ -267,7 +252,7 @@ mod tests {
             *e == shortcut_event
         };
 
-        let mut proxy = Box::new(MockProxy::new());
+        let mut proxy = MockProxy::new();
         proxy
             .expect_send_event()
             .with(predicate::function(shortcut_compare))
@@ -304,7 +289,7 @@ mod tests {
 
     #[test]
     fn unfiltered_events() {
-        let proxy = Box::new(MockProxy::new());
+        let proxy = MockProxy::new();
         let hook = ClientPipelineHook::new(proxy);
 
         let ret_process_true = RouterHookPacketResult {

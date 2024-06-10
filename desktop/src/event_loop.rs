@@ -30,6 +30,29 @@ pub enum UserEvent {
     SetCursor(libkynput_rs::Cursor),
 }
 
+pub(crate) trait EventProxy: Send + 'static {
+    fn send_event(&self, event: UserEvent) -> Result<()>;
+}
+
+#[derive(Clone)]
+struct EventProxyWinit {
+    proxy: winit::event_loop::EventLoopProxy<UserEvent>,
+}
+
+impl EventProxyWinit {
+    fn new(proxy: winit::event_loop::EventLoopProxy<UserEvent>) -> Self {
+        Self { proxy }
+    }
+}
+
+impl EventProxy for EventProxyWinit {
+    fn send_event(&self, event: UserEvent) -> Result<()> {
+        self.proxy.send_event(event)?;
+
+        Ok(())
+    }
+}
+
 pub type StopRequestCb = Box<dyn Fn() + Send>;
 
 struct State {
@@ -167,7 +190,8 @@ impl State {
             let pipeline_config = libkynput_rs::Config::default_client();
             let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
 
-            let input_ctx = Arc::new(InputContext::new(self.eventloop_proxy.clone(), pipeline)?);
+            let eventloop_proxy = EventProxyWinit::new(self.eventloop_proxy.clone());
+            let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline)?);
 
             self.windows.set_input_ctx(Arc::downgrade(&input_ctx));
             self.input_ctx = Some(input_ctx);
@@ -367,8 +391,8 @@ impl State {
                     let pipeline_config = libkynput_rs::Config::default_client();
                     let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
 
-                    let input_ctx =
-                        Arc::new(InputContext::new(self.eventloop_proxy.clone(), pipeline)?);
+                    let eventloop_proxy = EventProxyWinit::new(self.eventloop_proxy.clone());
+                    let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline)?);
 
                     self.windows.set_input_ctx(Arc::downgrade(&input_ctx));
                     self.input_ctx = Some(input_ctx);
