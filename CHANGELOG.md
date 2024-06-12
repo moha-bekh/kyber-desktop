@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 * libclient: Integrate kyaudioreg
 * avserver: Allow to overload encoder configuration from kyber_config.toml
 * kymux: Fix duplicate datagram handling with unreliable
+* kymux: Fix sequencer for unreliable protocols
 * desktop/win32: Hide console
 * desktop: Add multiscreen support. Can be enabled with option --display_count
 * desktop: Allow to configure Intra refresh with option --intra_refresh
