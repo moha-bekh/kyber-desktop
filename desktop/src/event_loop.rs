@@ -225,6 +225,10 @@ impl State {
             video_config.set_codec(self.cli_args.video_codec);
             video_config.set_yuv444(self.cli_args.yuv444);
 
+            if let Some(intra_refresh) = self.cli_args.intra_refresh {
+                video_config.set_intra_refresh(intra_refresh);
+            }
+
             session_config.add_video(video_config);
         }
 

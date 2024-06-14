@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 * kymux: Fix duplicate datagram handling with unreliable
 * desktop/win32: Hide console
 * desktop: Add multiscreen support. Can be enabled with option --display_count
+* desktop: Allow to configure Intra refresh with option --intra_refresh
 
 ## [0.16.1] - 2024-05-21
 

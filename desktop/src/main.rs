@@ -91,6 +91,7 @@ pub struct CliArgs {
     audio: bool,
     inputs: bool,
     software_decode: bool,
+    intra_refresh: Option<bool>,
 }
 
 fn main() {
@@ -177,6 +178,13 @@ fn main() {
                 .help("Enable video software decoding")
                 .takes_value(false),
         )
+        .arg(
+            clap::Arg::with_name("intra_refresh")
+                .long("intra_refresh")
+                .help("Enable Intra refresh (is supported by the encoder)")
+                .value_parser(clap::value_parser!(bool))
+                .takes_value(true),
+        )
         .arg(clap::Arg::with_name("STREAMER_IP").required(true).index(1))
         .get_matches();
 
@@ -229,6 +237,7 @@ fn main() {
     let audio = matches.get_one("audio").copied().unwrap_or(true);
     let inputs = matches.get_one("inputs").copied().unwrap_or(true);
     let software_decode = matches.is_present("software_decode");
+    let intra_refresh = matches.get_one("intra_refresh").copied();
 
     let cli_args = CliArgs {
         streamer_ip: streamer_ip.clone(),
@@ -241,6 +250,7 @@ fn main() {
         audio,
         inputs,
         software_decode,
+        intra_refresh,
     };
 
     // Create window
