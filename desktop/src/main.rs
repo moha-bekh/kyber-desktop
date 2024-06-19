@@ -111,15 +111,15 @@ fn main() {
             clap::Arg::with_name("protocol")
                 .long("protocol")
                 .help("Protocol to use")
-                .value_parser([
-                    "rtp",
-                    "kymux",
-                    "kymux_reliable",
-                    "kymux_gopstream",
-                    "kymux_unreliable",
-                    "kymux_unreliable_fec",
-                ])
+                .value_parser(["rtp", "kymux"])
                 .default_value("kymux"),
+        )
+        .arg(
+            clap::Arg::with_name("kymux-video")
+                .long("kymux-video")
+                .help("Kymux video protocol to use")
+                .value_parser(["reliable", "gopstream", "unreliable", "unreliable_fec"])
+                .default_value("reliable"),
         )
         .arg(
             clap::Arg::with_name("video-codec")
@@ -203,12 +203,19 @@ fn main() {
 
     let protocol = match matches.value_of("protocol") {
         Some("rtp") => StreamingProtocol::Rtp,
-        Some("kymux") | Some("kymux_reliable") => {
-            StreamingProtocol::Kymux(KymuxVideoProtocol::Reliable)
+        Some("kymux") => {
+            let video_protocol = match matches.value_of("kymux-video") {
+                None | Some("reliable") => KymuxVideoProtocol::Reliable,
+                Some("gopstream") => KymuxVideoProtocol::GopStream,
+                Some("unreliable") => KymuxVideoProtocol::Unreliable,
+                Some("unreliable_fec") => KymuxVideoProtocol::UnreliableFec,
+                _ => {
+                    error!("No valid kymux video protocol specified");
+                    return;
+                }
+            };
+            StreamingProtocol::Kymux(video_protocol)
         }
-        Some("kymux_gopstream") => StreamingProtocol::Kymux(KymuxVideoProtocol::GopStream),
-        Some("kymux_unreliable") => StreamingProtocol::Kymux(KymuxVideoProtocol::Unreliable),
-        Some("kymux_unreliable_fec") => StreamingProtocol::Kymux(KymuxVideoProtocol::UnreliableFec),
         _ => {
             error!("No valid protocol specified");
             return;
