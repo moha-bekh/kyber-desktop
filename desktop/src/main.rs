@@ -122,8 +122,8 @@ fn main() {
                 .default_value("kymux"),
         )
         .arg(
-            clap::Arg::with_name("video_codec")
-                .long("video_codec")
+            clap::Arg::with_name("video-codec")
+                .long("video-codec")
                 .help("Video codec to use")
                 .value_parser(["h264", "hevc", "av1"])
                 .default_value("h264"),
@@ -162,35 +162,35 @@ fn main() {
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name("display_idx")
-                .long("display_idx")
+            clap::Arg::with_name("display-idx")
+                .long("display-idx")
                 .help("Display Id to access")
                 .value_parser(clap::value_parser!(usize))
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name("display_count")
-                .long("display_count")
+            clap::Arg::with_name("display-count")
+                .long("display-count")
                 .help("Display count to stream")
                 .value_parser(clap::value_parser!(usize))
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name("software_decode")
-                .long("software_decode")
+            clap::Arg::with_name("software-decode")
+                .long("software-decode")
                 .help("Enable video software decoding")
                 .takes_value(false),
         )
         .arg(
-            clap::Arg::with_name("intra_refresh")
-                .long("intra_refresh")
+            clap::Arg::with_name("intra-refresh")
+                .long("intra-refresh")
                 .help("Enable Intra refresh (is supported by the encoder)")
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name("gamepad_force_xbox360")
-                .long("gamepad_force_xbox360")
+            clap::Arg::with_name("gamepad-force-xbox360")
+                .long("gamepad-force-xbox360")
                 .help("Force to plug gamepads as Xbox 360 controllers")
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
@@ -215,7 +215,7 @@ fn main() {
         }
     };
 
-    let video_codec = match matches.value_of("video_codec") {
+    let video_codec = match matches.value_of("video-codec") {
         Some("h264") => VideoCodec::H264,
         Some("hevc") => VideoCodec::HEVC,
         Some("av1") => VideoCodec::AV1,
@@ -229,8 +229,8 @@ fn main() {
         .value_of("bitrate")
         .map(|bitrate| parse_bitrate(bitrate.into()).unwrap());
 
-    let display_index = matches.get_one("display_idx").copied();
-    let display_count = matches.get_one("display_count").copied();
+    let display_index = matches.get_one("display-idx").copied();
+    let display_count = matches.get_one("display-count").copied();
 
     let display_params = match (display_index, display_count) {
         (None, None) => DisplayParams::Single(0),
@@ -238,7 +238,7 @@ fn main() {
         (Some(display_index), None) => DisplayParams::Single(display_index),
         (None, Some(display_count)) => DisplayParams::Multiple(display_count),
         (Some(_), Some(_)) => {
-            error!("display_idx and display_count are mutually exclusive");
+            error!("display-idx and display-count are mutually exclusive");
             return;
         }
     };
@@ -246,9 +246,9 @@ fn main() {
     let yuv444 = matches.is_present("444");
     let audio = matches.get_one("audio").copied().unwrap_or(true);
     let inputs = matches.get_one("inputs").copied().unwrap_or(true);
-    let gamepad_force_xbox360 = matches.get_one("gamepad_force_xbox360").copied();
-    let software_decode = matches.is_present("software_decode");
-    let intra_refresh = matches.get_one("intra_refresh").copied();
+    let gamepad_force_xbox360 = matches.get_one("gamepad-force-xbox360").copied();
+    let software_decode = matches.is_present("software-decode");
+    let intra_refresh = matches.get_one("intra-refresh").copied();
 
     let cli_args = CliArgs {
         streamer_ip: streamer_ip.clone(),
