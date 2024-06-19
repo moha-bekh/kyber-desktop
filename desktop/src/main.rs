@@ -11,7 +11,7 @@ mod window;
 use log::{error, info, LevelFilter};
 use winit::event_loop::EventLoopBuilder;
 
-use libclient_rs::{KymuxVideoProtocol, StreamingProtocol, VideoCodec};
+use libclient_rs::{KymuxAudioProtocol, KymuxVideoProtocol, StreamingProtocol, VideoCodec};
 
 use error::{Error, Result};
 use event_loop::UserEvent;
@@ -122,6 +122,13 @@ fn main() {
                 .default_value("reliable"),
         )
         .arg(
+            clap::Arg::with_name("kymux-audio")
+                .long("kymux-audio")
+                .help("Kymux audio protocol to use")
+                .value_parser(["reliable"])
+                .default_value("reliable"),
+        )
+        .arg(
             clap::Arg::with_name("video-codec")
                 .long("video-codec")
                 .help("Video codec to use")
@@ -214,7 +221,17 @@ fn main() {
                     return;
                 }
             };
-            StreamingProtocol::Kymux(video_protocol)
+            let audio_protocol = match matches.value_of("kymux-audio") {
+                None | Some("reliable") => KymuxAudioProtocol::Reliable,
+                _ => {
+                    error!("No valid kymux audio protocol specified");
+                    return;
+                }
+            };
+            StreamingProtocol::Kymux {
+                video_protocol,
+                audio_protocol,
+            }
         }
         _ => {
             error!("No valid protocol specified");

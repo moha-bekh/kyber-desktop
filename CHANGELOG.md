@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* desktop: Refactor protocol selection and add audio protocol parameter
+
 ## [0.17.1] - 2024-07-11
 
 * desktop: Add --gamepad_force_xbox360
