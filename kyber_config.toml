@@ -21,6 +21,18 @@ encoder = "nvenc"
 # Default: 8080
 #port = 8080
 
+# Override data plane listening port
+#
+# Used for Quic connection (UDP).
+#
+# Warning:
+# * Overrides value for data plane even if controller.port is set
+# * This is likely to break controllers deployed behind a NAT.
+#   To make it work, NAT forwarding rule in the router must not change to UDP
+#   port during redirection
+#
+#dataplane_port = 8080
+
 [inputserver]
 # Force to plug Xbox 360 controllers
 #

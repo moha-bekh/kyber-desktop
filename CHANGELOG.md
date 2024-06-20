@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 * desktop: Add multiscreen support. Can be enabled with option --display_count
 * desktop: Allow to configure Intra refresh with option --intra_refresh
 * inputserver/win32: Plug PlayStation controllers as PS4 controllers
+* controller: Allow to override dataplane port
 
 ## [0.16.1] - 2024-05-21
 
