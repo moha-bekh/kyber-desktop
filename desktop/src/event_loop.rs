@@ -68,11 +68,10 @@ struct State {
 
 impl State {
     fn create_connect_config(&self) -> Result<ConnectConfig> {
-        let connect_config = libclient_rs::ConnectConfig::default(
-            &self.cli_args.streamer_ip,
-            crate::STREAMER_HOST,
-            crate::STREAMER_CERT,
-        )?;
+        let connect_config = libclient_rs::ConnectConfig::default(&self.cli_args.streamer_ip)?;
+
+        connect_config.set_tls_host(crate::STREAMER_HOST)?;
+        connect_config.set_tls_root_cert(crate::STREAMER_CERT)?;
 
         if let Some(port) = self.cli_args.streamer_port {
             connect_config.set_streamer_port(port);

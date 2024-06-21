@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
   in time
 * controller/ws: Handle close control frame
 * libclient: Update VLC. Kymux branch is now based on 6880921445
+* libclient: Allow to rely on builtin OS TLS certificates
 * desktop/kymux-audio: Add unreliable parameter
 
 ## [0.17.1] - 2024-07-11
