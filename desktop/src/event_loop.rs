@@ -70,8 +70,13 @@ impl State {
     fn create_connect_config(&self) -> Result<ConnectConfig> {
         let connect_config = libclient_rs::ConnectConfig::default(&self.cli_args.streamer_ip)?;
 
-        connect_config.set_tls_host(crate::STREAMER_HOST)?;
-        connect_config.set_tls_root_cert(crate::STREAMER_CERT)?;
+        if let Some(tls_host) = &self.cli_args.tls_host {
+            connect_config.set_tls_host(tls_host)?;
+        }
+
+        if let Some(tls_root_cert) = &self.cli_args.tls_root_cert {
+            connect_config.set_tls_root_cert(tls_root_cert)?;
+        }
 
         if let Some(port) = self.cli_args.streamer_port {
             connect_config.set_streamer_port(port);

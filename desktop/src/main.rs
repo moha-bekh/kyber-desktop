@@ -17,9 +17,6 @@ use error::{Error, Result};
 use event_loop::UserEvent;
 use parse_utils::parse_bitrate;
 
-const STREAMER_HOST: &str = "kybertest";
-const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
-
 fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
     use std::path::Path;
 
@@ -85,6 +82,10 @@ pub enum DisplayParams {
 pub struct CliArgs {
     streamer_ip: String,
     streamer_port: Option<u16>,
+
+    tls_host: Option<String>,
+    tls_root_cert: Option<String>,
+
     protocol: StreamingProtocol,
     video_codec: VideoCodec,
     bitrate: Option<u32>,
@@ -95,6 +96,24 @@ pub struct CliArgs {
     gamepad_force_xbox360: Option<bool>,
     software_decode: bool,
     intra_refresh: Option<bool>,
+}
+
+fn load_tls_conf(matches: &clap::ArgMatches) -> (Option<String>, Option<String>) {
+    let tls_host = matches.get_one("tls-host").cloned();
+    let tls_root_cert = matches.get_one("tls-host").cloned();
+
+    #[cfg(feature = "test-tls-cert")]
+    let (tls_host, tls_root_cert) = {
+        const STREAMER_HOST: &str = "kybertest";
+        const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
+
+        let tls_host = tls_host.unwrap_or(STREAMER_HOST);
+        let tls_root_cert = tls_root_cert.unwrap_or(STREAMER_CERT);
+
+        (Some(tls_host.into()), Some(tls_root_cert.into()))
+    };
+
+    (tls_host, tls_root_cert)
 }
 
 fn main() {
@@ -275,9 +294,13 @@ fn main() {
     let software_decode = matches.is_present("software-decode");
     let intra_refresh = matches.get_one("intra-refresh").copied();
 
+    let (tls_host, tls_root_cert) = load_tls_conf(&matches);
+
     let cli_args = CliArgs {
         streamer_ip: streamer_ip.clone(),
         streamer_port,
+        tls_host,
+        tls_root_cert,
         protocol,
         video_codec,
         bitrate,
