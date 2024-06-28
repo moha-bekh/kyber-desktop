@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.17.0] - 2024-06-28
+
 * libclient: Integrate kyaudioreg
 * avserver: Allow to overload encoder configuration from kyber_config.toml
 * kymux: Fix duplicate datagram handling with unreliable
