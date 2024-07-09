@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* desktop: Add --gamepad_force_xbox360
+
 ## [0.17.0] - 2024-06-28
 
 * libclient: Integrate kyaudioreg

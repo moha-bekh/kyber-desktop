@@ -92,6 +92,7 @@ pub struct CliArgs {
     yuv444: bool,
     audio: bool,
     inputs: bool,
+    gamepad_force_xbox360: Option<bool>,
     software_decode: bool,
     intra_refresh: Option<bool>,
 }
@@ -187,6 +188,13 @@ fn main() {
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("gamepad_force_xbox360")
+                .long("gamepad_force_xbox360")
+                .help("Force to plug gamepads as Xbox 360 controllers")
+                .value_parser(clap::value_parser!(bool))
+                .takes_value(true),
+        )
         .arg(clap::Arg::with_name("STREAMER_IP").required(true).index(1))
         .get_matches();
 
@@ -238,6 +246,7 @@ fn main() {
     let yuv444 = matches.is_present("444");
     let audio = matches.get_one("audio").copied().unwrap_or(true);
     let inputs = matches.get_one("inputs").copied().unwrap_or(true);
+    let gamepad_force_xbox360 = matches.get_one("gamepad_force_xbox360").copied();
     let software_decode = matches.is_present("software_decode");
     let intra_refresh = matches.get_one("intra_refresh").copied();
 
@@ -251,6 +260,7 @@ fn main() {
         yuv444,
         audio,
         inputs,
+        gamepad_force_xbox360,
         software_decode,
         intra_refresh,
     };

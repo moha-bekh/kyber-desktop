@@ -238,6 +238,11 @@ impl State {
 
         if let Some(input_ctx) = self.input_ctx.as_ref() {
             let input_config = libclient_rs::InputSessionConfig::default(&input_ctx.pipeline())?;
+
+            if let Some(force) = self.cli_args.gamepad_force_xbox360 {
+                input_config.gamepad_force_xbox360(force);
+            }
+
             session_config.set_input(input_config);
         }
 
