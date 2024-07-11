@@ -4,7 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.17.1] - 2024-07-11
+
 * desktop: Add --gamepad_force_xbox360
+* libclient: Log intra_refresh setting received in StreamingSessionConfig
 
 ## [0.17.0] - 2024-06-28
 
