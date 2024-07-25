@@ -539,10 +539,15 @@ where
         } else {
             let cursor_was_visible = window.set_host_cursor_visible(false);
 
-            // Switch to relative mode only when the cursor of the current
-            // window hides. On Windows, we can get an hidden cursor from other
-            // displays.
-            if host_visible_count == 1 && cursor_was_visible == CursorVisible::True {
+            #[allow(clippy::if_same_then_else)]
+            if self.windows.len() == 1 && cursor_was_visible == CursorVisible::Undefined {
+                actions.push(CursorAction::SwitchRelative {
+                    window_id: last_active_window,
+                });
+            } else if host_visible_count == 1 && cursor_was_visible == CursorVisible::True {
+                // Switch to relative mode only when the cursor of the current
+                // window hides. On Windows, we can get an hidden cursor from other
+                // displays.
                 actions.push(CursorAction::SwitchRelative {
                     window_id: last_active_window,
                 });
