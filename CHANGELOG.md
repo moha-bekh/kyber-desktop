@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 * desktop: Correctly hide cursor at startup if required
 * avserver/win32: Workaround negative PTS generation while NTP goes backward
   in time
+* controller/ws: Handle close control frame
 
 ## [0.17.1] - 2024-07-11
 
