@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 * avserver/win32: Workaround negative PTS generation while NTP goes backward
   in time
 * controller/ws: Handle close control frame
-* libclient: Update VLC. Kymux branch is now based on c20f510de2
+* libclient: Update VLC. Kymux branch is now based on 6880921445
 * desktop/kymux-audio: Add unreliable parameter
 
 ## [0.17.1] - 2024-07-11
