@@ -144,7 +144,7 @@ fn main() {
             clap::Arg::with_name("kymux-audio")
                 .long("kymux-audio")
                 .help("Kymux audio protocol to use")
-                .value_parser(["reliable", "unreliable"])
+                .value_parser(["reliable", "unreliable", "unreliable_fec"])
                 .default_value("reliable"),
         )
         .arg(
@@ -243,6 +243,7 @@ fn main() {
             let audio_protocol = match matches.value_of("kymux-audio") {
                 None | Some("reliable") => KymuxAudioProtocol::Reliable,
                 Some("unreliable") => KymuxAudioProtocol::Unreliable,
+                Some("unreliable_fec") => KymuxAudioProtocol::UnreliableFec,
                 _ => {
                     error!("No valid kymux audio protocol specified");
                     return;
