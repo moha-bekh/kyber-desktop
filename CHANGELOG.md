@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 * libclient: Allow to rely on builtin OS TLS certificates
 * desktop/kymux-audio: Add unreliable parameter
 * controller: Correctly load the complete certificate chain
+* controller/ws: Make server certificate generation optional
 
 ## [0.17.1] - 2024-07-11
 

@@ -33,6 +33,15 @@ encoder = "nvenc"
 #
 #dataplane_port = 8080
 
+# Generate dynamically a certificate for Webtransport connections
+# Will be used by the web client to fill serverCertificateHashes field when
+# opening a Webtransport connection.
+#
+# MDN ref: https://developer.mozilla.org/en-US/docs/Web/API/WebTransport/WebTransport#servercertificatehashes
+#
+# Default: true
+#webtransport_gen_certificate = true
+
 [inputserver]
 # Force to plug Xbox 360 controllers
 #
