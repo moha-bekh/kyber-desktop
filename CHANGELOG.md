@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 * libclient: Update VLC. Kymux branch is now based on 6880921445
 * libclient: Allow to rely on builtin OS TLS certificates
 * desktop/kymux-audio: Add unreliable parameter
+* controller: Correctly load the complete certificate chain
 
 ## [0.17.1] - 2024-07-11
 
