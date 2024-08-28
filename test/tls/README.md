@@ -17,6 +17,18 @@ To have a browser that trusts our certificate, it is required to create a custom
 
 It is still possible to force Chrome to connect to a website that has an untrusted certificate, WebCodec API will still be available.
 
+Another alternative is to run Chrome/Chromium with `--ignore-certificate-errors-spki-list` parameter. Example:
+```bash
+chromium --ignore-certificate-errors-spki-list="U/p+dTMPZXIDU1PB0kCOKwFVCWpPQ5yMPpQF+yBzIiU=" https://test.demo.kyb.re:8080/webclient/
+```
+
+The `ignore-certificate-errors-spki-list` parameter can be generated with `openssl`:
+```bash
+$ openssl x509 -pubkey -noout -in cert.pem |
+    openssl rsa -pubin -outform der |
+    openssl dgst -sha256 -binary | base64
+```
+
 ### Current certificate limitations
 
 A TLS certificate is valid only for a list of DNS or IP. The certificate is currently valid for:
