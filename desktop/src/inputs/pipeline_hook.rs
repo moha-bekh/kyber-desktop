@@ -14,9 +14,6 @@ const SCANCODE_R: u16 = 19;
 const SCANCODE_LCTRL: u16 = 29;
 const SCANCODE_LALT: u16 = 56;
 
-// Taken from SDL
-const SCANCODE_COUNT: usize = 512;
-
 const SHORTCUT_FULLSCREEN: &[u16] = &[SCANCODE_F, SCANCODE_LCTRL, SCANCODE_LALT];
 const SHORTCUT_RESTART_STREAM: &[u16] = &[SCANCODE_R, SCANCODE_LCTRL, SCANCODE_LALT];
 
@@ -27,29 +24,29 @@ pub enum ShortcutType {
 }
 
 struct InternalState {
-    scancodes: [bool; SCANCODE_COUNT],
+    scancodes: HashSet<u16>,
     mouse_btns: HashSet<MouseButtonType>,
 }
 
 impl InternalState {
     fn new() -> Self {
         Self {
-            scancodes: [false; SCANCODE_COUNT],
+            scancodes: HashSet::new(),
             mouse_btns: HashSet::new(),
         }
     }
 
     fn check_shortcut(&self, scancodes: &[u16]) -> bool {
-        scancodes.iter().all(|s| self.scancodes[*s as usize])
+        scancodes.iter().all(|s| self.scancodes.contains(s))
     }
 
     fn handle_shortcut(&mut self, event: &KeyboardKey) -> Option<ShortcutType> {
         // Update keyboard state
         if event.scancode != SCANCODE_UNKNOWN {
-            if event.scancode < self.scancodes.len() as u16 {
-                self.scancodes[event.scancode as usize] = event.pressed;
+            if event.pressed {
+                self.scancodes.insert(event.scancode);
             } else {
-                debug!("Ignore scancode {}", event.scancode);
+                self.scancodes.remove(&event.scancode);
             }
         }
 
