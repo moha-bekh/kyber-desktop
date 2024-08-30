@@ -527,6 +527,12 @@ impl State {
                 let client = self.client.as_mut().ok_or(Error::NoClient)?;
                 client.stop_streaming()?;
             }
+            Event::UserEvent(UserEvent::Shortcut(ShortcutType::VolumeUp)) => {
+            }
+            Event::UserEvent(UserEvent::Shortcut(ShortcutType::VolumeDown)) => {
+            }
+            Event::UserEvent(UserEvent::Shortcut(ShortcutType::ToggleMute)) => {
+            }
             Event::UserEvent(UserEvent::SetCursor(cursor)) => {
                 self.windows.set_cursor(cursor)?;
             }
