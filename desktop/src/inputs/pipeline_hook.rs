@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
-use log::{debug, warn};
+use log::warn;
 
 use libkynput_rs::{InputType, KeyboardKey, MouseButton, MouseButtonType, Packet};
 use libkynput_rs::{RouterHook, RouterHookPacketResult};
@@ -23,6 +23,11 @@ pub enum ShortcutType {
     RestartStreaming,
 }
 
+const SHORTCUT_MAP: &[(&[u16], ShortcutType)] = &[
+    (SHORTCUT_FULLSCREEN, ShortcutType::Fullscreen),
+    (SHORTCUT_RESTART_STREAM, ShortcutType::RestartStreaming),
+];
+
 struct InternalState {
     scancodes: HashSet<u16>,
     mouse_btns: HashSet<MouseButtonType>,
@@ -36,10 +41,6 @@ impl InternalState {
         }
     }
 
-    fn check_shortcut(&self, scancodes: &[u16]) -> bool {
-        scancodes.iter().all(|s| self.scancodes.contains(s))
-    }
-
     fn handle_shortcut(&mut self, event: &KeyboardKey) -> Option<ShortcutType> {
         // Update keyboard state
         if event.scancode != SCANCODE_UNKNOWN {
@@ -50,13 +51,15 @@ impl InternalState {
             }
         }
 
-        if self.check_shortcut(SHORTCUT_FULLSCREEN) {
-            Some(ShortcutType::Fullscreen)
-        } else if self.check_shortcut(SHORTCUT_RESTART_STREAM) {
-            Some(ShortcutType::RestartStreaming)
-        } else {
-            None
-        }
+        // Find active shortcut
+        SHORTCUT_MAP.iter().find_map(|(scancodes, shortcut)| {
+            let shortcut_active = scancodes.iter().all(|s| self.scancodes.contains(s));
+            if shortcut_active {
+                Some(*shortcut)
+            } else {
+                None
+            }
+        })
     }
 
     fn handle_mouse_button(&mut self, btn: &MouseButton) {
