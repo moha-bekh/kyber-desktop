@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 * desktop/kymux-audio: Add unreliable parameter
 * controller: Correctly load the complete certificate chain
 * controller/ws: Make server certificate generation optional
+* desktop: Add audio volume keyboard shortcuts
 
 ## [0.17.1] - 2024-07-11
 

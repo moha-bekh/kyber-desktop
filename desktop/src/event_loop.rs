@@ -64,6 +64,8 @@ struct State {
     input_ctx: Option<Arc<InputContext>>,
     icon: Option<Icon>,
     windows: WindowsStateMachine<WindowControlWinit>,
+    volume: f32,
+    mute: bool,
 }
 
 impl State {
@@ -516,6 +518,16 @@ impl State {
             })) => {
                 info!("Got StreamerPipelineEvent. Type: {type_:?} - Stage: {stage:?} - Event: {event:?}");
             }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::AudioVolumeChanged {
+                volume,
+            })) => {
+                info!("Volume changed: {volume}");
+                self.volume = volume;
+            }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::AudioMuteChanged { mute })) => {
+                info!("Volume muted: {mute}");
+                self.mute = mute;
+            }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::Fullscreen)) => {
                 self.windows.toggle_fullscreen();
             }
@@ -528,10 +540,31 @@ impl State {
                 client.stop_streaming()?;
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::VolumeUp)) => {
+                let mut volume = self.volume + 0.1;
+                if volume > 1.0 {
+                    volume = 1.0;
+                }
+
+                if let Some(client) = &self.client {
+                    client.audio_set_volume(volume).unwrap();
+                }
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::VolumeDown)) => {
+                let mut volume = self.volume - 0.1;
+                if volume < 0.0 {
+                    volume = 0.0;
+                }
+
+                if let Some(client) = &self.client {
+                    client.audio_set_volume(volume).unwrap();
+                }
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::ToggleMute)) => {
+                let mute = !self.mute;
+
+                if let Some(client) = &self.client {
+                    client.audio_set_mute(mute).unwrap();
+                }
             }
             Event::UserEvent(UserEvent::SetCursor(cursor)) => {
                 self.windows.set_cursor(cursor)?;
@@ -568,6 +601,8 @@ impl EventLoopWrapper {
                 input_ctx: None,
                 icon,
                 windows: WindowsStateMachine::<WindowControlWinit>::new(),
+                volume: 1.0,
+                mute: false,
             }),
         })
     }
