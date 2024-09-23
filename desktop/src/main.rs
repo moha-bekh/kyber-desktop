@@ -99,16 +99,16 @@ pub struct CliArgs {
 }
 
 fn load_tls_conf(matches: &clap::ArgMatches) -> (Option<String>, Option<String>) {
-    let tls_host = matches.get_one("tls-host").cloned();
-    let tls_root_cert = matches.get_one("tls-host").cloned();
+    let tls_host: Option<String> = matches.get_one("tls-host").cloned();
+    let tls_root_cert: Option<String> = matches.get_one("tls-root-cert").cloned();
 
     #[cfg(feature = "test-tls-cert")]
     let (tls_host, tls_root_cert) = {
         const STREAMER_HOST: &str = "kybertest";
         const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
 
-        let tls_host = tls_host.unwrap_or(STREAMER_HOST);
-        let tls_root_cert = tls_root_cert.unwrap_or(STREAMER_CERT);
+        let tls_host = tls_host.unwrap_or(STREAMER_HOST.into());
+        let tls_root_cert = tls_root_cert.unwrap_or(STREAMER_CERT.into());
 
         (Some(tls_host.into()), Some(tls_root_cert.into()))
     };
@@ -219,6 +219,18 @@ fn main() {
                 .long("gamepad-force-xbox360")
                 .help("Force to plug gamepads as Xbox 360 controllers")
                 .value_parser(clap::value_parser!(bool))
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("tls-host")
+                .long("tls-host")
+                .help("TLS hostname to give during TLS connection")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("tls-root-cert")
+                .long("tls-root-cert")
+                .help("TLS root certificate to trust")
                 .takes_value(true),
         )
         .arg(clap::Arg::with_name("STREAMER_IP").required(true).index(1))
