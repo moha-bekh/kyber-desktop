@@ -98,20 +98,35 @@ pub struct CliArgs {
     intra_refresh: Option<bool>,
 }
 
+#[cfg(feature = "test-tls-cert")]
+fn tls_get_test_params(
+    matches: &clap::ArgMatches,
+    tls_host: Option<String>,
+    tls_root_cert: Option<String>,
+) -> (Option<String>, Option<String>) {
+    if !matches
+        .get_one("tls-enable-test-cert")
+        .copied()
+        .unwrap_or(true)
+    {
+        return (tls_host, tls_root_cert);
+    }
+
+    const STREAMER_HOST: &str = "kybertest";
+    const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
+
+    let tls_host = tls_host.unwrap_or(STREAMER_HOST.into());
+    let tls_root_cert = tls_root_cert.unwrap_or(STREAMER_CERT.into());
+
+    (Some(tls_host), Some(tls_root_cert))
+}
+
 fn load_tls_conf(matches: &clap::ArgMatches) -> (Option<String>, Option<String>) {
     let tls_host: Option<String> = matches.get_one("tls-host").cloned();
     let tls_root_cert: Option<String> = matches.get_one("tls-root-cert").cloned();
 
     #[cfg(feature = "test-tls-cert")]
-    let (tls_host, tls_root_cert) = {
-        const STREAMER_HOST: &str = "kybertest";
-        const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
-
-        let tls_host = tls_host.unwrap_or(STREAMER_HOST.into());
-        let tls_root_cert = tls_root_cert.unwrap_or(STREAMER_CERT.into());
-
-        (Some(tls_host.into()), Some(tls_root_cert.into()))
-    };
+    let (tls_host, tls_root_cert) = tls_get_test_params(matches, tls_host, tls_root_cert);
 
     (tls_host, tls_root_cert)
 }
@@ -124,7 +139,7 @@ fn main() {
 
     info!("Kyber client. Revision {}", env!("VERGEN_GIT_DESCRIBE"));
 
-    let matches = clap::App::new("Streaming client")
+    let app = clap::App::new("Streaming client")
         .about("IP of the streamer to connect to")
         .arg(
             clap::Arg::with_name("protocol")
@@ -233,8 +248,18 @@ fn main() {
                 .help("TLS root certificate to trust")
                 .takes_value(true),
         )
-        .arg(clap::Arg::with_name("STREAMER_IP").required(true).index(1))
-        .get_matches();
+        .arg(clap::Arg::with_name("STREAMER_IP").required(true).index(1));
+
+    #[cfg(feature = "test-tls-cert")]
+    let app = app.arg(
+        clap::Arg::with_name("tls-enable-test-cert")
+            .long("tls-enable-test-cert")
+            .help("Enable TLS test certificates")
+            .value_parser(clap::value_parser!(bool))
+            .takes_value(true),
+    );
+
+    let matches = app.get_matches();
 
     let streamer_ip = String::from(matches.value_of("STREAMER_IP").unwrap());
     let streamer_port: Option<u16> = matches.get_one("port").copied();
