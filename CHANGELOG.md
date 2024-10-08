@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file.
 * controller: Correctly load the complete certificate chain
 * controller/ws: Make server certificate generation optional
 * desktop: Add audio volume keyboard shortcuts
-* Update Quic stack (quinn 0.11.5, wtransport 0.3.1, rustls 0.23.13)
+* Update Quic stack (quinn 0.11.5, wtransport 0.4.0, rustls 0.23.13)
 
 ## [0.17.1] - 2024-07-11
 
