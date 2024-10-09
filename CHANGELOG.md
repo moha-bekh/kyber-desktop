@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.18.0] - 2024-10-09
+
 * desktop: Refactor protocol selection and add audio protocol parameter
 * desktop: Correctly hide cursor at startup if required
 * avserver/win32: Workaround negative PTS generation while NTP goes backward
