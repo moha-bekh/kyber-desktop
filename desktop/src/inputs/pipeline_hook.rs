@@ -65,6 +65,11 @@ impl InternalState {
 
         // Find active shortcut
         SHORTCUT_MAP.iter().find_map(|(scancodes, shortcut)| {
+            // Ignore shortcuts with a mismatching length
+            if scancodes.len() != self.scancodes.len() {
+                return None;
+            }
+
             let shortcut_active = scancodes.iter().all(|s| self.scancodes.contains(s));
             if shortcut_active {
                 Some(*shortcut)
