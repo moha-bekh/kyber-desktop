@@ -66,6 +66,7 @@ struct State {
     windows: WindowsStateMachine<WindowControlWinit>,
     volume: f32,
     mute: bool,
+    bitrate: Option<u32>,
 }
 
 impl State {
@@ -217,12 +218,16 @@ impl State {
         Ok(())
     }
 
-    fn create_streaming_session_config(&self) -> Result<StreamingSessionConfig> {
+    fn create_streaming_session_config(&mut self) -> Result<StreamingSessionConfig> {
         let session_config = libclient_rs::StreamingSessionConfig::default(self.cli_args.protocol)?;
 
-        if let Some(bitrate) = self.cli_args.bitrate {
+        if let Some(bitrate) = self.bitrate {
+            session_config.set_bitrate(bitrate);
+        } else if let Some(bitrate) = self.cli_args.bitrate {
             session_config.set_bitrate(bitrate);
         }
+
+        self.bitrate = Some(session_config.get_bitrate());
 
         for window in self.windows.iter_windows() {
             let player_config =
@@ -534,6 +539,12 @@ impl State {
                 info!("Volume muted: {mute}");
                 self.mute = mute;
             }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::BitrateChanged {
+                bitrate,
+            })) => {
+                info!("Bitrate changed: {bitrate}");
+                self.bitrate = Some(bitrate);
+            }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::Fullscreen)) => {
                 self.windows.toggle_fullscreen();
             }
@@ -563,6 +574,34 @@ impl State {
 
                 if let Some(client) = &self.client {
                     client.audio_set_volume(volume).unwrap();
+                }
+            }
+            Event::UserEvent(UserEvent::Shortcut(ShortcutType::BitrateUp)) => {
+                let Some(mut bitrate) = self.bitrate else {
+                    return Ok(());
+                };
+
+                bitrate += 5_000_000;
+                if bitrate > 70_000_000 {
+                    bitrate = 70_000_000;
+                }
+
+                if let Some(client) = &self.client {
+                    client.set_bitrate(bitrate).unwrap();
+                }
+            }
+            Event::UserEvent(UserEvent::Shortcut(ShortcutType::BitrateDown)) => {
+                let Some(mut bitrate) = self.bitrate else {
+                    return Ok(());
+                };
+
+                bitrate -= 5_000_000;
+                if bitrate < 5_000_000 {
+                    bitrate = 5_000_000;
+                }
+
+                if let Some(client) = &self.client {
+                    client.set_bitrate(bitrate).unwrap();
                 }
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::ToggleMute)) => {
@@ -609,6 +648,7 @@ impl EventLoopWrapper {
                 windows: WindowsStateMachine::<WindowControlWinit>::new(),
                 volume: 1.0,
                 mute: false,
+                bitrate: None,
             }),
         })
     }

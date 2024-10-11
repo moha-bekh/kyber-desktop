@@ -9,6 +9,7 @@ use libkynput_rs::{RouterHook, RouterHookPacketResult};
 use crate::event_loop::{EventProxy, UserEvent};
 
 const SCANCODE_UNKNOWN: u16 = 0;
+const SCANCODE_B: u16 = 48;
 const SCANCODE_F: u16 = 33;
 const SCANCODE_M: u16 = 39;
 const SCANCODE_R: u16 = 19;
@@ -20,6 +21,8 @@ const SCANCODE_LALT: u16 = 56;
 const SHORTCUT_FULLSCREEN: &[u16] = &[SCANCODE_F, SCANCODE_LCTRL, SCANCODE_LALT];
 const SHORTCUT_RESTART_STREAM: &[u16] = &[SCANCODE_R, SCANCODE_LCTRL, SCANCODE_LALT];
 const SHORTCUT_TOGGLE_MUTE: &[u16] = &[SCANCODE_M, SCANCODE_LCTRL];
+const SHORTCUT_BITRATE_UP: &[u16] = &[SCANCODE_UP, SCANCODE_LCTRL, SCANCODE_B];
+const SHORTCUT_BITRATE_DOWN: &[u16] = &[SCANCODE_DOWN, SCANCODE_LCTRL, SCANCODE_B];
 const SHORTCUT_VOLUME_UP: &[u16] = &[SCANCODE_UP, SCANCODE_LCTRL];
 const SHORTCUT_VOLUME_DOWN: &[u16] = &[SCANCODE_DOWN, SCANCODE_LCTRL];
 
@@ -29,6 +32,8 @@ pub enum ShortcutType {
     RestartStreaming,
     VolumeUp,
     VolumeDown,
+    BitrateUp,
+    BitrateDown,
     ToggleMute,
 }
 
@@ -38,6 +43,8 @@ const SHORTCUT_MAP: &[(&[u16], ShortcutType)] = &[
     (SHORTCUT_TOGGLE_MUTE, ShortcutType::ToggleMute),
     (SHORTCUT_VOLUME_UP, ShortcutType::VolumeUp),
     (SHORTCUT_VOLUME_DOWN, ShortcutType::VolumeDown),
+    (SHORTCUT_BITRATE_UP, ShortcutType::BitrateUp),
+    (SHORTCUT_BITRATE_DOWN, ShortcutType::BitrateDown),
 ];
 
 struct InternalState {
