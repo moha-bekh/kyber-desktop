@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 * txproto/waspi: Reduce some log severity
 * controller: Log actix server errors
 * controller: Log displays at startup
+* libclient: Stop backend on DataPlaneClosed
+
 ## [0.18.0] - 2024-10-09
 
 * desktop: Refactor protocol selection and add audio protocol parameter
