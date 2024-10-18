@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* avserver: Log when display enumeration has been started
+* avserver: Add pid in logs
+* txproto/dxgi: Add more error logs
+* txproto/waspi: Reduce some log severity
 ## [0.18.0] - 2024-10-09
 
 * desktop: Refactor protocol selection and add audio protocol parameter
