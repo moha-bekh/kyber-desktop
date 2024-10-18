@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* controller: Log initialization errors in controller.log
+
 ## [0.18.1] - 2024-10-21
 
 * avserver: Log when display enumeration has been started
