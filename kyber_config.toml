@@ -13,6 +13,15 @@ encoder = "nvenc"
 # Default: true
 #intra_refresh = true
 
+# Configure the clock used to generate PTS
+#
+# Used for both audio and video
+#
+# Possible values: "ZeroedOrigin", "System"
+#
+# Default: "ZeroedOrigin"
+#clock_type = "ZeroedOrigin"
+
 [controller]
 # Listening port
 #

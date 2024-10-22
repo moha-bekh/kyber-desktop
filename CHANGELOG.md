@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 * libkynput/capi: Add vendor/product id in libkynput_gamepad_plug_to_packet()
 * txproto: Rebase to upstream/master
 * desktop: Bitrate can now changed dynamically during runtime
+* avservice: Allow to configure txproto clock source from kyber_config.toml
 
 ## [0.18.2] - 2024-10-22
 
