@@ -240,7 +240,13 @@ impl State {
             session_config.add_video(video_config);
         }
 
-        session_config.set_audio(self.cli_args.audio);
+        if self.cli_args.audio {
+            let audio_config = libclient_rs::AudioSessionConfig::new_default()?;
+            if let Some(audio_buffer) = self.cli_args.audio_buffer {
+                audio_config.set_audio_buffer(audio_buffer);
+            }
+            session_config.set_audio(audio_config);
+        }
 
         if let Some(input_ctx) = self.input_ctx.as_ref() {
             let input_config = libclient_rs::InputSessionConfig::default(&input_ctx.pipeline())?;

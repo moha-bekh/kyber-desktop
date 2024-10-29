@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 * avserver/win32: Implement monotonic clock
 * windows_service: Correctly log CreateProcessAsUserW() error
 * kymux: Try to find an available port when starting IPC
+* kyaudioreg: Fix compensation
+* desktop: Add --audio-buffer parameter
 
 ## [0.18.2] - 2024-10-22
 

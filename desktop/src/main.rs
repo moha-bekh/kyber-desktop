@@ -92,6 +92,7 @@ pub struct CliArgs {
     display_params: DisplayParams,
     yuv444: bool,
     audio: bool,
+    audio_buffer: Option<u32>, // ms, None means default value
     inputs: bool,
     gamepad_force_xbox360: Option<bool>,
     software_decode: bool,
@@ -186,6 +187,13 @@ fn main() {
                 .long("audio")
                 .help("Enable audio")
                 .value_parser(clap::value_parser!(bool))
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::with_name("audio-buffer")
+                .long("audio-buffer")
+                .help("Set audio buffer (in ms)")
+                .value_parser(clap::value_parser!(u32))
                 .takes_value(true),
         )
         .arg(
@@ -327,6 +335,7 @@ fn main() {
 
     let yuv444 = matches.is_present("444");
     let audio = matches.get_one("audio").copied().unwrap_or(true);
+    let audio_buffer = matches.get_one("audio-buffer").copied();
     let inputs = matches.get_one("inputs").copied().unwrap_or(true);
     let gamepad_force_xbox360 = matches.get_one("gamepad-force-xbox360").copied();
     let software_decode = matches.is_present("software-decode");
@@ -345,6 +354,7 @@ fn main() {
         display_params,
         yuv444,
         audio,
+        audio_buffer,
         inputs,
         gamepad_force_xbox360,
         software_decode,
