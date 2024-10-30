@@ -290,6 +290,7 @@ impl State {
 
         let player_config = libclient_rs::VideoPlayerConfig::default(Some(window_handle))?;
         player_config.set_software_decode(cli_args.software_decode);
+        player_config.set_video_buffer(cli_args.video_buffer);
 
         Ok(player_config)
     }
