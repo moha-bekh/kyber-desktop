@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * avserver/win32: Implement monotonic clock
+* windows_service: Correctly log CreateProcessAsUserW() error
 
 ## [0.18.2] - 2024-10-22
 
