@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* avserver/win32: Implement monotonic clock
+
 ## [0.18.2] - 2024-10-22
 
 * controller: Log initialization errors in controller.log
