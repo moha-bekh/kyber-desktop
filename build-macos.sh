@@ -25,6 +25,7 @@ Build Desktop Application.
 OPTIONS:
    -h            Show some help
    -n            Skip sources fetch
+   -f            Force reset the dependencies to their pinned version
    -s            Skip native dependencies build
    -d            Build only native dependencies
    -c            Run clippy
@@ -62,11 +63,13 @@ checkout_deps() {
     fi
 
     KYMUX_PATH=$(realpath kymux)
+    if [ "$FORCE" = true ]; then
+        local FORCE_OPT="-f"
+    fi
 
     cd kymux
-    git reset --hard
-    git checkout $KYMUX_SHA1
-    git submodule update --init --recursive
+    git checkout $FORCE_OPT $KYMUX_SHA1 || exit
+    git submodule update $FORCE_OPT --init --recursive
     cd -
 
     # Checkout libkypc
@@ -79,9 +82,8 @@ checkout_deps() {
     LIBKYPC_PATH=$(realpath libkypc)
 
     cd libkypc
-    git reset --hard
-    git checkout $LIBKYPC_SHA1
-    git submodule update --init --recursive
+    git checkout $FORCE_OPT $LIBKYPC_SHA1 || exit
+    git submodule update $FORCE_OPT --init --recursive
     cd -
 
     # Checkout libkynput
@@ -94,9 +96,8 @@ checkout_deps() {
     LIBKYNPUT_PATH=$(realpath libkynput)
 
     cd libkynput
-    git reset --hard
-    git checkout $LIBKYNPUT_SHA1
-    git submodule update --init --recursive
+    git checkout $FORCE_OPT $LIBKYNPUT_SHA1 || exit
+    git submodule update $FORCE_OPT --init --recursive
 
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
@@ -114,9 +115,8 @@ checkout_deps() {
 
     cd libclient
     echo "Set libclient SHA1 to $LIBCLIENT_SHA1"
-    git reset --hard
-    git checkout $LIBCLIENT_SHA1
-    git submodule update --init --recursive
+    git checkout $FORCE_OPT $LIBCLIENT_SHA1 || exit
+    git submodule update $FORCE_OPT --init --recursive
 
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
@@ -222,12 +222,13 @@ get_cargo_target()
 }
 
 FETCH_SOURCES=true
+FORCE=false
 BUILD_DEPS=true
 PACKAGE=false
 ACTION="build"
 OUT_DIR=$(pwd)/rootfs-$HOST_ARCH-macos
 
-while getopts "hnsdctpo:a:" OPTION
+while getopts "hnfsdctpo:a:" OPTION
 do
     case $OPTION in
         h)
@@ -236,6 +237,9 @@ do
             ;;
         n)
             FETCH_SOURCES=false
+            ;;
+        f)
+            FORCE=true
             ;;
         s)
             BUILD_DEPS=false
