@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 * kyaudioreg: Fix compensation
 * desktop: Add --audio-buffer parameter
 * controller: Remove timeout on avserver kill
+* kymux: Try to find an available port when starting IPC
 
 ## [0.18.2] - 2024-10-22
 
