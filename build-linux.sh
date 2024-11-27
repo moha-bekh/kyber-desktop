@@ -189,19 +189,19 @@ build_deps() {
 package() {
     local source_directory=$1
 
-    if [[ -z "${KYBER_STAGGING_DIRECTORY}" ]]; then
-        local stagging_directory="kyber-linux-x86_64"
+    if [[ -z "${KYBER_STAGING_DIRECTORY}" ]]; then
+        local staging_directory="kyber-linux-x86_64"
     else
-        local stagging_directory="${KYBER_STAGGING_DIRECTORY}"
+        local staging_directory="${KYBER_STAGING_DIRECTORY}"
     fi
 
-    local stagging_directory_realpath=$(realpath $stagging_directory)
+    local staging_directory_realpath=$(realpath $staging_directory)
 
     local src_bin=$source_directory/bin
 
-    mkdir -p "$stagging_directory/bin"
-    mkdir -p "$stagging_directory/lib"
-    mkdir -p "$stagging_directory/share"
+    mkdir -p "$staging_directory/bin"
+    mkdir -p "$staging_directory/lib"
+    mkdir -p "$staging_directory/share"
 
     # Copy bin directory
     cp \
@@ -212,36 +212,36 @@ package() {
         $src_bin/inputserver \
         $src_bin/txproto \
         $src_bin/kyber_config.toml \
-        $stagging_directory/bin
+        $staging_directory/bin
 
     # Copy test TLS cert/key
     cp \
         $src_bin/kybertest_cert.pem \
         $src_bin/kybertest_key.pem \
         $src_bin/kybertest_rootca_cert.pem \
-        $stagging_directory/bin
+        $staging_directory/bin
 
     # Copy ressources
     cp \
         $source_directory/share/kyber.ico \
-        $stagging_directory/share
+        $staging_directory/share
 
     # Copy libraries
     cd $source_directory
-    find lib -name \*.so\* -exec cp -a --parents {} $stagging_directory_realpath \;
+    find lib -name \*.so\* -exec cp -a --parents {} $staging_directory_realpath \;
     cd -
 
     # Strip all binaries and libraries
-    find $stagging_directory/bin -type f -executable -exec strip {} \;
-    find $stagging_directory/lib -name \*.so\* -exec strip {} \;
+    find $staging_directory/bin -type f -executable -exec strip {} \;
+    find $staging_directory/lib -name \*.so\* -exec strip {} \;
 
     # Copy scripts
     cp \
         scripts/linux/run_client.sh \
         scripts/linux/run_controller.sh \
-        $stagging_directory
+        $staging_directory
 
-    tar cfvj $(basename $stagging_directory).tar.bz2 $stagging_directory
+    tar cfvj $(basename $staging_directory).tar.bz2 $staging_directory
 }
 
 FETCH_SOURCES=true
@@ -324,7 +324,7 @@ case "$ACTION" in
             test/tls/kybertest_rootca_cert.pem \
             $OUT_DIR/bin
 
-        # Copy ressources
+        # Copy resources
         cp \
             desktop/res/kyber.ico \
             $OUT_DIR/share

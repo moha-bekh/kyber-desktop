@@ -189,18 +189,18 @@ build_deps() {
 package() {
     local source_directory=$1
 
-    if [[ -z "${KYBER_STAGGING_DIRECTORY}" ]]; then
-        local stagging_directory="kyber-windows-x86_64"
+    if [[ -z "${KYBER_STAGING_DIRECTORY}" ]]; then
+        local staging_directory="kyber-windows-x86_64"
     else
-        local stagging_directory="${KYBER_STAGGING_DIRECTORY}"
+        local staging_directory="${KYBER_STAGING_DIRECTORY}"
     fi
 
-    local stagging_directory_realpath=$(realpath $stagging_directory)
+    local staging_directory_realpath=$(realpath $staging_directory)
 
     local src_bin=$source_directory/bin
     local src_lib=$source_directory/lib
 
-    mkdir -p "$stagging_directory"
+    mkdir -p "$staging_directory"
 
     # Copy all dll
     cp \
@@ -218,10 +218,10 @@ package() {
         $src_bin/SDL2.dll \
         $src_bin/swresample-4.dll \
         $src_bin/swscale-7.dll \
-        $stagging_directory
+        $staging_directory
 
     cd $src_lib/vlc
-    find plugins -name \*.dll -exec cp --parents {} $stagging_directory_realpath \;
+    find plugins -name \*.dll -exec cp --parents {} $staging_directory_realpath \;
     cd -
 
     # Copy all exe
@@ -239,27 +239,27 @@ package() {
         $src_bin/kybertest_key.pem \
         $src_bin/kybertest_rootca_cert.pem \
         $src_bin/kyber_config.toml \
-        $stagging_directory
+        $staging_directory
 
     # Strip all exe and dll
-    find $stagging_directory -name \*.exe -exec x86_64-w64-mingw32-strip {} \;
-    find $stagging_directory -name \*.dll -exec x86_64-w64-mingw32-strip {} \;
+    find $staging_directory -name \*.exe -exec x86_64-w64-mingw32-strip {} \;
+    find $staging_directory -name \*.dll -exec x86_64-w64-mingw32-strip {} \;
 
     cp \
         $BASE_DIR/scripts/windows/install_service.bat \
         $BASE_DIR/scripts/windows/start_service.bat \
         $BASE_DIR/scripts/windows/stop_service.bat \
         $BASE_DIR/scripts/windows/uninstall_service.bat \
-        $stagging_directory
+        $staging_directory
 
-    # Copy ressources
+    # Copy resources
     cp \
         desktop/res/kyber.ico \
-        $stagging_directory
+        $staging_directory
 
-    local zipname=$(basename $stagging_directory).zip
+    local zipname=$(basename $staging_directory).zip
     echo "Creating ${zipname}"
-    zip -r ${zipname} $stagging_directory
+    zip -r ${zipname} $staging_directory
 }
 
 FETCH_SOURCES=true
