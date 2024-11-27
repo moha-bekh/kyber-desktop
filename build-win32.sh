@@ -16,6 +16,7 @@ Build Desktop Application.
 
 OPTIONS:
    -h            Show some help
+   -n            Skip source fetch
    -s            Skip native dependencies build
    -d            Build only native dependencies
    -c            Run clippy
