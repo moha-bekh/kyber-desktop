@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 * desktop: Add --audio-buffer parameter
 * controller: Remove timeout on avserver kill
 * kymux: Try to find an available port when starting IPC
+* libclient/rdp: Allow to override the SDP folder with envvar KYBER_CACHEDIR
 
 ## [0.18.2] - 2024-10-22
 
