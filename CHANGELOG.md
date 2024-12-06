@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 * libclient: always update clock offset
 * libkynput/win32: Implement keypress repetition on Host side
 * windows_service/kidd: Allow to plug more than one screen
+* avserver: Update to ffmpeg 7.1.2
 
 ## [0.20.0] - 2025-09-02
 
