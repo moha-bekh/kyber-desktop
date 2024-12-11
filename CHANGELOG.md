@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 * libkynput: Add SDL2 feature to be able to trigger SDL2 support
 * libkynput/capi: Add rumble unpack
 * libkynput/capi: Add vendor/product id in libkynput_gamepad_plug_to_packet()
+* txproto: Rebase to upstream/master
 
 ## [0.18.2] - 2024-10-22
 
