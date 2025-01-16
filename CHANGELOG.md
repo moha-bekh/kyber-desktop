@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 * txproto: Rebase to upstream/master
 * desktop: Bitrate can now changed dynamically during runtime
 * avservice: Allow to configure txproto clock source from kyber_config.toml
+* kyaudioreg: Rework underflow log
 
 ## [0.18.2] - 2024-10-22
 
