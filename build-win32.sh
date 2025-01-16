@@ -202,6 +202,9 @@ package() {
         $src_bin/avutil-59.dll \
         $src_bin/kyaudioreg.dll \
         $src_bin/liblua.dll \
+        $src_bin/libplacebo-351.dll \
+        $src_bin/libspirv-cross-c-shared.dll \
+        $src_bin/libSPIRV-Tools-shared.dll \
         $src_bin/libtxproto-0.dll \
         $src_bin/libvlccore.dll \
         $src_bin/libvlc.dll \
@@ -209,6 +212,9 @@ package() {
         $src_bin/SDL2.dll \
         $src_bin/swresample-5.dll \
         $src_bin/swscale-8.dll \
+        $src_bin/libstdc++-6.dll \
+        $src_bin/libgcc_s_seh-1.dll \
+        $src_bin/libwinpthread-1.dll \
         $staging_directory
 
     cd $src_lib/vlc
