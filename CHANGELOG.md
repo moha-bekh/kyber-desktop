@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 * desktop: Add --audio-buffer parameter
 * controller: Remove timeout on avserver kill
 * kymux: Try to find an available port when starting IPC
-* libclient/rdp: Allow to override the SDP folder with envvar KYBER_CACHEDIR
+* libclient/rtp: Allow to override the SDP folder with envvar KYBER_CACHEDIR
 * libkynput: Add SDL2 feature to be able to trigger SDL2 support
 * libkynput/capi: Add rumble unpack
 * libkynput/capi: Add vendor/product id in libkynput_gamepad_plug_to_packet()
