@@ -20,6 +20,8 @@ All notable changes to this project will be documented in this file.
 * avservice: Allow to configure txproto clock source from kyber_config.toml
 * kyaudioreg: Rework underflow log
 * desktop: Add video-buffer option
+* avservice: By default, the video bitrate can't be set under 5 mbps
+* avservice: Allow to configure the minimum allowed video bitrate
 
 ## [0.18.2] - 2024-10-22
 

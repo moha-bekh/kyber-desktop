@@ -22,6 +22,11 @@ encoder = "nvenc"
 # Default: "ZeroedOrigin"
 #clock_type = "ZeroedOrigin"
 
+# Configure the minimum allowed bitrate
+#
+# Default: 5 mbps
+#minimum_bitrate = 5000000
+
 [controller]
 # Listening port
 #
