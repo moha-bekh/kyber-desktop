@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 * desktop: Add video-buffer option
 * avservice: By default, the video bitrate can't be set under 5 mbps
 * avservice: Allow to configure the minimum allowed video bitrate
+* avservice/nvenc: Set GOP when intrarefresh is disabled
 
 ## [0.18.2] - 2024-10-22
 
