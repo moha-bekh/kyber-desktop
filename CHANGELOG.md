@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 * avservice/nvenc: Set GOP when intrarefresh is disabled
 * controller: Generate, log and send a SessionId on streaming start
 * libclient: Log SessionId sent by controller on streaming start
+* kymux: Filter out duplicates in GopStream
 
 ## [0.18.2] - 2024-10-22
 
