@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.19.0] - 2025-02-14
+
 * avserver/win32: Implement monotonic clock
 * windows_service: Correctly log CreateProcessAsUserW() error
 * kymux: Try to find an available port when starting IPC
