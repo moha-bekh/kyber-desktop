@@ -16,6 +16,7 @@ exclude = [
 ]
 
 [patch.crates-io]
+libclient-common = { path = "libclient/libclient-common" }
 libclient-rs = { path = "libclient/libclient-rs" }
 libclient-sys = { path = "libclient/libclient-rs/libclient-sys" }
 libkynput-rs = { path = "libkynput/libkynput-rs" }

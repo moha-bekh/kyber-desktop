@@ -18,6 +18,7 @@ use libclient_rs::{
 
 use crate::error::{Error, Result};
 use crate::inputs::{InputContext, ShortcutType};
+use crate::metrics::MetricsProcessor;
 use crate::window::{Position, Size, Window, WindowControlWinit, WindowsStateMachine};
 use crate::CliArgs;
 use crate::{client_proxy::ClientEventProxy, DisplayParams};
@@ -314,12 +315,21 @@ impl State {
             self.input_ctx = Some(input_ctx);
         }
 
+        let metrics = self.cli_args.metrics;
+
         // Create client
         let connect_config = self.create_connect_config()?;
-        let client = Client::new(&connect_config, self.cli_args.metrics)?;
+        let client = Client::new(&connect_config, metrics)?;
 
         let client_proxy = Box::new(ClientEventProxy::new(self.eventloop_proxy.clone()));
         client.set_event_handler(client_proxy)?;
+
+        if metrics {
+            let mut metrics_processor = MetricsProcessor::new()?;
+            client.set_metrics_callback(Some(Box::new(move |metric| {
+                metrics_processor.on_metric(metric);
+            })));
+        }
 
         client.connect()?;
         self.client = Some(client);
