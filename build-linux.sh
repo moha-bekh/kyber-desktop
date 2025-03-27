@@ -140,6 +140,7 @@ checkout_deps() {
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
     echo "libkypc = { path = \"$LIBKYPC_PATH\" }" >> .cargo/config.toml
+    echo "kymux_client = { path = \"$KYMUX_PATH/kymux_client\" }" >> .cargo/config.toml
 
     cd -
 
