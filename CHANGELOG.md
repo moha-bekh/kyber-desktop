@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* libkynput: Don't fail on first malformed packet
+
 ## [0.19.0] - 2025-02-14
 
 * avserver/win32: Implement monotonic clock
