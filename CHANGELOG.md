@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.19.1] - 2025-04-29
+
 * libkynput: Don't fail on first malformed packet
 
 ## [0.19.0] - 2025-02-14
