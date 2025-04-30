@@ -98,6 +98,7 @@ pub struct CliArgs {
     gamepad_force_xbox360: Option<bool>,
     software_decode: bool,
     intra_refresh: Option<bool>,
+    clipboard: Option<bool>,
 }
 
 #[cfg(feature = "test-tls-cert")]
@@ -253,6 +254,13 @@ fn main() {
                 .takes_value(true),
         )
         .arg(
+            clap::Arg::with_name("clipboard")
+                .long("clipboard")
+                .help("Enable Clipboard support")
+                .value_parser(clap::value_parser!(bool))
+                .takes_value(true),
+        )
+        .arg(
             clap::Arg::with_name("tls-host")
                 .long("tls-host")
                 .help("TLS hostname to give during TLS connection")
@@ -349,6 +357,7 @@ fn main() {
     let software_decode = matches.is_present("software-decode");
     let intra_refresh = matches.get_one("intra-refresh").copied();
     let video_buffer = matches.get_one("video-buffer").copied().unwrap_or(0);
+    let clipboard = matches.get_one("clipboard").copied();
 
     let (tls_host, tls_root_cert) = load_tls_conf(&matches);
 
@@ -369,6 +378,7 @@ fn main() {
         gamepad_force_xbox360,
         software_decode,
         intra_refresh,
+        clipboard,
     };
 
     // Create window

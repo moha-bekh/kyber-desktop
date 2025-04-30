@@ -16,6 +16,7 @@ pub(crate) struct InputContext {
     state_reader: PipelineStateReader,
     winit_handler: Option<Arc<WinitHandler>>,
     supports_relative_mouse: bool,
+    pub(crate) supports_clipboard: bool,
     relative_mouse: AtomicBool,
 }
 
@@ -54,6 +55,7 @@ impl InputContext {
         )?;
 
         let supports_relative_mouse = pipeline.produces_type(InputType::MouseMove);
+        let supports_clipboard = pipeline.produces_type(InputType::Clipboard);
 
         // Create Shortcuts handler
         let pipeline_hook = Box::new(ClientPipelineHook::new(eventloop_proxy));
@@ -66,6 +68,7 @@ impl InputContext {
             pipeline,
             state_reader,
             supports_relative_mouse,
+            supports_clipboard,
             relative_mouse: AtomicBool::new(false),
             winit_handler,
         })

@@ -260,6 +260,12 @@ impl State {
                 input_config.gamepad_force_xbox360(force);
             }
 
+            if input_ctx.supports_clipboard {
+                if let Some(clipboard) = self.cli_args.clipboard {
+                    input_config.clipboard(clipboard);
+                }
+            }
+
             session_config.set_input(input_config);
         }
 
