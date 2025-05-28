@@ -99,6 +99,7 @@ pub struct CliArgs {
     software_decode: bool,
     intra_refresh: Option<bool>,
     clipboard: Option<bool>,
+    metrics: bool,
 }
 
 #[cfg(feature = "test-tls-cert")]
@@ -272,6 +273,13 @@ fn main() {
                 .help("TLS root certificate to trust")
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("metrics")
+                .long("metrics")
+                .help("Enable metrics")
+                .value_parser(clap::value_parser!(bool))
+                .takes_value(true),
+        )
         .arg(clap::Arg::with_name("STREAMER_IP").required(true).index(1));
 
     #[cfg(feature = "test-tls-cert")]
@@ -358,6 +366,7 @@ fn main() {
     let intra_refresh = matches.get_one("intra-refresh").copied();
     let video_buffer = matches.get_one("video-buffer").copied().unwrap_or(0);
     let clipboard = matches.get_one("clipboard").copied();
+    let metrics = matches.get_one("metrics").copied().unwrap_or(false);
 
     let (tls_host, tls_root_cert) = load_tls_conf(&matches);
 
@@ -379,6 +388,7 @@ fn main() {
         software_decode,
         intra_refresh,
         clipboard,
+        metrics,
     };
 
     // Create window
