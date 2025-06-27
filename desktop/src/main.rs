@@ -12,7 +12,9 @@ mod window;
 use log::{error, info, LevelFilter};
 use winit::event_loop::EventLoopBuilder;
 
-use libclient_rs::{KymuxAudioProtocol, KymuxVideoProtocol, StreamingProtocol, VideoCodec};
+use libclient_rs::{
+    AuthCredentials, KymuxAudioProtocol, KymuxVideoProtocol, StreamingProtocol, VideoCodec,
+};
 
 use error::{Error, Result};
 use event_loop::UserEvent;
@@ -87,6 +89,7 @@ pub struct CliArgs {
     tls_host: Option<String>,
     tls_root_cert: Option<String>,
 
+    auth_credentials: Option<AuthCredentials>,
     protocol: StreamingProtocol,
     video_codec: VideoCodec,
     bitrate: Option<u32>,
@@ -281,6 +284,19 @@ fn main() {
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("auth-type")
+                .long("auth-type")
+                .help("Authentication method")
+                .value_parser(["basic", "jwt"])
+                .default_value("basic"),
+        )
+        .arg(
+            clap::Arg::with_name("auth-creds")
+                .long("auth-credentials")
+                .help("Authentication credentials")
+                .default_value("anonymous"),
+        )
         .arg(clap::Arg::with_name("STREAMER_IP").required(true).index(1));
 
     #[cfg(feature = "test-tls-cert")]
@@ -358,6 +374,13 @@ fn main() {
         }
     };
 
+    let creds = matches.value_of("auth-creds").unwrap().to_owned();
+    let auth_credentials = match matches.value_of("auth-type") {
+        Some("basic") => Some(AuthCredentials::Basic { username: creds }),
+        Some("jwt") => Some(AuthCredentials::Jwt { token: creds }),
+        None | Some(_) => unreachable!(),
+    };
+
     let yuv444 = matches.is_present("444");
     let audio = matches.get_one("audio").copied().unwrap_or(true);
     let audio_buffer = matches.get_one("audio-buffer").copied();
@@ -376,6 +399,7 @@ fn main() {
         streamer_port,
         tls_host,
         tls_root_cert,
+        auth_credentials,
         protocol,
         video_codec,
         bitrate,
