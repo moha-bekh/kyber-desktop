@@ -1,9 +1,9 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  DEBIAN_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-bookworm:20240226122118
-  UBUNTU_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/ubuntu-noble:20240618121355
-  WIN64_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-win64:20240226123357
-  MACOS_RUST_VERSION: 1.76.0
+  DEBIAN_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-bookworm:20250819182152
+  UBUNTU_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/ubuntu-noble:20250819183743
+  WIN64_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-win64:20250819183159
+  MACOS_RUST_VERSION: 1.89.0
 
 stages:
   - lint
