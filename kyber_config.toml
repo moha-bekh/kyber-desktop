@@ -56,6 +56,19 @@ encoder = "nvenc"
 # Default: true
 #webtransport_gen_certificate = true
 
+# JWT authentication backend
+# 
+# Setup the JWT expected token signature.
+[controller.auth.jwt]
+# Warning: For now, only HS256 or RS256 are officially supported.
+# Default: "HS256"
+#algorithm = "HS256"
+
+# The key can either be filled as plain text or as a filesystem path.
+# Default: "{ plain = "kyber-authentication-development-key" }"
+#key = { plain = "kyber-authentication-development-key" }
+#key = { file = "/tmp/RSA256-pub.pem" }
+
 [inputserver]
 # Force to plug Xbox 360 controllers
 #
