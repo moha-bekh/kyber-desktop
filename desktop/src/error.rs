@@ -1,6 +1,7 @@
 use crate::event_loop::UserEvent;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum Error {
     IO(std::io::Error),
     WindowOs(winit::error::OsError),

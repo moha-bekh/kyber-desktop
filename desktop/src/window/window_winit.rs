@@ -53,9 +53,7 @@ impl WindowControl for WindowControlWinit {
     }
 
     fn monitor_size(&self) -> Option<Size> {
-        let Some(monitor) = self.window.current_monitor() else {
-            return None;
-        };
+        let monitor = self.window.current_monitor()?;
 
         let size = monitor.os_size();
         Some(Size {

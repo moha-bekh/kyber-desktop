@@ -86,18 +86,12 @@ where
     }
 
     fn get_window(&self, id: &WindowId) -> Option<&Window<W>> {
-        let Some(index) = self.windows_map.get(id) else {
-            return None;
-        };
-
+        let index = self.windows_map.get(id)?;
         Some(&self.windows[*index])
     }
 
     fn get_window_mut(&mut self, id: &WindowId) -> Option<&mut Window<W>> {
-        let Some(index) = self.windows_map.get(id) else {
-            return None;
-        };
-
+        let index = self.windows_map.get(id)?;
         Some(&mut self.windows[*index])
     }
 
@@ -279,9 +273,7 @@ where
 
                 // If true, switch from absolute position to a position relative
                 // to the matching window
-                let Some(inner_pos) = window.position() else {
-                    return None;
-                };
+                let inner_pos = window.position()?;
 
                 let position = Position {
                     x: absolute_pos.x - inner_pos.x,
@@ -490,10 +482,7 @@ where
 
         let relative_mode = self.mouse_mode_relative();
 
-        let Some(window) = self.window_from_display_id(cursor.display_id) else {
-            return None;
-        };
-
+        let window = self.window_from_display_id(cursor.display_id)?;
         let window_id = window.id();
 
         let mut actions = vec![];
