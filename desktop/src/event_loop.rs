@@ -316,7 +316,7 @@ impl State {
 
         // Create client
         let connect_config = self.create_connect_config()?;
-        let client = Client::new(&connect_config)?;
+        let client = Client::new(&connect_config, false)?;
 
         let client_proxy = Box::new(ClientEventProxy::new(self.eventloop_proxy.clone()));
         client.set_event_handler(client_proxy)?;
