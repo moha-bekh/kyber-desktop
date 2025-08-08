@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * windows: Add clipboard support for client and host side
+* libkynput: Correctly inject PS4 controller triggers. PS4 triggers must also be
+             injected as buttons
 
 ## [0.19.1] - 2025-04-29
 
