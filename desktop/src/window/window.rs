@@ -74,30 +74,21 @@ where
     pub(crate) fn new(window: T, display: &libclient_rs::Display) -> Result<Self> {
         let window_size = window.inner_size();
 
-        let mut video_layout = VideoLayout {
-            window_size: Size {
-                width: window_size.width,
-                height: window_size.height,
-            },
-            host_size: Size {
-                width: display.width as _,
-                height: display.height as _,
-            },
-            video_size: Size {
-                width: 0.0,
-                height: 0.0,
-            },
-            video_pos: Position { x: 0.0, y: 0.0 },
+        let window_size = Size {
+            width: window_size.width,
+            height: window_size.height,
         };
 
-        video_layout.update_display_layout();
+        let host_size = Size {
+            width: display.width as _,
+            height: display.height as _,
+        };
+
+        let video_layout = VideoLayout::new(window_size, host_size);
 
         Ok(Self {
             window,
-            window_size: Size {
-                width: window_size.width,
-                height: window_size.height,
-            },
+            window_size,
             video_layout,
             display_id: display.id,
             cursor_entered: true,
@@ -138,9 +129,8 @@ where
                 // to contain within the whole window.
                 // Try to contain in a Rect at first, and fallback in the whole window contain
                 // if not supported.
-                let pos = self.video_layout.video_pos;
-                let size = self.video_layout.video_size;
-                let ret = self.window.set_cursor_rect(Some((pos, size)));
+                let (pos, size) = self.video_layout.video();
+                let ret = self.window.set_cursor_rect(Some((*pos, *size)));
 
                 if ret.is_err() {
                     let ret = self.window.set_cursor_grab(true);
@@ -203,12 +193,7 @@ where
         self.window_size.height = size.height;
 
         debug!("Window resized");
-        self.video_layout.window_size = Size {
-            width: size.width,
-            height: size.height,
-        };
-
-        self.video_layout.update_display_layout();
+        self.video_layout.set_window_size(&self.window_size);
     }
 
     pub(crate) fn position(&self) -> Option<Position> {
@@ -232,12 +217,10 @@ where
             return;
         }
 
-        self.video_layout.host_size = Size {
+        self.video_layout.set_host_size(&Size {
             width: display.width as _,
             height: display.height as _,
-        };
-
-        self.video_layout.update_display_layout();
+        });
     }
 
     pub(crate) fn is_fullscreen(&self) -> bool {
@@ -251,18 +234,12 @@ where
             debug!("Exit fullscreen");
             self.window.set_fullscreen(false);
 
-            self.video_layout.window_size = self.window_size;
-            self.video_layout.update_display_layout();
+            self.video_layout.set_window_size(&self.window_size);
         } else if !is_fullscreen && fullscreen {
             debug!("Enter fullscreen");
 
             if let Some(monitor_size) = self.window.monitor_size() {
-                self.video_layout.window_size = Size {
-                    width: monitor_size.width,
-                    height: monitor_size.height,
-                };
-
-                self.video_layout.update_display_layout()
+                self.video_layout.set_window_size(&monitor_size);
             }
 
             self.window.set_fullscreen(true);
@@ -275,21 +252,25 @@ where
             return None;
         };
 
+        let (video_pos, video_size) = self.video_layout.video();
+
         let video_absolute_pos = Position {
-            x: inner_pos.x + self.video_layout.video_pos.x,
-            y: inner_pos.y + self.video_layout.video_pos.y,
+            x: inner_pos.x + video_pos.x,
+            y: inner_pos.y + video_pos.y,
         };
 
         Some(Rect {
             position: video_absolute_pos,
-            size: self.video_layout.video_size,
+            size: *video_size,
         })
     }
 
     pub(crate) fn position_inside_video(&self, position: &Position) -> bool {
+        let (video_pos, video_size) = self.video_layout.video();
+
         let video_rect = Rect {
-            position: self.video_layout.video_pos,
-            size: self.video_layout.video_size,
+            position: *video_pos,
+            size: *video_size,
         };
 
         video_rect.is_position_inside(position)

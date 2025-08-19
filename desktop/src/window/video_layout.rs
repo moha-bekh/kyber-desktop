@@ -1,15 +1,42 @@
 use super::{Position, Size};
 
 #[derive(Clone, Copy, Debug)]
-pub struct VideoLayout {
-    pub window_size: Size,
-    pub host_size: Size,
-    pub video_size: Size,
-    pub video_pos: Position,
+pub(super) struct VideoLayout {
+    window_size: Size,
+    host_size: Size,
+    video_size: Size,
+    video_pos: Position,
 }
 
 impl VideoLayout {
-    pub fn update_display_layout(&mut self) {
+    pub(super) fn new(window_size: Size, host_size: Size) -> Self {
+        let mut this = Self {
+            window_size,
+            host_size,
+            video_size: Default::default(),
+            video_pos: Default::default(),
+        };
+
+        this.update_display_layout();
+
+        this
+    }
+
+    pub(super) fn video(&self) -> (&Position, &Size) {
+        (&self.video_pos, &self.video_size)
+    }
+
+    pub(super) fn set_window_size(&mut self, window_size: &Size) {
+        self.window_size = *window_size;
+        self.update_display_layout();
+    }
+
+    pub(super) fn set_host_size(&mut self, host_size: &Size) {
+        self.host_size = *host_size;
+        self.update_display_layout();
+    }
+
+    fn update_display_layout(&mut self) {
         let window_ratio = self.window_size.width / self.window_size.height;
         let stream_ratio = self.host_size.width / self.host_size.height;
 
@@ -38,7 +65,7 @@ impl VideoLayout {
         }
     }
 
-    pub fn local_to_host(
+    pub(super) fn local_to_host(
         &self,
         mut cursor_pos: Position,
         capture_cursor: bool,
@@ -91,7 +118,7 @@ impl VideoLayout {
         })
     }
 
-    pub fn host_to_local(&self, host_pos: &Position) -> Position {
+    pub(super) fn host_to_local(&self, host_pos: &Position) -> Position {
         let scale = self.video_size.width / self.host_size.width;
 
         Position {
