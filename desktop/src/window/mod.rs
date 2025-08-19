@@ -9,13 +9,13 @@ pub(crate) use window::{Window, WindowControl};
 pub(crate) use window_winit::WindowControlWinit;
 pub(crate) use windows_statemachine::WindowsStateMachine;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Size {
     pub width: f64,
     pub height: f64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Position {
     pub x: f64,
     pub y: f64,
