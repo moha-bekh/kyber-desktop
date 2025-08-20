@@ -130,7 +130,7 @@ where
                 // Try to contain in a Rect at first, and fallback in the whole window contain
                 // if not supported.
                 let (pos, size) = self.video_layout.video();
-                let ret = self.window.set_cursor_rect(Some((*pos, *size)));
+                let ret = self.window.set_cursor_rect(Some((pos, size)));
 
                 if ret.is_err() {
                     let ret = self.window.set_cursor_grab(true);
@@ -261,7 +261,7 @@ where
 
         Some(Rect {
             position: video_absolute_pos,
-            size: *video_size,
+            size: video_size,
         })
     }
 
@@ -269,8 +269,8 @@ where
         let (video_pos, video_size) = self.video_layout.video();
 
         let video_rect = Rect {
-            position: *video_pos,
-            size: *video_size,
+            position: video_pos,
+            size: video_size,
         };
 
         video_rect.is_position_inside(position)
