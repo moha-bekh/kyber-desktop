@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 * Integrate metrics support
 * Update actix, rustls, quinn, wtransport
 * avserver/wasapi: Correctly fill channel count
+* libkynput: Update SDL to 2.32.8
 
 ## [0.19.1] - 2025-04-29
 
