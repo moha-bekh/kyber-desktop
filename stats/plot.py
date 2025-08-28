@@ -43,8 +43,6 @@ def get_timings(f):
     for key in y:
         if key in f:
             timings[key] = f[key] - acquired
-        else:
-            timings[key] = 0
 
     return timings
 
@@ -58,12 +56,20 @@ for f in sorted(frames, key=lambda f: f["pts"]):
 
         x.append(pts)
         for k, v in y.items():
-            v.append(timings[k])
+            if k in timings:
+                v.append(timings[k])
+            else:
+                v.append(np.nan) # missing value
     except:
         print(f"pts={pts} frame incomplete: {f}")
 
 def calculate_statistics(start_field, end_field):
-    data = np.array(y[end_field]) - np.array(y[start_field])
+    end_array = np.array(y[end_field])
+    start_array = np.array(y[start_field])
+    # Only consider items where both fields are present
+    mask = (~np.isnan(end_array)) & (~np.isnan(start_array))
+
+    data = end_array[mask] - start_array[mask]
 
     minimum = np.min(data)
     maximum = np.max(data)
