@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
              injected as buttons
 * Integrate metrics support
 * Update actix, rustls, quinn, wtransport
+* avserver/wasapi: Correctly fill channel count
 
 ## [0.19.1] - 2025-04-29
 
