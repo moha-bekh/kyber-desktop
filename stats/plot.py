@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from collections import defaultdict
 import json
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -9,14 +10,15 @@ input = "metrics.json"
 if len(sys.argv) > 1:
     input = sys.argv[1]
 
-frames = []
+frames = defaultdict(list)  # map of source_id -> list of frames
 
 print(f"Opening {input}")
 with open(input) as f:
     for l in f:
         j = json.loads(l)
         if j["log_type"] == "frame_metric":
-            frames.append(j)
+            source_id = j["source_id"]
+            frames[source_id].append(j)
 
 x = []
 y = {
@@ -68,59 +70,62 @@ def calculate_statistics(start_field, end_field):
         print(f"\t\tD{i} ({i}0th percentile): {decile}")
 
 
-for f in sorted(frames, key=lambda f: f["pts"]):
-    try:
-        pts = f["pts"]
-        timings = get_timings(f)
-        if timings is None:
-            continue
+for source_id, l in sorted(frames.items()):
+    print(f"=== SOURCE {source_id} ===")
+    for f in sorted(l, key=lambda f: f["pts"]):
+        try:
+            pts = f["pts"]
+            timings = get_timings(f)
+            if timings is None:
+                continue
 
-        x.append(pts)
-        for k, v in y.items():
-            if k in timings:
-                v.append(timings[k])
-            else:
-                v.append(np.nan) # missing value
-    except:
-        print(f"pts={pts} frame incomplete: {f}")
+            x.append(pts)
+            for k, v in y.items():
+                if k in timings:
+                    v.append(timings[k])
+                else:
+                    v.append(np.nan) # missing value
+        except:
+            print(f"source_id={source_id} pts={pts} frame incomplete: {f}")
 
-print(f"Sample count: {len(x)}")
 
-print("Decode statistics (us)")
-calculate_statistics("decoding", "decoded")
+    print(f"Sample count: {len(x)}")
 
-print("Prepare statistics (us)")
-calculate_statistics("decoded", "prepared")
+    print("Decode statistics (us)")
+    calculate_statistics("decoding", "decoded")
 
-print("Encode statistics (us)")
-calculate_statistics("encoding", "encoded")
+    print("Prepare statistics (us)")
+    calculate_statistics("decoded", "prepared")
 
-print("Network statistics (us)")
-calculate_statistics("sent", "received")
+    print("Encode statistics (us)")
+    calculate_statistics("encoding", "encoded")
 
-colors = [
-    "#FF7F50",  # Coral
-    "#9B59B6",  # Purple
-    "#E63946",  # Red
-    "#F1A7A7",  # Light red
-    "#A8DADC",  # Light turquoise
-    "#457B9D",  # Deep turquoise
-    "#1D3557",  # Dark blue
-    "#F1C40F",  # Yellow
-    "#2ECC71",  # Green
-]
+    print("Network statistics (us)")
+    calculate_statistics("sent", "received")
 
-fig, ax = plt.subplots()
-ax.set_title('Kyber latency')
-ax.set_xlabel('pts (s)')
-ax.set_ylabel('Delay (ms)')
-formatter = ticker.FuncFormatter(lambda x, _: f'{x / 1_000}')
-ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1_000_000}'));
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1_000}'));
-ax.set_xlim(0, max(x))
-ax.set_ylim(0, 80000)
-for i, (k, v) in enumerate(reversed(y.items())):
-    ax.vlines(x, 0, v, alpha=1, color=colors[i], label=k)
+    colors = [
+        "#FF7F50",  # Coral
+        "#9B59B6",  # Purple
+        "#E63946",  # Red
+        "#F1A7A7",  # Light red
+        "#A8DADC",  # Light turquoise
+        "#457B9D",  # Deep turquoise
+        "#1D3557",  # Dark blue
+        "#F1C40F",  # Yellow
+        "#2ECC71",  # Green
+    ]
 
-ax.legend(loc='upper left')
-plt.show()
+    fig, ax = plt.subplots()
+    ax.set_title(f'Kyber latency (source={source_id})')
+    ax.set_xlabel('pts (s)')
+    ax.set_ylabel('Delay (ms)')
+    formatter = ticker.FuncFormatter(lambda x, _: f'{x / 1_000}')
+    ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1_000_000}'));
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1_000}'));
+    ax.set_xlim(0, max(x))
+    ax.set_ylim(0, 80000)
+    for i, (k, v) in enumerate(reversed(y.items())):
+        ax.vlines(x, 0, v, alpha=1, color=colors[i], label=k)
+
+    ax.legend(loc='upper left')
+    plt.show()
