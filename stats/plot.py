@@ -47,22 +47,6 @@ def get_timings(f):
     return timings
 
 
-for f in sorted(frames, key=lambda f: f["pts"]):
-    try:
-        pts = f["pts"]
-        timings = get_timings(f)
-        if timings is None:
-            continue
-
-        x.append(pts)
-        for k, v in y.items():
-            if k in timings:
-                v.append(timings[k])
-            else:
-                v.append(np.nan) # missing value
-    except:
-        print(f"pts={pts} frame incomplete: {f}")
-
 def calculate_statistics(start_field, end_field):
     end_array = np.array(y[end_field])
     start_array = np.array(y[start_field])
@@ -82,6 +66,23 @@ def calculate_statistics(start_field, end_field):
     print("\tDeciles:")
     for i, decile in enumerate(deciles, 1):
         print(f"\t\tD{i} ({i}0th percentile): {decile}")
+
+
+for f in sorted(frames, key=lambda f: f["pts"]):
+    try:
+        pts = f["pts"]
+        timings = get_timings(f)
+        if timings is None:
+            continue
+
+        x.append(pts)
+        for k, v in y.items():
+            if k in timings:
+                v.append(timings[k])
+            else:
+                v.append(np.nan) # missing value
+    except:
+        print(f"pts={pts} frame incomplete: {f}")
 
 print(f"Sample count: {len(x)}")
 
