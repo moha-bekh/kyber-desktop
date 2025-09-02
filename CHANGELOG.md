@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.20.0] - 2025-09-02
+
 * Rust toolchain updated to 1.89.0
 * windows: Add clipboard support for client and host side
 * libkynput: Correctly inject PS4 controller triggers. PS4 triggers must also be
