@@ -122,8 +122,8 @@ for source_id, l in sorted(frames.items()):
     formatter = ticker.FuncFormatter(lambda x, _: f'{x / 1_000}')
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1_000_000}'));
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1_000}'));
-    ax.set_xlim(0, max(x))
-    ax.set_ylim(0, 80000)
+    ax.margins(0, 0)
+    ax.autoscale()
     for i, (k, v) in enumerate(reversed(y.items())):
         ax.vlines(x, 0, v, alpha=1, color=colors[i], label=k)
 
