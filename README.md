@@ -149,6 +149,20 @@ cargo install --locked cargo-c@0.10.15
 ./build-win32.sh
 ```
 
+Note that there are some options in the build script to avoid some build steps:
+* `-n`: Skip git fetch/checkout (preserves your local changes)
+* `-s`: Skip the dependencies build
+* `-o`: Output directory (must be absolute path)
+
+#### Generate the final package
+
+The build scripts generate a Unix-like folder structure. For Windows, the `-p`
+option packages the output into a flat structure.
+
+The command outputs:
+* `kyber-windows-x86_64`: The "flattened" build output
+* `kyber-windows-x86_64.zip`: The content of `kyber-windows-x86_64` in a zip
+
 ### macOS
 
 #### Install required system packages
