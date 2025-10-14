@@ -46,7 +46,8 @@ pacman -S base-devel cmake meson ninja pkg-config llvm clang openssl-1.1 \
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-cargo install cargo-c
+rustup install 1.89.0 && rustup default 1.89.0
+cargo install --locked cargo-c@0.10.15
 ```
 
 #### Build
@@ -94,8 +95,9 @@ sudo apt-get install -y \
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup install 1.89.0 && rustup default 1.89.0
 rustup target add x86_64-pc-windows-gnu
-cargo install cargo-c
+cargo install --locked cargo-c@0.10.15
 ```
 
 #### Build
@@ -119,8 +121,9 @@ brew install \
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup install 1.89.0 && rustup default 1.89.0
 rustup target add x86_64-apple-darwin aarch64-apple-darwin
-cargo install cargo-c
+cargo install --locked cargo-c@0.10.15
 ```
 
 #### Build: dev mode
