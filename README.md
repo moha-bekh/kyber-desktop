@@ -163,6 +163,14 @@ The command outputs:
 * `kyber-windows-x86_64`: The "flattened" build output
 * `kyber-windows-x86_64.zip`: The content of `kyber-windows-x86_64` in a zip
 
+#### Host notes
+
+* To have access to UAC, install and start the Windows service
+  (`install_service.bat`, `start_service.bat`). Starting the service from an
+  SSH session will work without any trick
+* `controller.exe` can be started manually from an interactive session. If started
+  from an SSH session, it requires some additional tricks
+
 ### macOS
 
 #### Install required system packages
