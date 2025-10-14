@@ -193,6 +193,11 @@ cargo install --locked cargo-c@0.10.15
 * `x86_64` (The default value)
 * `arm64`
 
+Note that there are some options in the build script to avoid some build steps:
+* `-n`: Skip git fetch/checkout (preserves your local changes)
+* `-s`: Skip the dependencies build
+* `-o`: Output directory (must be absolute path)
+
 #### Build: create a macOS bundle
 
 A `.app` bundle can be generated:
