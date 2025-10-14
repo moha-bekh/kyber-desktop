@@ -7,7 +7,7 @@ Tool that uses ffmpeg and libvlc to remotey control a computer desktop.
 ### Get submodules
 
 The project has some submodules to get
-```
+```bash
 git submodule update --init
 ```
 
@@ -15,7 +15,7 @@ git submodule update --init
 
 #### Debian: Install required system packages
 
-```
+```bash
 sudo apt-get install -y \
     build-essential cmake meson ninja-build pkg-config \
     llvm-dev libclang-dev clang libssl-dev \
@@ -34,7 +34,7 @@ sudo apt-get build-dep -y vlc
 
 #### Arch: Install required system packages
 
-```
+```bash
 pacman -S base-devel cmake meson ninja pkg-config llvm clang openssl-1.1 \
     autoconf libtool curl git wget unzip python3 python-setuptools lua gettext \
     bison flex nasm ant ragel help2man libdrm mesa glslang lcms2 pulseaudio  \
@@ -44,14 +44,14 @@ pacman -S base-devel cmake meson ninja pkg-config llvm clang openssl-1.1 \
 
 #### Install Rust and required Rust tools
 
-```
+```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 cargo install cargo-c
 ```
 
 #### Build
 
-```
+```bash
 ./build-linux.sh
 ```
 
@@ -80,7 +80,7 @@ export LD_LIBRARY_PATH=$ROOTFS_DIR/lib:$ROOTFS_DIR/lib/x86_64-linux-gnu:$ROOTFS_
 
 #### Install required system packages
 
-```
+```bash
 sudo apt-get install -y \
     build-essential cmake meson ninja-build pkg-config \
     llvm-dev libclang-dev clang libssl-dev \
@@ -92,7 +92,7 @@ sudo apt-get install -y \
 
 #### Install Rust and required Rust tools
 
-```
+```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup target add x86_64-pc-windows-gnu
 cargo install cargo-c
@@ -100,7 +100,7 @@ cargo install cargo-c
 
 #### Build
 
-```
+```bash
 ./build-win32.sh
 ```
 
@@ -108,7 +108,7 @@ cargo install cargo-c
 
 #### Install required system packages
 
-```
+```bash
 brew install \
     m4 nasm openssl@1.1 pkg-config \
     autoconf automake libtool \
@@ -117,7 +117,7 @@ brew install \
 
 #### Install Rust and required Rust tools
 
-```
+```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup target add x86_64-apple-darwin aarch64-apple-darwin
 cargo install cargo-c
@@ -125,7 +125,7 @@ cargo install cargo-c
 
 #### Build: dev mode
 
-```
+```bash
 ./build-macos.sh -a <arch>
 ```
 
@@ -136,7 +136,7 @@ cargo install cargo-c
 #### Build: create a macOS bundle
 
 A `.app` bundle can be generated:
-```
+```bash
 ./build-macos.sh -p -a <arch>
 ```
 
@@ -145,6 +145,6 @@ The command outputs:
 * `kyber-client.app.zip`
 
 The bundle can be runned by another Mac, but it must be allowed at first:
-```
+```bash
 xattr -r -d com.apple.quarantine kyber-client.app
 ```
