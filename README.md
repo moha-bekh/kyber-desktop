@@ -32,6 +32,10 @@ sudo apt-get install -y \
 sudo apt-get build-dep -y vlc
 ```
 
+Tested distros
+* Debian Bookworm
+* Ubuntu 24.04
+
 #### Arch: Install required system packages
 
 ```bash
@@ -58,24 +62,63 @@ cargo install --locked cargo-c@0.10.15
 
 The script outputs files in folder `rootfs-x86_64-linux-gnu`.
 
-`LD_LIBRARY_PATH` must be configured to be able to run produced executables:
+There are helper scripts in `scripts/linux` to setup all the required envvars to
+run the client and the server:
+
+```bash
+cp scripts/linux/*.sh rootfs-x86_64-linux-gnu
 ```
-ROOTFS_DIR=$(pwd)/rootfs-x86_64-linux-gnu
-export LD_LIBRARY_PATH=$ROOTFS_DIR/lib:$ROOTFS_DIR/lib/x86_64-linux-gnu:$ROOTFS_DIR/lib/vlc
+
+Note that there are some options in the build script to avoid some build steps:
+* `-n`: Skip git fetch/checkout (preserves your local changes)
+* `-s`: Skip the dependencies build
+* `-o`: Output directory (must be absolute path)
+
+#### Run client
+
+```bash
+# Force X11 Compatibility Mode
+export WAYLAND_DISPLAY=""
+./rootfs-x86_64-linux-gnu/run_client.sh <host_ip>`
 ```
 
-#### Run
+### Input notes for client
 
-* Client: `./rootfs-x86_64-linux-gnu/bin/client <host_ip>`
-* Host: `./rootfs-x86_64-linux-gnu/bin/controller`
+* The input part has two backend for Keyboard and Mouse acquisition: `winit` and
+  `libinput`. `winit` uses a standard X11 connection to get inputs, while `libinput`
+  reads directly `/dev/input/` devices, but it requires for the user to be in the `input` group.
+  To have access to `/dev/input/`, use one of the tricks describes above.
 
-#### Host notes
+#### Run host
 
-* User must have write access to `/dev/uinput` to be able to plug virtual devices (keyboard and mouse).
+```bash
+./rootfs-x86_64-linux-gnu/run_controller.sh
+```
 
-#### Client notes
+#### Grant Input Device Permissions for Controller
 
-* The input part has two backend for Keyboard and Mouse acquisition: `winit` and `libinput`. `winit` uses a standard X11 connection to get inputs, while `libinput` reads directly `/dev/input/` devices, but it requires for the user to be in the `input` group.
+The host (`controller`) needs permission to create virtual input devices. There are two options for that.
+
+##### Use `chmod`
+
+This won't persist across reboot.
+
+```bash
+sudo chmod +w /dev/uinput
+```
+
+##### Add user to the `input` group
+
+This is a persistent solution (more intrusive).
+
+```bash
+# Add current user to the 'input' group to allow access to /dev/uinput
+sudo usermod -aG input $USER
+sudo usermod -a -G input $USER
+```
+
+**IMPORTANT:** This permission change only applies after  **log out of session and log back in**.
+make sure it work with `groups | grep input`
 
 ### Windows
 
