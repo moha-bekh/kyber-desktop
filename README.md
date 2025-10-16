@@ -221,3 +221,16 @@ The bundle can be runned by another Mac, but it must be allowed at first:
 ```bash
 xattr -r -d com.apple.quarantine kyber-client.app
 ```
+
+## Some tips
+
+### My video decoder crashes
+
+Especially on Linux with an Nvidia driver, the video decoding part can crash.
+
+Software decode can be enable with `--software-decode` to workaround the issue.
+
+### I want to run the controller and the client on the same machine
+
+It is possible to connect to `localhost`. However, the client must be started
+with `--audio=false --inputs=false` options.
