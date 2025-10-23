@@ -371,7 +371,7 @@ impl State {
                 event: WindowEvent::Focused(focused),
                 ..
             } => {
-                self.windows.focused(window_id, focused)?;
+                self.windows.focused(window_id, event_loop, focused)?;
             }
             Event::WindowEvent {
                 window_id,
@@ -567,7 +567,7 @@ impl State {
                 self.bitrate = Some(bitrate);
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::Fullscreen)) => {
-                self.windows.toggle_fullscreen();
+                self.windows.toggle_fullscreen(event_loop);
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::RestartStreaming)) => {
                 info!("Restart streaming requested");
