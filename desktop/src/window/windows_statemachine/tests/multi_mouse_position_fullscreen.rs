@@ -181,7 +181,7 @@ fn multi_mouse_position_fullscreen() {
     let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline).unwrap());
 
     // Create windows
-    let mut windows = WindowsStateMachine::<MockWindowControl>::new();
+    let mut windows = WindowsStateMachine::<MockWindowControl>::new(false);
     windows.set_input_ctx(Arc::downgrade(&input_ctx));
 
     // Window 1
@@ -231,7 +231,7 @@ fn multi_mouse_position_fullscreen() {
     );
 
     // Toggle fullscreen
-    windows.toggle_fullscreen();
+    windows.toggle_fullscreen(fake_event_loop_target());
 
     windows.resized(
         window1_id.into(),

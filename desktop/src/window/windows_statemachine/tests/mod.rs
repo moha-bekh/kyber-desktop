@@ -19,6 +19,12 @@ use super::*;
 use crate::event_loop::UserEvent;
 use crate::window::Size;
 
+// SAFETY: This creates a fake EventLoopWindowTarget for tests only.
+// It's safe because we never actually use it - keyboard_grabber is None in tests.
+fn fake_event_loop_target() -> &'static winit::event_loop::EventLoopWindowTarget<UserEvent> {
+    unsafe { std::mem::transmute(&()) }
+}
+
 struct InputProducer {
     consumer: libkynput_rs::Consumer,
 }
@@ -113,5 +119,7 @@ mock! {
         fn set_cursor_grab(&self, grab: bool) -> Result<()>;
 
         fn gain_focus(&self);
+
+        fn winit_window(&self) -> &winit::window::Window;
     }
 }

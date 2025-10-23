@@ -262,7 +262,7 @@ fn multi_mouse_position_windowed() {
     let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline).unwrap());
 
     // Create windows
-    let mut windows = WindowsStateMachine::<MockWindowControl>::new();
+    let mut windows = WindowsStateMachine::<MockWindowControl>::new(false);
     windows.set_input_ctx(Arc::downgrade(&input_ctx));
 
     // Window 1

@@ -120,7 +120,7 @@ fn single_keypress() {
     let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline).unwrap());
 
     // Plug window
-    let mut windows = WindowsStateMachine::<MockWindowControl>::new();
+    let mut windows = WindowsStateMachine::<MockWindowControl>::new(false);
     windows.set_input_ctx(Arc::downgrade(&input_ctx));
 
     windows.add_window(
@@ -155,7 +155,9 @@ fn single_keypress() {
     );
 
     // Send KeyboardKey without focus
-    windows.focused(window_id.into(), false).unwrap();
+    windows
+        .focused(window_id.into(), fake_event_loop_target(), false)
+        .unwrap();
 
     input_producer.consumer.consume(
         libkynput_rs::KeyboardKey {
@@ -166,7 +168,9 @@ fn single_keypress() {
     );
 
     // Restore focus
-    windows.focused(window_id.into(), true).unwrap();
+    windows
+        .focused(window_id.into(), fake_event_loop_target(), true)
+        .unwrap();
 
     input_producer.consumer.consume(
         libkynput_rs::KeyboardKey {

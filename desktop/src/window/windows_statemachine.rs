@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::{Arc, Weak};
 
-use log::warn;
+use log::{info, warn};
 use winit::{
     event::{DeviceEvent, WindowEvent},
     window::WindowId,
@@ -17,6 +17,7 @@ use super::window::{CursorGrabMode, CursorVisible};
 use super::{Position, Size, Window, WindowControl};
 use crate::error::{Error, Result};
 use crate::inputs::InputContext;
+use crate::keyboard_grabber::KeyboardGrabber;
 
 // After processing a new cursor, we may take various actions
 enum CursorAction {
@@ -45,13 +46,14 @@ where
     active_cursor: Option<Rc<Cursor>>,
     last_active_window: Option<WindowId>,
     fullscreen: bool,
+    keyboard_grabber: Option<KeyboardGrabber>,
 }
 
 impl<W> WindowsStateMachine<W>
 where
     W: WindowControl,
 {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(enable_keyboard_grab: bool) -> Self {
         Self {
             input_ctx: None,
             windows: vec![],
@@ -59,11 +61,25 @@ where
             active_cursor: None,
             last_active_window: None,
             fullscreen: false,
+            keyboard_grabber: if enable_keyboard_grab {
+                Some(KeyboardGrabber::new())
+            } else {
+                None
+            },
         }
     }
 
     pub(crate) fn set_input_ctx(&mut self, input_ctx: Weak<InputContext>) {
-        self.input_ctx = Some(input_ctx);
+        self.input_ctx = Some(input_ctx.clone());
+
+        // Set the input handler on the keyboard grabber
+        if let Some(input_ctx_arc) = input_ctx.upgrade() {
+            if let Some(winit_handler) = input_ctx_arc.winit_handler() {
+                if let Some(keyboard_grabber) = self.keyboard_grabber.as_mut() {
+                    keyboard_grabber.set_input_handler(winit_handler);
+                }
+            }
+        }
     }
 
     pub(crate) fn input_ctx(input_ctx: &Option<Weak<InputContext>>) -> Option<Arc<InputContext>> {
@@ -95,7 +111,12 @@ where
         Some(&mut self.windows[*index])
     }
 
-    pub(crate) fn focused(&mut self, id: WindowId, focused: bool) -> Result<()> {
+    pub(crate) fn focused(
+        &mut self,
+        id: WindowId,
+        event_loop: &winit::event_loop::EventLoopWindowTarget<crate::UserEvent>,
+        focused: bool,
+    ) -> Result<()> {
         // Update window focus status as reported by the OS
         if let Some(window) = self.get_window_mut(&id) {
             window.set_focused(focused);
@@ -140,9 +161,21 @@ where
             }
         }
 
+        if let Some(keyboard_grabber) = self.keyboard_grabber.as_mut() {
+            if let Some(window) = self.windows.first() {
+                keyboard_grabber.grab(
+                    event_loop,
+                    window.winit_window(),
+                    self.fullscreen && focused,
+                );
+            }
+        }
+
         if let Some(input_ctx) = Self::input_ctx(&self.input_ctx) {
             input_ctx.set_global_processing_state(focused)?;
         }
+
+        info!("Window {} focused: {}", u64::from(id), focused);
 
         Ok(())
     }
@@ -449,11 +482,20 @@ where
         }
     }
 
-    pub(crate) fn toggle_fullscreen(&mut self) {
+    pub(crate) fn toggle_fullscreen(
+        &mut self,
+        event_loop: &winit::event_loop::EventLoopWindowTarget<crate::UserEvent>,
+    ) {
         self.fullscreen = !self.fullscreen;
 
         for window in self.windows.iter_mut() {
             window.set_fullscreen(self.fullscreen);
+        }
+
+        if let Some(keyboard_grabber) = self.keyboard_grabber.as_mut() {
+            if let Some(window) = self.windows.first() {
+                keyboard_grabber.grab(event_loop, window.winit_window(), self.fullscreen);
+            }
         }
     }
 

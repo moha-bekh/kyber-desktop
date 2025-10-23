@@ -149,7 +149,7 @@ fn single_mouse_drag() {
     let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline).unwrap());
 
     // Plug window
-    let mut windows = WindowsStateMachine::<MockWindowControl>::new();
+    let mut windows = WindowsStateMachine::<MockWindowControl>::new(false);
     windows.set_input_ctx(Arc::downgrade(&input_ctx));
 
     windows.add_window(

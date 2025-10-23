@@ -78,7 +78,7 @@ fn single_mouse_position_windowed() {
     let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline).unwrap());
 
     // Create window
-    let mut windows = WindowsStateMachine::<MockWindowControl>::new();
+    let mut windows = WindowsStateMachine::<MockWindowControl>::new(false);
     windows.set_input_ctx(Arc::downgrade(&input_ctx));
 
     windows.add_window(

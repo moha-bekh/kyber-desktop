@@ -662,11 +662,11 @@ impl EventLoopWrapper {
             event_loop,
             state: RefCell::new(State {
                 eventloop_proxy,
+                windows: WindowsStateMachine::<WindowControlWinit>::new(true),
                 cli_args,
                 client: None,
                 input_ctx: None,
                 icon,
-                windows: WindowsStateMachine::<WindowControlWinit>::new(),
                 volume: 1.0,
                 mute: false,
                 bitrate: None,

@@ -171,7 +171,7 @@ fn single_fullscreen_toggle() {
     let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline).unwrap());
 
     // Create window
-    let mut windows = WindowsStateMachine::<MockWindowControl>::new();
+    let mut windows = WindowsStateMachine::<MockWindowControl>::new(false);
     windows.set_input_ctx(Arc::downgrade(&input_ctx));
 
     windows.add_window(
@@ -197,7 +197,7 @@ fn single_fullscreen_toggle() {
     );
 
     // Enter fullscreen
-    windows.toggle_fullscreen();
+    windows.toggle_fullscreen(fake_event_loop_target());
 
     windows.resized(
         window_id.into(),
@@ -213,7 +213,7 @@ fn single_fullscreen_toggle() {
         .unwrap();
 
     // Leave fullscreen
-    windows.toggle_fullscreen();
+    windows.toggle_fullscreen(fake_event_loop_target());
 
     windows.resized(
         window_id.into(),
