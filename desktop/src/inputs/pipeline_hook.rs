@@ -7,16 +7,7 @@ use libkynput_rs::{InputType, KeyboardKey, MouseButton, MouseButtonType, Packet}
 use libkynput_rs::{RouterHook, RouterHookPacketResult};
 
 use crate::event_loop::{EventProxy, UserEvent};
-
-const SCANCODE_UNKNOWN: u16 = 0;
-const SCANCODE_B: u16 = 48;
-const SCANCODE_F: u16 = 33;
-const SCANCODE_M: u16 = 39;
-const SCANCODE_R: u16 = 19;
-const SCANCODE_UP: u16 = 57416;
-const SCANCODE_DOWN: u16 = 57424;
-const SCANCODE_LCTRL: u16 = 29;
-const SCANCODE_LALT: u16 = 56;
+use crate::inputs::winit_handler::scancodes::*;
 
 const SHORTCUT_FULLSCREEN: &[u16] = &[SCANCODE_F, SCANCODE_LCTRL, SCANCODE_LALT];
 const SHORTCUT_RESTART_STREAM: &[u16] = &[SCANCODE_R, SCANCODE_LCTRL, SCANCODE_LALT];
