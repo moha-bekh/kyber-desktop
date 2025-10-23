@@ -5,6 +5,7 @@ mod error;
 mod event_loop;
 mod icon;
 mod inputs;
+mod keyboard_grabber;
 mod metrics;
 mod parse_utils;
 mod window;
