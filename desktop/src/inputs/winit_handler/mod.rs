@@ -10,8 +10,9 @@ pub mod scancodes;
 use tests::platform;
 
 use std::collections::{HashMap, HashSet};
+use std::sync::Mutex;
 
-use log::warn;
+use log::{error, warn};
 use winit::{
     dpi::PhysicalPosition,
     event::{DeviceEvent, MouseScrollDelta, WindowEvent},
@@ -29,6 +30,8 @@ enum WinitEventType {
     Device,
     Window,
 }
+
+pub trait KeyboardGrabber: Send {}
 
 trait PlatformImpl {
     fn handled_events() -> HashMap<InputType, WinitEventType>;
@@ -49,6 +52,14 @@ trait PlatformImpl {
         _position: &PhysicalPosition<f64>,
         _scale_factor: f64,
     ) -> Option<MouseWheel> {
+        None
+    }
+
+    fn has_custom_keyboard_grabber() -> bool {
+        false
+    }
+
+    fn create_keyboard_grabber(_consumer: Consumer) -> Option<Box<dyn KeyboardGrabber>> {
         None
     }
 }
@@ -84,6 +95,8 @@ pub struct WinitHandler {
     produced_types: Vec<InputType>,
 
     consumer: Consumer,
+
+    keyboard_grabber: Mutex<Option<Box<dyn KeyboardGrabber>>>,
 }
 
 impl WinitHandler {
@@ -95,6 +108,44 @@ impl WinitHandler {
         types.append(&mut platform_types);
 
         types
+    }
+
+    pub fn has_custom_keyboard_grabber() -> bool {
+        platform::Impl::has_custom_keyboard_grabber()
+    }
+
+    pub fn plug_keyboard_grabber(&self, plug: bool) {
+        if !Self::has_custom_keyboard_grabber() {
+            return;
+        }
+
+        let mut keyboard_grabber = self
+            .keyboard_grabber
+            .lock()
+            .expect("keyboard_grabber mutex poisoned");
+        if plug {
+            if keyboard_grabber.is_some() {
+                error!("Trying to plug a keyboard grabber while one is already plugged");
+                return;
+            }
+
+            let ret = platform::Impl::create_keyboard_grabber(self.consumer.clone());
+            match ret {
+                Some(grabber) => {
+                    *keyboard_grabber = Some(grabber);
+                }
+                None => {
+                    error!("Failed to create keyboard grabber");
+                }
+            }
+        } else {
+            if keyboard_grabber.is_none() {
+                error!("Trying to unplug a unexisting keyboard grabber");
+                return;
+            }
+
+            *keyboard_grabber = None;
+        }
     }
 
     pub fn new(consumer: Consumer, requested_produced_types: Vec<InputType>) -> Result<Self> {
@@ -116,6 +167,7 @@ impl WinitHandler {
                 .copied()
                 .collect(),
             consumer,
+            keyboard_grabber: Mutex::new(None),
         })
     }
 
