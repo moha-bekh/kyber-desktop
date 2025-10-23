@@ -173,4 +173,8 @@ impl InputContext {
     pub(crate) fn has_one_mouse_button_pressed(&self) -> bool {
         self.state_reader.has_one_mouse_button_pressed()
     }
+
+    pub(crate) fn winit_handler(&self) -> Option<Arc<WinitHandler>> {
+        self.winit_handler.clone()
+    }
 }
