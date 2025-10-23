@@ -134,4 +134,8 @@ impl WindowControl for WindowControlWinit {
     fn gain_focus(&self) {
         self.window.focus_window();
     }
+
+    fn winit_window(&self) -> &winit::window::Window {
+        &self.window
+    }
 }

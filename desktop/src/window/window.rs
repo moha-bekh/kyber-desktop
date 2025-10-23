@@ -1,4 +1,4 @@
-use log::{debug, warn};
+use log::{debug, info, warn};
 use raw_window_handle::RawWindowHandle;
 use winit::window::WindowId;
 
@@ -49,6 +49,8 @@ pub(crate) trait WindowControl {
     fn set_cursor_grab(&self, grab: bool) -> Result<()>;
 
     fn gain_focus(&self);
+
+    fn winit_window(&self) -> &winit::window::Window;
 }
 
 pub(crate) struct Window<T>
@@ -231,19 +233,18 @@ where
         let is_fullscreen = self.is_fullscreen();
 
         if is_fullscreen && !fullscreen {
-            debug!("Exit fullscreen");
             self.window.set_fullscreen(false);
 
             self.video_layout.set_window_size(&self.window_size);
         } else if !is_fullscreen && fullscreen {
-            debug!("Enter fullscreen");
-
             if let Some(monitor_size) = self.window.monitor_size() {
                 self.video_layout.set_window_size(&monitor_size);
             }
 
             self.window.set_fullscreen(true);
         }
+
+        info!("Window {} fullscreen: {}", u64::from(self.id()), fullscreen);
     }
 
     pub(crate) fn video_absolute_position(&self) -> Option<Rect> {
@@ -325,5 +326,9 @@ where
 
     pub(crate) fn gain_focus(&self) {
         self.window.gain_focus();
+    }
+
+    pub(crate) fn winit_window(&self) -> &winit::window::Window {
+        self.window.winit_window()
     }
 }
