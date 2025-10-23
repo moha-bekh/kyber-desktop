@@ -158,8 +158,8 @@ impl InputContext {
     }
 
     pub(crate) fn flush_keys(&self) -> Result<()> {
-        info!("Flush keys");
         self.pipeline.flush_keys()?;
+        self.state_reader.flush_keys();
 
         Ok(())
     }

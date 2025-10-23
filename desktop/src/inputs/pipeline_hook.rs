@@ -51,6 +51,10 @@ impl InternalState {
         }
     }
 
+    fn reset_keyboard_state(&mut self) {
+        self.scancodes.clear();
+    }
+
     fn handle_shortcut(&mut self, event: &KeyboardKey) -> Option<ShortcutType> {
         // Update keyboard state
         if event.scancode != SCANCODE_UNKNOWN {
@@ -98,6 +102,19 @@ impl PipelineStateReader {
     pub fn has_one_mouse_button_pressed(&self) -> bool {
         match self.state.lock() {
             Ok(state) => state.has_one_mouse_button_pressed(),
+            Err(err) => {
+                warn!("PipelineStateReader: Fail to lock state: {:?}", err);
+                false
+            }
+        }
+    }
+
+    pub fn flush_keys(&self) -> bool {
+        match self.state.lock() {
+            Ok(mut state) => {
+                state.reset_keyboard_state();
+                true
+            }
             Err(err) => {
                 warn!("PipelineStateReader: Fail to lock state: {:?}", err);
                 false
