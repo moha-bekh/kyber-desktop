@@ -662,7 +662,7 @@ impl EventLoopWrapper {
             event_loop,
             state: RefCell::new(State {
                 eventloop_proxy,
-                windows: WindowsStateMachine::<WindowControlWinit>::new(true),
+                windows: WindowsStateMachine::<WindowControlWinit>::new(cli_args.keyboard_grab),
                 cli_args,
                 client: None,
                 input_ctx: None,

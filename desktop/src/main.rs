@@ -104,6 +104,7 @@ pub struct CliArgs {
     software_decode: bool,
     intra_refresh: Option<bool>,
     clipboard: Option<bool>,
+    keyboard_grab: bool,
     metrics: bool,
 }
 
@@ -267,6 +268,13 @@ fn main() {
                 .takes_value(true),
         )
         .arg(
+            clap::Arg::with_name("keyboard-grab")
+                .long("keyboard-grab")
+                .help("Enable keyboard grabbing for immersive mode. Default: true")
+                .value_parser(clap::value_parser!(bool))
+                .takes_value(true),
+        )
+        .arg(
             clap::Arg::with_name("tls-host")
                 .long("tls-host")
                 .help("TLS hostname to give during TLS connection")
@@ -391,6 +399,7 @@ fn main() {
     let intra_refresh = matches.get_one("intra-refresh").copied();
     let video_buffer = matches.get_one("video-buffer").copied().unwrap_or(0);
     let clipboard = matches.get_one("clipboard").copied();
+    let keyboard_grab = matches.get_one("keyboard-grab").copied().unwrap_or(true);
     let metrics = matches.get_one("metrics").copied().unwrap_or(false);
 
     let (tls_host, tls_root_cert) = load_tls_conf(&matches);
@@ -414,6 +423,7 @@ fn main() {
         software_decode,
         intra_refresh,
         clipboard,
+        keyboard_grab,
         metrics,
     };
 
