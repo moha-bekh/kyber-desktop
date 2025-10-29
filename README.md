@@ -177,7 +177,7 @@ The command outputs:
 
 ```bash
 brew install \
-    m4 nasm openssl@1.1 pkg-config \
+    m4 nasm openssl@3 pkg-config \
     autoconf automake libtool \
     cmake gettext meson ragel ant help2man
 ```
