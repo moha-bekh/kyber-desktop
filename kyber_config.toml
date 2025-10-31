@@ -56,6 +56,15 @@ encoder = "nvenc"
 # Default: true
 #webtransport_gen_certificate = true
 
+[controller.session]
+# Downgrade `SameSite` session cookie attribute to "SameSite: none; Secure".
+#
+# Warning: This is intended for dev environments and **SHOULD NOT** be disabled
+# on production environments. The strict SameSite restriction is the only
+# protection that Kyber leverages against CSRF attacks.
+# Default: false
+disable_same_site_protection = false
+
 # JWT authentication backend
 # 
 # Setup the JWT expected token signature.
