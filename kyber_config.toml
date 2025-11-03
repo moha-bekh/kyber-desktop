@@ -6,6 +6,35 @@
 # Default: "nvenc"
 encoder = "nvenc"
 
+#[avserver.watermark]
+# Configure the watermark overlay
+#
+# The watermark is drawn on top of the encoded video.
+# Supported formats: PNG.
+#
+# Default: none
+#file = "./logo.png"
+
+# Configure the horizontal position of the watermark
+#
+# Normalized coordinates:
+# * -1.0: left
+# *  0.0: center
+# *  1.0: right
+#
+# Default: 0.0
+#x = 0.0
+
+# Configure the vertical position of the watermark
+#
+# Normalized coordinates:
+# * -1.0: bottom
+# *  0.0: center
+# *  1.0: top
+#
+# Default: 0.0
+#y = 0.0
+
 # Enable or disable Intra Refresh
 #
 # Only supported when using Kymux + nvenc
