@@ -74,6 +74,14 @@ encoder = "nvenc"
 # Default: true
 #clipboard_allow_paste = true
 
+# Enable key repetition
+#
+# Host side
+# Only supported on Windows
+#
+# Default: true
+#keyboard_key_repeat = true
+
 [windows_service.kidd]
 # Enable or disable Kidd
 #

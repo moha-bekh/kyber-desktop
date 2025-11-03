@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 * Update actix, rustls, quinn, wtransport
 * avserver/wasapi: Correctly fill channel count
 * libkynput: Update SDL to 2.32.8
+* libkynput/win32: Implement keypress repetition on Host side
 
 ## [0.19.1] - 2025-04-29
 
