@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* libclient: always update clock offset
+
 ## [0.20.0] - 2025-09-02
 
 * Rust toolchain updated to 1.89.0
@@ -14,7 +16,6 @@ All notable changes to this project will be documented in this file.
 * Update actix, rustls, quinn, wtransport
 * avserver/wasapi: Correctly fill channel count
 * libkynput: Update SDL to 2.32.8
-* libclient: always update clock offset
 
 ## [0.19.1] - 2025-04-29
 
