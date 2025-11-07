@@ -6,14 +6,37 @@ import matplotlib.ticker as ticker
 import numpy as np
 import sys
 
-input = "metrics.json"
-if len(sys.argv) > 1:
-    input = sys.argv[1]
+input_file = "metrics.json"
+all_metrics = [
+        "encoding", "encoded", "sent", "received",
+        "decoding", "decoded", "prepared", "displayed", "skipped",
+    ]
+if len(sys.argv) < 2 or sys.argv[1].startswith("--metrics="):
+    print("You forgot to specify the JSON file as first argument.")
+    print("Usage: plot.py <file.json> or plot.py <file.json> --metrics=metric1,metric2,...")
+    sys.exit(1)
+
+input_file = sys.argv[1]
+selected_metrics = all_metrics #default value
+
+if len(sys.argv) > 2:
+    arg = sys.argv[2]
+
+    if arg.startswith("--metrics="):
+        selected_metrics = arg.split("=", 1)[1].split(",")
+        error = [m for m in selected_metrics if m not in all_metrics]
+
+        if len(error) > 0:
+            print("Unkown metrics : ", error, "\nYou can display those metrics : \n", all_metrics)
+            sys.exit(1)
+    else:
+            print("No metrics specified \nUsage: plot.py <file.json> --metrics=metric1,metric2,... \n or:    plot.py <file.json> to display all metrics")
+            sys.exit(1)
 
 frames = defaultdict(list)  # map of source_id -> list of frames
 
-print(f"Opening {input}")
-with open(input) as f:
+print(f"Opening {input_file}")
+with open(input_file) as f:
     for l in f:
         j = json.loads(l)
         if j["log_type"] == "frame_metric":
@@ -21,17 +44,7 @@ with open(input) as f:
             frames[source_id].append(j)
 
 x = []
-y = {
-    "encoding": [],
-    "encoded": [],
-    "sent": [],
-    "received": [],
-    "decoding": [],
-    "decoded": [],
-    "prepared": [],
-    "displayed": [],
-    "skipped": [],
-}
+y = {key: [] for key in all_metrics}
 
 def get_timings(f):
     pts = f["pts"]
@@ -124,7 +137,10 @@ for source_id, l in sorted(frames.items()):
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1_000}'));
     ax.margins(0, 0)
     ax.autoscale()
-    for i, (k, v) in enumerate(reversed(y.items())):
+    #Plot only selected metrics
+    metrics_to_plot = [(k, y[k]) for k in selected_metrics]
+
+    for i, (k, v) in enumerate(reversed(metrics_to_plot)):
         ax.vlines(x, 0, v, alpha=1, color=colors[i], label=k)
 
     ax.legend(loc='upper left')
