@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* Add authentication support
 * libclient: always update clock offset
 * libkynput/win32: Implement keypress repetition on Host side
 * windows_service/kidd: Allow to plug more than one screen
