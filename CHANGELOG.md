@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 * Add authentication support
 * libclient: always update clock offset
 * libkynput/win32: Implement keypress repetition on Host side
+* libkynput/win32: Add Unicode codepoint injection support
 * windows_service/kidd: Allow to plug more than one screen
 * avserver: Update to ffmpeg 7.1.2
 
