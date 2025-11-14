@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 * windows_service/kidd: Allow to plug more than one screen
 * avserver: Update to ffmpeg 7.1.2
 * avserver/win32: Log available adapters and used adapter
+* controller: Correctly log when a process fails to start
 
 ## [0.20.0] - 2025-09-02
 
