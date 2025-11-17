@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.21.0] - 2025-11-17
+
 * Add authentication support
 * libclient: always update clock offset
 * libkynput/win32: Implement keypress repetition on Host side
