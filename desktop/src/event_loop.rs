@@ -68,6 +68,7 @@ struct State {
     volume: f32,
     mute: bool,
     bitrate: Option<u32>,
+    saved_streaming_config: Option<StreamingSessionConfig>,
 }
 
 impl State {
@@ -89,6 +90,8 @@ impl State {
         if let Some(port) = self.cli_args.streamer_port {
             connect_config.set_streamer_port(port);
         }
+
+        connect_config.set_auto_reconnection(true);
 
         Ok(connect_config)
     }
@@ -488,6 +491,9 @@ impl State {
 
                 let client = self.client.as_mut().ok_or(Error::NoClient)?;
                 client.start_streaming(&session_config)?;
+
+                // Save config for reconnection (after start_streaming succeeds)
+                self.saved_streaming_config = Some(session_config);
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnectFailed)) => {
                 warn!("Control plane connect failed");
@@ -498,7 +504,44 @@ impl State {
                 *control_flow = ControlFlow::Exit;
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::DataPlaneClosed)) => {
-                warn!("Data plane closed");
+                warn!("Data plane closed - waiting for reconnection");
+            }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::Reconnecting {
+                attempt,
+                max_attempts,
+            })) => {
+                info!("Reconnecting... (attempt {}/{})", attempt, max_attempts);
+            }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::Reconnected {
+                should_restart_streaming,
+            })) => {
+                info!("Successfully reconnected to server");
+
+                if should_restart_streaming {
+                    info!("Restarting streaming session after reconnection");
+
+                    if self.cli_args.inputs {
+                        let pipeline_config = libkynput_rs::Config::default_client();
+                        let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
+
+                        let eventloop_proxy = EventProxyWinit::new(self.eventloop_proxy.clone());
+                        let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline)?);
+
+                        self.windows.set_input_ctx(Arc::downgrade(&input_ctx));
+                        self.input_ctx = Some(input_ctx);
+                    }
+
+                    if let Some(session_config) = &self.saved_streaming_config {
+                        let client = self.client.as_mut().ok_or(Error::NoClient)?;
+                        client.start_streaming(session_config)?;
+                    } else {
+                        warn!("No saved streaming config - cannot restart streaming");
+                    }
+                }
+            }
+            Event::UserEvent(UserEvent::Client(libclient_rs::Event::ReconnectionFailed)) => {
+                warn!("Reconnection failed after all attempts - exiting");
+                *control_flow = ControlFlow::Exit;
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::StreamingStartFailed)) => {
                 warn!("Streaming start failed");
@@ -523,6 +566,9 @@ impl State {
 
                 let client = self.client.as_mut().ok_or(Error::NoClient)?;
                 client.start_streaming(&streaming_config)?;
+
+                // Save config for reconnection (after start_streaming succeeds)
+                self.saved_streaming_config = Some(streaming_config);
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::InputServiceConnected)) => {
                 info!("Input service connected");
@@ -535,7 +581,26 @@ impl State {
                 let client = self.client.as_mut().ok_or(Error::NoClient)?;
                 client.stop()?;
 
-                *control_flow = ControlFlow::Exit;
+                // Only exit if user requested disconnect, otherwise reconnection will be attempted
+                match reason {
+                    libclient_rs::StopReason::Requested => {
+                        info!("User requested disconnect - exiting");
+                        *control_flow = ControlFlow::Exit;
+                    }
+                    libclient_rs::StopReason::ControlPlaneClosed => {
+                        info!("Control plane closed - waiting for reconnection");
+                    }
+                    libclient_rs::StopReason::ControlPlaneIoError => {
+                        info!("Control plane I/O error - waiting for reconnection");
+                    }
+                    libclient_rs::StopReason::ControlPlaneTimeout => {
+                        info!("Control plane timeout - waiting for reconnection");
+                    }
+                    libclient_rs::StopReason::DecodeError => {
+                        warn!("Decode error occurred - exiting");
+                        *control_flow = ControlFlow::Exit;
+                    }
+                }
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::DisplayListUpdated {
                 displays,
@@ -670,6 +735,7 @@ impl EventLoopWrapper {
                 volume: 1.0,
                 mute: false,
                 bitrate: None,
+                saved_streaming_config: None,
             }),
         })
     }
