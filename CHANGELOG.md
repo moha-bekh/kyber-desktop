@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* controller/auth: Correctly generate cookie key generation
+
 ## [0.21.0] - 2025-11-17
 
 * Add authentication support
