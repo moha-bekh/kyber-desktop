@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.21.2] - 2025-11-26
+
+* tls: Regenerate test certificate
+
 ## [0.21.1] - 2025-11-24
 
 * controller/auth: Correctly generate cookie key generation
