@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* windows/linux: Grab keyboard when fullscreen is enabled
+
 ## [0.21.2] - 2025-11-26
 
 * tls: Regenerate test certificate
