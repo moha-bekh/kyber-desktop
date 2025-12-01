@@ -62,7 +62,6 @@ checkout_deps() {
         git -C kymux fetch
     fi
 
-    KYMUX_PATH=$(realpath kymux)
     if [ "$FORCE" = true ]; then
         local FORCE_OPT="-f"
     fi
@@ -79,8 +78,6 @@ checkout_deps() {
         git -C libkypc fetch
     fi
 
-    LIBKYPC_PATH=$(realpath libkypc)
-
     cd libkypc
     git checkout $FORCE_OPT $LIBKYPC_SHA1 || exit
     git submodule update $FORCE_OPT --init --recursive
@@ -93,16 +90,14 @@ checkout_deps() {
         git -C libkynput fetch
     fi
 
-    LIBKYNPUT_PATH=$(realpath libkynput)
-
     cd libkynput
     git checkout $FORCE_OPT $LIBKYNPUT_SHA1 || exit
     git submodule update $FORCE_OPT --init --recursive
 
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
-    echo "kymux_client = { path = \"$KYMUX_PATH/kymux_client\" }" >> .cargo/config.toml
-    echo "libkypc = { path = \"$LIBKYPC_PATH\" }" >> .cargo/config.toml
+    echo "kymux_client = { path = \"../kymux/kymux_client\" }" >> .cargo/config.toml
+    echo "libkypc = { path = \"../libkypc\" }" >> .cargo/config.toml
 
     cd -
 
@@ -120,11 +115,11 @@ checkout_deps() {
 
     mkdir -p .cargo
     echo "[patch.crates-io]" > .cargo/config.toml
-    echo "kymux = { path = \"$KYMUX_PATH/kymux\" }" >> .cargo/config.toml
-    echo "kymux_client = { path = \"$KYMUX_PATH/kymux_client\" }" >> .cargo/config.toml
-    echo "libkynput = { path = \"$LIBKYNPUT_PATH/libkynput\" }" >> .cargo/config.toml
-    echo "libkynput-rs = { path = \"$LIBKYNPUT_PATH/libkynput-rs\" }" >> .cargo/config.toml
-    echo "libkynput-sys = { path = \"$LIBKYNPUT_PATH/libkynput-rs/libkynput-sys\" }" >> .cargo/config.toml
+    echo "kymux = { path = \"../kymux/kymux\" }" >> .cargo/config.toml
+    echo "kymux_client = { path = \"../kymux/kymux_client\" }" >> .cargo/config.toml
+    echo "libkynput = { path = \"../libkynput/libkynput\" }" >> .cargo/config.toml
+    echo "libkynput-rs = { path = \"../libkynput/libkynput-rs\" }" >> .cargo/config.toml
+    echo "libkynput-sys = { path = \"../libkynput/libkynput-rs/libkynput-sys\" }" >> .cargo/config.toml
 
     cd -
 }
