@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 * controller: QUIC and Webtransport connections can now be handled simultaneously
 * libclient: Verify TLS certificate hash for QUIC connections
 * Implement watermark feature. For Windows and Linux X11 + nvenc only
+* linux: Implement NvFBC grab
 
 ## [0.21.2] - 2025-11-26
 

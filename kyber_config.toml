@@ -6,6 +6,15 @@
 # Default: "nvenc"
 encoder = "nvenc"
 
+# Linux: Select screen capture backend
+#
+# Possible values: "nvfbc"
+#
+# Default: "nvfbc"
+#
+# NvFBC: Works only with Nvidia GPUs with X11 and nvenc encoder.
+#grab_backend = "nvfbc"
+
 #[avserver.watermark]
 # Configure the watermark overlay
 #
