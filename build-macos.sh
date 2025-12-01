@@ -25,6 +25,7 @@ Build Desktop Application.
 OPTIONS:
    -h            Show some help
    -n            Skip sources fetch
+   -N            Fetch sources only
    -f            Force reset the dependencies to their pinned version
    -s            Skip native dependencies build
    -d            Build only native dependencies
@@ -220,7 +221,7 @@ PACKAGE=false
 ACTION="build"
 OUT_DIR=$(pwd)/rootfs-$HOST_ARCH-macos
 
-while getopts "hnfsdctpo:a:" OPTION
+while getopts "hnNfsdctpo:a:" OPTION
 do
     case $OPTION in
         h)
@@ -229,6 +230,11 @@ do
             ;;
         n)
             FETCH_SOURCES=false
+            ;;
+        N)  
+            FETCH_SOURCES=true
+            BUILD_DEPS=false
+            ACTION="none"
             ;;
         f)
             FORCE=true

@@ -17,6 +17,7 @@ Build Desktop Application.
 OPTIONS:
    -h            Show some help
    -n            Skip source fetch
+   -N            Fetch sources only
    -f            Force reset the dependencies to their pinned version
    -s            Skip native dependencies build
    -d            Build only native dependencies
@@ -261,7 +262,7 @@ CONSOLE_FLAG=""
 HIDE_CONSOLE_FEATURE=""
 OUT_DIR=$(pwd)/rootfs-x86_64-w64-mingw32
 
-while getopts "hnfsdctpo:w" OPTION
+while getopts "hnNfsdctpo:w" OPTION
 do
     case $OPTION in
         h)
@@ -270,6 +271,11 @@ do
             ;;
         n)
             FETCH_SOURCES=false
+            ;;
+        N)
+            FETCH_SOURCES=true
+            BUILD_DEPS=false
+            ACTION="none"
             ;;
         f)
             FORCE=true
