@@ -310,18 +310,6 @@ impl State {
     }
 
     fn connect(&mut self) -> Result<()> {
-        // Create Input pipeline
-        if self.cli_args.inputs {
-            let pipeline_config = libkynput_rs::Config::default_client();
-            let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
-
-            let eventloop_proxy = EventProxyWinit::new(self.eventloop_proxy.clone());
-            let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline)?);
-
-            self.windows.set_input_ctx(Arc::downgrade(&input_ctx));
-            self.input_ctx = Some(input_ctx);
-        }
-
         let metrics = self.cli_args.metrics;
 
         // Create client
@@ -347,6 +335,29 @@ impl State {
     fn stop_client(&mut self) -> Result<()> {
         let client = self.client.as_mut().ok_or(Error::NoClient)?;
         client.disconnect()?;
+        Ok(())
+    }
+
+    fn start_streaming(&mut self) -> Result<()> {
+        // Recreate input pipeline (handlers are not restartable after stop)
+        if self.cli_args.inputs {
+            let pipeline_config = libkynput_rs::Config::default_client();
+            let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
+
+            let eventloop_proxy = EventProxyWinit::new(self.eventloop_proxy.clone());
+            let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline)?);
+
+            self.windows.set_input_ctx(Arc::downgrade(&input_ctx));
+            self.input_ctx = Some(input_ctx);
+        }
+
+        let streaming_config = self.create_streaming_session_config()?;
+
+        let client = self.client.as_mut().ok_or(Error::NoClient)?;
+        client.start_streaming(&streaming_config)?;
+
+        self.saved_streaming_config = Some(streaming_config);
+
         Ok(())
     }
 
@@ -486,14 +497,7 @@ impl State {
                 displays,
             })) => {
                 self.create_windows(event_loop, &displays)?;
-
-                let session_config = self.create_streaming_session_config()?;
-
-                let client = self.client.as_mut().ok_or(Error::NoClient)?;
-                client.start_streaming(&session_config)?;
-
-                // Save config for reconnection (after start_streaming succeeds)
-                self.saved_streaming_config = Some(session_config);
+                self.start_streaming()?;
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnectFailed)) => {
                 warn!("Control plane connect failed");
@@ -519,24 +523,7 @@ impl State {
 
                 if should_restart_streaming {
                     info!("Restarting streaming session after reconnection");
-
-                    if self.cli_args.inputs {
-                        let pipeline_config = libkynput_rs::Config::default_client();
-                        let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
-
-                        let eventloop_proxy = EventProxyWinit::new(self.eventloop_proxy.clone());
-                        let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline)?);
-
-                        self.windows.set_input_ctx(Arc::downgrade(&input_ctx));
-                        self.input_ctx = Some(input_ctx);
-                    }
-
-                    if let Some(session_config) = &self.saved_streaming_config {
-                        let client = self.client.as_mut().ok_or(Error::NoClient)?;
-                        client.start_streaming(session_config)?;
-                    } else {
-                        warn!("No saved streaming config - cannot restart streaming");
-                    }
+                    self.start_streaming()?;
                 }
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::ReconnectionFailed)) => {
@@ -549,26 +536,7 @@ impl State {
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::StreamingStopped)) => {
                 info!("Streaming stopped. Restart streaming");
-
-                // Create Input pipeline
-                if self.cli_args.inputs {
-                    let pipeline_config = libkynput_rs::Config::default_client();
-                    let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
-
-                    let eventloop_proxy = EventProxyWinit::new(self.eventloop_proxy.clone());
-                    let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline)?);
-
-                    self.windows.set_input_ctx(Arc::downgrade(&input_ctx));
-                    self.input_ctx = Some(input_ctx);
-                }
-
-                let streaming_config = self.create_streaming_session_config()?;
-
-                let client = self.client.as_mut().ok_or(Error::NoClient)?;
-                client.start_streaming(&streaming_config)?;
-
-                // Save config for reconnection (after start_streaming succeeds)
-                self.saved_streaming_config = Some(streaming_config);
+                self.start_streaming()?;
             }
             Event::UserEvent(UserEvent::Client(libclient_rs::Event::InputServiceConnected)) => {
                 info!("Input service connected");
