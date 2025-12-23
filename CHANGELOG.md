@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 * windows/linux: Grab keyboard when fullscreen is enabled
 * desktop: Add automatic reconnection support
+* libkypc/windows: Implement automatic child process cleanup
+* windows: Allow to run multiple controller instances on the same machine
 
 ## [0.21.2] - 2025-11-26
 
