@@ -47,6 +47,14 @@ encoder = "nvenc"
 #
 #dataplane_port = 8080
 
+# TLS certificate and key paths
+#
+# Allows specifying custom TLS certificates for production deployments.
+#
+# Default: "kybertest_cert.pem" / "kybertest_key.pem"
+#tls_cert = "/path/to/server_cert.pem"
+#tls_key = "/path/to/server_key.pem"
+
 # Generate dynamically a certificate for Webtransport connections
 # Will be used by the web client to fill serverCertificateHashes field when
 # opening a Webtransport connection.
