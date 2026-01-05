@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 * libkypc/windows: Implement automatic child process cleanup
 * windows: Allow to run multiple controller instances on the same machine
 * vlc: Fix build issues for Windows cross build and iOS/visionOS build
+* controller: make TLS certificate paths configurable
 
 ## [0.21.2] - 2025-11-26
 
