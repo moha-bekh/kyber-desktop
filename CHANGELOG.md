@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 * windows: Allow to run multiple controller instances on the same machine
 * vlc: Fix build issues for Windows cross build and iOS/visionOS build
 * controller: make TLS certificate paths configurable
+* avserver/win32: Prevent display sleep on frame acquisition timeout
 
 ## [0.21.2] - 2025-11-26
 
