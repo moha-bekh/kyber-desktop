@@ -1,6 +1,6 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  DEBIAN_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-bookworm:20250819182152
+  DEBIAN_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-trixie:20260106094705
   UBUNTU_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/ubuntu-noble:20250819183743
   WIN64_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-win64:20250819183159
   MACOS_RUST_VERSION: 1.89.0
@@ -101,7 +101,7 @@ lint:
     - merge_requests
     - tags
   needs:
-    - contrib-debian-bookworm-x86_64
+    - contrib-debian-trixie-x86_64
   script: |
     export ROOTFS_PATH=$(pwd)/rootfs
     cd $ROOTFS_PATH
@@ -109,33 +109,33 @@ lint:
     cd -
     ./build-linux.sh -s -c -o $ROOTFS_PATH
 
-contrib-debian-bookworm-x86_64:
+contrib-debian-trixie-x86_64:
   extends: .contrib-linux-x86_64-common
   image: $DEBIAN_IMAGE
 
-build-debian-bookworm-x86_64:
+build-debian-trixie-x86_64:
   extends: .build-linux-x86_64-common
   image: $DEBIAN_IMAGE
   needs:
-    - contrib-debian-bookworm-x86_64
+    - contrib-debian-trixie-x86_64
   variables:
-    KYBER_BASE_DIR: "kyber-debian-bookworm-x86_64"
+    KYBER_BASE_DIR: "kyber-debian-trixie-x86_64"
   artifacts:
     paths:
-      - kyber-debian-bookworm-x86_64*.tar.bz2
+      - kyber-debian-trixie-x86_64*.tar.bz2
     expire_in: 1 week
 
-test-debian-bookworm-x86_64:
+test-debian-trixie-x86_64:
   extends: .test-linux-x86_64-common
   image: $DEBIAN_IMAGE
   needs:
-    - contrib-debian-bookworm-x86_64
+    - contrib-debian-trixie-x86_64
 
-clippy-debian-bookworm-x86_64:
+clippy-debian-trixie-x86_64:
   extends: .clippy-linux-x86_64-common
   image: $DEBIAN_IMAGE
   needs:
-    - contrib-debian-bookworm-x86_64
+    - contrib-debian-trixie-x86_64
 
 contrib-ubuntu-noble-x86_64:
   extends: .contrib-linux-x86_64-common
