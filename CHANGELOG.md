@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 * avserver/win32: Prevent display sleep on frame acquisition timeout
 * controller: QUIC and Webtransport connections can now be handled simultaneously
 * libclient: Verify TLS certificate hash for QUIC connections
+* Implement watermark feature. For Windows and Linux X11 + nvenc only
 
 ## [0.21.2] - 2025-11-26
 
