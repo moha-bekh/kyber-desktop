@@ -1,8 +1,8 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  DEBIAN_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-trixie:20260106094705
+  DEBIAN_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-trixie:20260108164414
   UBUNTU_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/ubuntu-noble:20250819183743
-  WIN64_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-win64:20260106095522
+  WIN64_IMAGE: registry.gitlab.com/kyber-labs/kyber-streamer/docker-images/debian-win64:20260108164958
   MACOS_RUST_VERSION: 1.89.0
 
 stages:
