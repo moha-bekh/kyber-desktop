@@ -358,6 +358,27 @@ case "$ACTION" in
             test/tls/kybertest_key.pem \
             test/tls/kybertest_rootca_cert.pem \
             $OUT_DIR/bin
+
+        COMPILER="x86_64-w64-mingw32-g++"
+        MINGW_RUNTIME="
+        libstdc++-6.dll
+        libgcc_s_seh-1.dll
+        libgcc_s_dw2-1.dll
+        libwinpthread-1.dll
+        "
+
+        for dll in $MINGW_RUNTIME; do
+        dll_path=$("$COMPILER" -print-file-name="$dll" 2>/dev/null | tr -d '\r' | tr -d '\n' || true)
+        if [ -n "$dll_path" ] && [ "$dll_path" != "$dll" ] && [ -f "$dll_path" ]; then
+            if command -v install >/dev/null 2>&1; then
+            install -m 0755 "$dll_path" "$OUT_DIR/bin/"
+            else
+            cp -f "$dll_path" "$OUT_DIR/bin/"
+            fi
+        else
+            echo "MinGW: $dll not found via $COMPILER -print-file-name (skipping)."
+        fi
+        done
     ;;
     "clippy")
         cargo clippy --target x86_64-pc-windows-gnu -- -D warnings
