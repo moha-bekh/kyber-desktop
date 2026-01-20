@@ -7,18 +7,13 @@ members = [
 ]
 
 exclude = [
-    "avserver",
-    "controller",
-    "libclient",
-    "libkynput",
-    "libkypc",
-    "kymux",
+    "kysdk",
 ]
 
 [patch.crates-io]
-libclient-common = { path = "libclient/libclient-common" }
-libclient-rs = { path = "libclient/libclient-rs" }
-libclient-sys = { path = "libclient/libclient-rs/libclient-sys" }
-libkynput-rs = { path = "libkynput/libkynput-rs" }
-libkynput-sys = { path = "libkynput/libkynput-rs/libkynput-sys" }
+libclient-common = { path = "kysdk/kyctl/libclient-common" }
+libclient-rs = { path = "kysdk/kyctl/libclient-rs" }
+libclient-sys = { path = "kysdk/kyctl/libclient-rs/libclient-sys" }
+libkynput-rs = { path = "kysdk/kynput/libkynput-rs" }
+libkynput-sys = { path = "kysdk/kynput/libkynput-rs/libkynput-sys" }
 winit = { path = "external/winit" }

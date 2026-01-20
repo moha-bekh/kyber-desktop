@@ -1,3 +1,6 @@
 [submodule "external/winit"]
 	path = external/winit
-	url = ../../external/winit.git
+	url = ../../deps/winit.git
+[submodule "kysdk"]
+	path = kysdk
+	url = ../../core/kysdk.git

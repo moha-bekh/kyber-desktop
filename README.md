@@ -8,7 +8,7 @@ Tool that uses ffmpeg and libvlc to remotey control a computer desktop.
 
 The project has some submodules to get
 ```bash
-git submodule update --init
+git submodule update --init --recursive
 ```
 
 ### Linux

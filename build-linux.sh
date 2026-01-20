@@ -3,8 +3,6 @@
 set -e
 set -x
 
-source component-versions.sh
-
 BASE_DIR=$(realpath $(dirname $0))
 
 usage()
@@ -16,8 +14,6 @@ Build Desktop Application.
 
 OPTIONS:
    -h            Show some help
-   -n            Skip sources fetch
-   -N            Fetch sources only
    -f            Force reset the dependencies to their pinned version
    -s            Skip native dependencies build
    -d            Build only native dependencies
@@ -46,135 +42,8 @@ git_clone() {
     fi
 }
 
-checkout_deps() {
-    # Checkout kymux
-    if [[ ! -d kymux ]]; then
-        git_clone "kyber-labs/kyber-streamer/kymux.git"
-    else
-        git -C kymux fetch
-    fi
-
-    if [ "$FORCE" = true ]; then
-        local FORCE_OPT="-f"
-    fi
-
-    cd kymux
-    git checkout $FORCE_OPT $KYMUX_SHA1 || exit
-    git submodule update $FORCE_OPT --init --recursive
-    cd -
-
-    # Checkout libkypc
-    if [[ ! -d libkypc ]]; then
-        git_clone "kyber-labs/kyber-streamer/libkypc.git"
-    else
-        git -C libkypc fetch
-    fi
-
-    cd libkypc
-    git checkout $FORCE_OPT $LIBKYPC_SHA1 || exit
-    git submodule update $FORCE_OPT --init --recursive
-    cd -
-
-    # Checkout libkynput
-    if [[ ! -d libkynput ]]; then
-        git_clone "kyber-labs/kyber-streamer/libkynput.git"
-    else
-        git -C libkynput fetch
-    fi
-
-    cd libkynput
-    git checkout $FORCE_OPT $LIBKYNPUT_SHA1 || exit
-    git submodule update $FORCE_OPT --init --recursive
-
-    mkdir -p .cargo
-    echo "[patch.crates-io]" > .cargo/config.toml
-    echo "kycom = { path = \"../kymux/kycom\" }" >> .cargo/config.toml
-    echo "libkypc = { path = \"../libkypc\" }" >> .cargo/config.toml
-
-    cd -
-
-    # Checkout libclient
-    if [[ ! -d libclient ]]; then
-        git_clone "kyber-labs/kyber-streamer/libclient.git"
-    else
-        git -C libclient fetch
-    fi
-
-    cd libclient
-    echo "Set libclient SHA1 to $LIBCLIENT_SHA1"
-    git reset --hard
-    git checkout $FORCE_OPT $LIBCLIENT_SHA1 || exit
-    git submodule update $FORCE_OPT --init --recursive
-
-    mkdir -p .cargo
-    echo "[patch.crates-io]" > .cargo/config.toml
-    echo "kymux = { path = \"../kymux/kymux\" }" >> .cargo/config.toml
-    echo "kycom = { path = \"../kymux/kycom\" }" >> .cargo/config.toml
-    echo "libkynput = { path = \"../libkynput/libkynput\" }" >> .cargo/config.toml
-    echo "libkynput-rs = { path = \"../libkynput/libkynput-rs\" }" >> .cargo/config.toml
-    echo "libkynput-sys = { path = \"../libkynput/libkynput-rs/libkynput-sys\" }" >> .cargo/config.toml
-
-    cd -
-
-    # Checkout avserver
-    if [[ ! -d avserver ]]; then
-        git_clone "kyber-labs/kyber-streamer/avserver.git"
-    else
-        git -C avserver fetch
-    fi
-
-    cd avserver
-    git reset --hard
-    git checkout $FORCE_OPT $AVSERVER_SHA1 || exit
-    git submodule update $FORCE_OPT --init --recursive
-
-    mkdir -p .cargo
-    echo "[patch.crates-io]" > .cargo/config.toml
-    echo "libkypc = { path = \"../libkypc\" }" >> .cargo/config.toml
-    echo "kycom = { path = \"../kymux/kycom\" }" >> .cargo/config.toml
-
-    cd -
-
-    # Checkout controller
-    if [[ ! -d controller ]]; then
-        git_clone "kyber-labs/kyber-streamer/controller.git"
-    else
-        git -C controller fetch
-    fi
-
-    cd controller
-    git reset --hard
-    git checkout $FORCE_OPT $CONTROLLER_SHA1 || exit
-    git submodule update $FORCE_OPT --init --recursive
-
-    mkdir -p .cargo
-    echo "[patch.crates-io]" > .cargo/config.toml
-    echo "avservice-types = { path = \"../avserver/avservice-types\" }" >> .cargo/config.toml
-    echo "inputservice-types = { path = \"../libkynput/inputservice-types\" }" >> .cargo/config.toml
-    echo "kymux = { path = \"../kymux/kymux\" }" >> .cargo/config.toml
-    echo "libkypc = { path = \"../libkypc\" }" >> .cargo/config.toml
-
-    cd -
-}
-
 build_deps() {
-    # Build libkynput
-    cd libkynput
-    ./build-linux.sh -o $OUT_DIR
-    cd -
-
-    # Build libclient
-    cd libclient
-    ./build-linux.sh -o $OUT_DIR
-    cd -
-
-    # Build avserver
-    cd avserver
-    ./build-linux.sh -o $OUT_DIR
-    cd -
-
-    # Build controller
-    cd controller
+    cd kysdk/kyctl
     ./build-linux.sh -o $OUT_DIR
     cd -
 }
@@ -237,30 +106,17 @@ package() {
     tar cfvj $(basename $staging_directory).tar.bz2 $staging_directory
 }
 
-FETCH_SOURCES=true
 BUILD_DEPS=true
-FORCE=false
 PACKAGE=false
 ACTION="build"
 OUT_DIR=$(pwd)/rootfs-x86_64-linux-gnu
 
-while getopts "hnNfsdctpo:" OPTION
+while getopts "hfsdctpo:" OPTION
 do
     case $OPTION in
         h)
             usage
             exit 1
-            ;;
-        n)
-            FETCH_SOURCES=false
-            ;;
-        N)
-            FETCH_SOURCES=true
-            BUILD_DEPS=false
-            ACTION="none"
-            ;;
-        f)
-            FORCE=true
             ;;
         s)
             BUILD_DEPS=false
@@ -294,13 +150,6 @@ export PATH=$OUT_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$OUT_DIR/lib:$OUT_DIR/lib/x86_64-linux-gnu:$OUT_DIR/lib64
 export PKG_CONFIG_PATH=$OUT_DIR/lib/pkgconfig:$OUT_DIR/lib/x86_64-linux-gnu/pkgconfig:$OUT_DIR/lib64/pkgconfig
 
-# Checkout dependencies
-if [ "$FETCH_SOURCES" = true ]; then
-    checkout_deps
-else
-    echo "Skip dependencies source fetch"
-fi
-
 # Build dependencies
 if [ "$BUILD_DEPS" = true ]; then
     build_deps
@@ -311,7 +160,7 @@ fi
 # Run action
 case "$ACTION" in
     "build")
-        cargo build --release
+        cargo build -p client --release
         cp target/release/client $OUT_DIR/bin
 
         # Copy default configuration
@@ -332,10 +181,10 @@ case "$ACTION" in
             $OUT_DIR/share
     ;;
     "clippy")
-        cargo clippy -- -D warnings
+        cargo clippy -p client -- -D warnings
     ;;
     "test")
-        cargo test
+        cargo test -p client
     ;;
     "none")
         echo "No action requested"

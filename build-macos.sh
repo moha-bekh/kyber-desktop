@@ -7,8 +7,6 @@ realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
 
-source component-versions.sh
-
 # Architecture configuration
 BUILD_ARCH=`uname -m | cut -d. -f1`
 HOST_ARCH="x86_64"
@@ -24,8 +22,6 @@ Build Desktop Application.
 
 OPTIONS:
    -h            Show some help
-   -n            Skip sources fetch
-   -N            Fetch sources only
    -f            Force reset the dependencies to their pinned version
    -s            Skip native dependencies build
    -d            Build only native dependencies
@@ -55,84 +51,8 @@ git_clone() {
     fi
 }
 
-checkout_deps() {
-    # Checkout kymux
-    if [[ ! -d kymux ]]; then
-        git_clone "kyber-labs/kyber-streamer/kymux.git"
-    else
-        git -C kymux fetch
-    fi
-
-    if [ "$FORCE" = true ]; then
-        local FORCE_OPT="-f"
-    fi
-
-    cd kymux
-    git checkout $FORCE_OPT $KYMUX_SHA1 || exit
-    git submodule update $FORCE_OPT --init --recursive
-    cd -
-
-    # Checkout libkypc
-    if [[ ! -d libkypc ]]; then
-        git_clone "kyber-labs/kyber-streamer/libkypc.git"
-    else
-        git -C libkypc fetch
-    fi
-
-    cd libkypc
-    git checkout $FORCE_OPT $LIBKYPC_SHA1 || exit
-    git submodule update $FORCE_OPT --init --recursive
-    cd -
-
-    # Checkout libkynput
-    if [[ ! -d libkynput ]]; then
-        git_clone "kyber-labs/kyber-streamer/libkynput.git"
-    else
-        git -C libkynput fetch
-    fi
-
-    cd libkynput
-    git checkout $FORCE_OPT $LIBKYNPUT_SHA1 || exit
-    git submodule update $FORCE_OPT --init --recursive
-
-    mkdir -p .cargo
-    echo "[patch.crates-io]" > .cargo/config.toml
-    echo "kycom = { path = \"../kymux/kycom\" }" >> .cargo/config.toml
-    echo "libkypc = { path = \"../libkypc\" }" >> .cargo/config.toml
-
-    cd -
-
-    # Checkout libclient
-    if [[ ! -d libclient ]]; then
-        git_clone "kyber-labs/kyber-streamer/libclient.git"
-    else
-        git -C libclient fetch
-    fi
-
-    cd libclient
-    echo "Set libclient SHA1 to $LIBCLIENT_SHA1"
-    git checkout $FORCE_OPT $LIBCLIENT_SHA1 || exit
-    git submodule update $FORCE_OPT --init --recursive
-
-    mkdir -p .cargo
-    echo "[patch.crates-io]" > .cargo/config.toml
-    echo "kymux = { path = \"../kymux/kymux\" }" >> .cargo/config.toml
-    echo "kycom = { path = \"../kymux/kycom\" }" >> .cargo/config.toml
-    echo "libkynput = { path = \"../libkynput/libkynput\" }" >> .cargo/config.toml
-    echo "libkynput-rs = { path = \"../libkynput/libkynput-rs\" }" >> .cargo/config.toml
-    echo "libkynput-sys = { path = \"../libkynput/libkynput-rs/libkynput-sys\" }" >> .cargo/config.toml
-
-    cd -
-}
-
 build_deps() {
-    # Build libkynput
-    cd libkynput
-    ./build-macos.sh -a $HOST_ARCH -o $OUT_DIR
-    cd -
-
-    # Build libclient
-    cd libclient
+    cd kysdk/kyctl
     ./build-macos.sh -a $HOST_ARCH -o $OUT_DIR
     cd -
 }
@@ -214,30 +134,17 @@ get_cargo_target()
     esac
 }
 
-FETCH_SOURCES=true
-FORCE=false
 BUILD_DEPS=true
 PACKAGE=false
 ACTION="build"
 OUT_DIR=$(pwd)/rootfs-$HOST_ARCH-macos
 
-while getopts "hnNfsdctpo:a:" OPTION
+while getopts "hfsdctpo:a:" OPTION
 do
     case $OPTION in
         h)
             usage
             exit 1
-            ;;
-        n)
-            FETCH_SOURCES=false
-            ;;
-        N)  
-            FETCH_SOURCES=true
-            BUILD_DEPS=false
-            ACTION="none"
-            ;;
-        f)
-            FORCE=true
             ;;
         s)
             BUILD_DEPS=false
@@ -274,13 +181,6 @@ export PATH=$OUT_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$OUT_DIR/lib
 export PKG_CONFIG_PATH=$OUT_DIR/lib/pkgconfig
 
-# Checkout dependencies
-if [ "$FETCH_SOURCES" = true ]; then
-    checkout_deps
-else
-    echo "Skip dependencies source fetch"
-fi
-
 # Build dependencies
 if [ "$BUILD_DEPS" = true ]; then
     build_deps
@@ -299,6 +199,7 @@ CARGO_TARGET=`get_cargo_target $HOST_ARCH`
 case "$ACTION" in
     "build")
         cargo build \
+            -p client \
             --target $CARGO_TARGET \
             --release
 
@@ -318,10 +219,10 @@ case "$ACTION" in
             $OUT_DIR/share/kyber
     ;;
     "clippy")
-        cargo clippy --target $CARGO_TARGET -- -D warnings
+        cargo clippy -p client --target $CARGO_TARGET -- -D warnings
     ;;
     "test")
-        cargo test
+        cargo test -p client
     ;;
     "none")
         echo "No action requested"
