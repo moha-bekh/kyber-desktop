@@ -21,6 +21,7 @@ sudo apt-get install -y \
     llvm-dev libclang-dev clang libssl-dev \
     autoconf libtool curl git wget unzip \
     python3 python3-setuptools python3-mako python3-venv \
+    python3-jinja2 \
     lua5.4 liblua5.4-dev \
     autopoint gettext bison flex nasm ant ragel help2man \
     libdrm-dev libgbm-dev glslang-dev liblcms2-dev libpulse-dev \
@@ -131,6 +132,7 @@ sudo apt-get install -y \
     mingw-w64 mingw-w64-tools \
     autoconf libtool curl git wget zip unzip \
     python3 python3-setuptools python3-mako python3-venv \
+    python3-jinja2 \
     lua5.4 gettext bison flex ant ragel help2man nasm
 ```
 
