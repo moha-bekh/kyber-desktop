@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 * Implement watermark feature. For Windows and Linux X11 + nvenc only
 * linux: Implement NvFBC grab
 * controller: Add basic multi-client support
+* avserver/win32: Allow to use x264
 
 ## [0.21.2] - 2025-11-26
 
