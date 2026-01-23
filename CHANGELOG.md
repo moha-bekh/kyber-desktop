@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 * libclient: Verify TLS certificate hash for QUIC connections
 * Implement watermark feature. For Windows and Linux X11 + nvenc only
 * linux: Implement NvFBC grab
+* controller: Add basic multi-client support
 
 ## [0.21.2] - 2025-11-26
 
