@@ -35,6 +35,8 @@ pub enum Error {
     Input(libkynput_rs::Error),
     // Window errors
     WindowFailed(winit::error::ExternalError),
+    // Configuration errors
+    Config(String),
 }
 
 impl From<std::io::Error> for Error {
@@ -76,6 +78,25 @@ impl From<winit::error::ExternalError> for Error {
 impl From<winit::event_loop::EventLoopClosed<UserEvent>> for Error {
     fn from(_: winit::event_loop::EventLoopClosed<UserEvent>) -> Error {
         Error::WinitEventLoopClosed
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::IO(e) => write!(f, "IO error: {}", e),
+            Error::WindowOs(e) => write!(f, "Window OS error: {}", e),
+            Error::ThreadPanicked => write!(f, "Thread panicked"),
+            Error::IconLoad => write!(f, "Failed to load icon"),
+            Error::NoClient => write!(f, "No client"),
+            Error::UnknownWindow => write!(f, "Unknown window"),
+            Error::Winit => write!(f, "Winit error"),
+            Error::WinitEventLoopClosed => write!(f, "Event loop closed"),
+            Error::Libclient(e) => write!(f, "Libclient error: {:?}", e),
+            Error::Input(e) => write!(f, "Input error: {:?}", e),
+            Error::WindowFailed(e) => write!(f, "Window failed: {}", e),
+            Error::Config(msg) => write!(f, "{}", msg),
+        }
     }
 }
 

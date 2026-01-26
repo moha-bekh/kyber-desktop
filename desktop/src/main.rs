@@ -189,7 +189,7 @@ fn tls_get_test_params(
     }
 }
 
-fn load_tls_conf(matches: &clap::ArgMatches) -> std::result::Result<TlsConfig, String> {
+fn load_tls_conf(matches: &clap::ArgMatches) -> Result<TlsConfig> {
     let tls_host: Option<String> = matches.get_one("tls-host").cloned();
     let tls_root_cert: Option<String> = matches.get_one("tls-root-cert").cloned();
 
@@ -201,8 +201,12 @@ fn load_tls_conf(matches: &clap::ArgMatches) -> std::result::Result<TlsConfig, S
         if let Some(fp) = matches.get_one::<String>("tls-fingerprint") {
             Some(fp.clone())
         } else if let Some(file_path) = matches.get_one::<String>("tls-fingerprint-file") {
-            let content = std::fs::read_to_string(file_path)
-                .map_err(|e| format!("Failed to read fingerprint file '{}': {}", file_path, e))?;
+            let content = std::fs::read_to_string(file_path).map_err(|e| {
+                Error::Config(format!(
+                    "Failed to read fingerprint file '{}': {}",
+                    file_path, e
+                ))
+            })?;
             Some(content.trim().to_string())
         } else {
             None
@@ -227,7 +231,9 @@ fn load_tls_conf(matches: &clap::ArgMatches) -> std::result::Result<TlsConfig, S
     .count();
 
     if mode_count > 1 {
-        return Err("Only one TLS verification mode can be specified at a time".to_string());
+        return Err(Error::Config(
+            "Only one TLS verification mode can be specified at a time".to_string(),
+        ));
     }
 
     let verification = if tls_skip_verification {
@@ -669,14 +675,11 @@ fn main() {
     let keyboard_grab = matches.get_one("keyboard-grab").copied().unwrap_or(true);
     let metrics = matches.get_one("metrics").copied().unwrap_or(false);
 
-    let tls_config = match load_tls_conf(&matches) {
-        Ok(config) => config,
-        Err(e) => {
-            error!("{}", e);
-            eprintln!("Error: {}", e);
-            std::process::exit(1);
-        }
-    };
+    let tls_config = load_tls_conf(&matches).unwrap_or_else(|e| {
+        error!("{}", e);
+        eprintln!("Error: {}", e);
+        std::process::exit(1);
+    });
 
     let cli_args = CliArgs {
         streamer_ip: streamer_ip.clone(),
