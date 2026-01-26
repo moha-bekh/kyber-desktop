@@ -22,7 +22,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::sync::Arc;
 
-use log::{info, warn};
+use log::{error, info, warn};
 use raw_window_handle::RawWindowHandle;
 use winit::{
     dpi::{LogicalPosition, LogicalSize},
@@ -33,15 +33,32 @@ use winit::{
 };
 
 use libclient_rs::{
-    Client, ConnectConfig, StreamingSessionConfig, VideoPlayerConfig, WindowHandle,
+    Client, ConnectConfig, StreamingSessionConfig, TofuPrompt, VideoPlayerConfig, WindowHandle,
 };
 
 use crate::error::{Error, Result};
 use crate::inputs::{InputContext, ShortcutType};
 use crate::metrics::MetricsProcessor;
 use crate::window::{Position, Size, Window, WindowControlWinit, WindowsStateMachine};
-use crate::CliArgs;
 use crate::{client_proxy::ClientEventProxy, DisplayParams};
+use crate::{CliArgs, TlsVerification};
+
+/// Print SSH-style warning when a host's certificate has changed.
+fn print_cert_changed_warning(hostname: &str, expected: &str, actual: &str) {
+    eprintln!();
+    eprintln!("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+    eprintln!("@    WARNING: REMOTE HOST CERTIFICATE HAS CHANGED!       @");
+    eprintln!("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+    eprintln!("IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!");
+    eprintln!();
+    eprintln!("Host: {}", hostname);
+    eprintln!("Expected: {}", expected);
+    eprintln!("Got:      {}", actual);
+    eprintln!();
+    eprintln!("To remove the old fingerprint, run:");
+    eprintln!("  client --tls-tofu-remove {}", hostname);
+    eprintln!();
+}
 
 #[derive(Clone, Debug)]
 pub enum UserEvent {
@@ -78,6 +95,119 @@ impl EventProxy for EventProxyWinit {
 
 pub type StopRequestCb = Box<dyn Fn() + Send>;
 
+fn configure_tls_verification(
+    connect_config: &ConnectConfig,
+    verification: &TlsVerification,
+) -> Result<()> {
+    match verification {
+        TlsVerification::System => {}
+        TlsVerification::RootCert(root_cert) => {
+            connect_config.set_tls_root_cert(root_cert)?;
+        }
+        TlsVerification::Fingerprint(fingerprint) => {
+            connect_config.set_tls_cert_fingerprint(fingerprint)?;
+        }
+        TlsVerification::Tofu => {
+            connect_config.enable_tofu(|prompt| match prompt {
+                TofuPrompt::UnknownHost { hostname, .. } => {
+                    info!("TOFU: Trusting new host '{}'", hostname);
+                    true
+                }
+                TofuPrompt::CertificateChanged {
+                    hostname,
+                    expected_fingerprint,
+                    actual_fingerprint,
+                } => {
+                    print_cert_changed_warning(
+                        &hostname,
+                        &expected_fingerprint,
+                        &actual_fingerprint,
+                    );
+                    false
+                }
+            })?;
+        }
+        TlsVerification::TofuInteractive => {
+            connect_config.enable_tofu(|prompt| match prompt {
+                TofuPrompt::UnknownHost {
+                    hostname,
+                    fingerprint,
+                } => {
+                    eprintln!();
+                    eprintln!(
+                        "The authenticity of host '{}' can't be established.",
+                        hostname
+                    );
+                    eprintln!("Certificate fingerprint is {}.", fingerprint);
+                    eprint!("Are you sure you want to continue connecting (yes/no)? ");
+
+                    use std::io::Write;
+                    std::io::stderr().flush().ok();
+
+                    let mut input = String::new();
+                    if std::io::stdin().read_line(&mut input).is_err() {
+                        return false;
+                    }
+
+                    let accepted = input.trim().to_lowercase() == "yes";
+                    if accepted {
+                        info!("User accepted host '{}'", hostname);
+                    } else {
+                        info!("User rejected host '{}'", hostname);
+                    }
+                    accepted
+                }
+                TofuPrompt::CertificateChanged {
+                    hostname,
+                    expected_fingerprint,
+                    actual_fingerprint,
+                } => {
+                    print_cert_changed_warning(
+                        &hostname,
+                        &expected_fingerprint,
+                        &actual_fingerprint,
+                    );
+                    false
+                }
+            })?;
+        }
+        TlsVerification::KnownHosts => {
+            connect_config.enable_tofu(|prompt| match prompt {
+                TofuPrompt::UnknownHost {
+                    hostname,
+                    fingerprint,
+                } => {
+                    eprintln!();
+                    eprintln!("Host '{}' is not in known_hosts.", hostname);
+                    eprintln!("Fingerprint: {}", fingerprint);
+                    eprintln!();
+                    eprintln!("To add this host, run:");
+                    eprintln!("  client --tls-tofu-accept {} {}", hostname, fingerprint);
+                    eprintln!();
+                    false
+                }
+                TofuPrompt::CertificateChanged {
+                    hostname,
+                    expected_fingerprint,
+                    actual_fingerprint,
+                } => {
+                    print_cert_changed_warning(
+                        &hostname,
+                        &expected_fingerprint,
+                        &actual_fingerprint,
+                    );
+                    false
+                }
+            })?;
+        }
+        TlsVerification::Skip => {
+            warn!("TLS verification disabled - connection is NOT secure!");
+            connect_config.tls_skip_verification();
+        }
+    }
+    Ok(())
+}
+
 struct State {
     eventloop_proxy: EventLoopProxy<UserEvent>,
     cli_args: CliArgs,
@@ -103,9 +233,7 @@ impl State {
             connect_config.set_tls_host(tls_host)?;
         }
 
-        if let Some(tls_root_cert) = &self.cli_args.tls_root_cert {
-            connect_config.set_tls_root_cert(tls_root_cert)?;
-        }
+        configure_tls_verification(&connect_config, &self.cli_args.tls_verification)?;
 
         if let Some(port) = self.cli_args.streamer_port {
             connect_config.set_streamer_port(port);
@@ -395,7 +523,11 @@ impl State {
                 self.stop_client()?;
             }
             Event::UserEvent(UserEvent::Start) => {
-                self.connect()?;
+                if let Err(e) = self.connect() {
+                    error!("Failed to connect: {:?}", e);
+                    *control_flow = ControlFlow::Exit;
+                    return Err(e);
+                }
             }
             Event::UserEvent(UserEvent::StopRequest) => {
                 self.stop_client()?;
