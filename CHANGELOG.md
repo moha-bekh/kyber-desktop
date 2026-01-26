@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 * linux: Implement NvFBC grab
 * controller: Add basic multi-client support
 * avserver/win32: Allow to use x264
+* avserver/win32: Detect display hotplug
 
 ## [0.21.2] - 2025-11-26
 
