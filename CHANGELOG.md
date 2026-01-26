@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-01-26
+
 * windows/linux: Grab keyboard when fullscreen is enabled
 * desktop: Add automatic reconnection support
 * libkypc/windows: Implement automatic child process cleanup
