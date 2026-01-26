@@ -142,6 +142,18 @@ fn tls_get_test_params(
         return (tls_host, tls_root_cert);
     }
 
+    // Don't auto-set test cert if user specified another TLS verification mode
+    let other_mode_specified = matches.is_present("tls-fingerprint")
+        || matches.is_present("tls-fingerprint-file")
+        || matches.is_present("tls-tofu")
+        || matches.is_present("tls-tofu-interactive")
+        || matches.is_present("tls-known-hosts")
+        || matches.is_present("tls-skip-verification");
+
+    if other_mode_specified {
+        return (tls_host, tls_root_cert);
+    }
+
     const STREAMER_HOST: &str = "kybertest";
     const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
 
