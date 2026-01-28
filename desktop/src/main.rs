@@ -58,23 +58,34 @@ fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
         .encoder(Box::new(pattern_encoder.clone()))
         .build();
 
-    // Compute log file
+    // Compute log file path
+    // On Windows, use %LOCALAPPDATA%\Kyber\log to avoid permission issues
+    // when running without admin rights (Program Files is read-only for non-admin)
     let log_folder = "log";
     let log_file = format!("{logfile}.log");
 
     let log_path = if cfg!(windows) {
-        let mut exe_path = std::env::current_exe().unwrap();
-        exe_path.pop();
-
-        Path::new(&exe_path).join(log_folder).join(log_file)
+        let base_path = std::env::var("LOCALAPPDATA")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|_| {
+                let mut exe_path = std::env::current_exe().unwrap();
+                exe_path.pop();
+                exe_path
+            });
+        base_path.join("Kyber").join(log_folder).join(log_file)
     } else {
         Path::new(log_folder).join(log_file)
     };
 
+    // Create log directory if it doesn't exist
+    if let Some(parent) = log_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
     // Setup File output
     let file = FileAppender::builder()
         .encoder(Box::new(pattern_encoder))
-        .build(log_path)
+        .build(&log_path)
         .unwrap();
 
     // Configure logger
