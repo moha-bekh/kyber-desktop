@@ -143,58 +143,9 @@ pub struct CliArgs {
     metrics: bool,
 }
 
-#[cfg(feature = "test-tls-cert")]
-fn tls_get_test_params(
-    matches: &clap::ArgMatches,
-    tls_host: Option<String>,
-    tls_root_cert: Option<String>,
-) -> (Option<String>, Option<String>) {
-    if !matches
-        .get_one("tls-enable-test-cert")
-        .copied()
-        .unwrap_or(true)
-    {
-        return (tls_host, tls_root_cert);
-    }
-
-    // Don't auto-set test cert if user specified another TLS verification mode
-    let other_mode_specified = matches.is_present("tls-fingerprint")
-        || matches.is_present("tls-fingerprint-file")
-        || matches.is_present("tls-tofu")
-        || matches.is_present("tls-tofu-interactive")
-        || matches.is_present("tls-known-hosts")
-        || matches.is_present("tls-skip-verification");
-
-    if other_mode_specified {
-        return (tls_host, tls_root_cert);
-    }
-
-    const STREAMER_HOST: &str = "kybertest";
-    const STREAMER_CERT: &str = "kybertest_rootca_cert.pem";
-
-    // Check if test cert exists next to binary (libclient resolves paths there)
-    let cert_exists = std::env::current_exe()
-        .ok()
-        .and_then(|exe| exe.parent().map(|p| p.join(STREAMER_CERT)))
-        .map(|p| p.exists())
-        .unwrap_or(false);
-
-    // Only set test defaults if cert exists or user provided one
-    if cert_exists || tls_root_cert.is_some() {
-        let tls_host = tls_host.or_else(|| Some(STREAMER_HOST.into()));
-        let tls_root_cert = tls_root_cert.or_else(|| Some(STREAMER_CERT.into()));
-        (tls_host, tls_root_cert)
-    } else {
-        (tls_host, tls_root_cert)
-    }
-}
-
 fn load_tls_conf(matches: &clap::ArgMatches) -> Result<TlsConfig> {
     let tls_host: Option<String> = matches.get_one("tls-host").cloned();
     let tls_root_cert: Option<String> = matches.get_one("tls-root-cert").cloned();
-
-    #[cfg(feature = "test-tls-cert")]
-    let (tls_host, tls_root_cert) = tls_get_test_params(matches, tls_host, tls_root_cert);
 
     // Handle fingerprint: either from --tls-fingerprint or --tls-fingerprint-file
     let tls_fingerprint: Option<String> =
@@ -507,15 +458,6 @@ fn main() {
                 .default_value("anonymous"),
         )
         .arg(clap::Arg::with_name("STREAMER_IP").index(1));
-
-    #[cfg(feature = "test-tls-cert")]
-    let app = app.arg(
-        clap::Arg::with_name("tls-enable-test-cert")
-            .long("tls-enable-test-cert")
-            .help("Enable TLS test certificates")
-            .value_parser(clap::value_parser!(bool))
-            .takes_value(true),
-    );
 
     let matches = app.get_matches();
 

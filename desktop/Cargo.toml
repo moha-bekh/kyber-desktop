@@ -26,8 +26,7 @@ mockall = "0.12.1"
 serial_test = "3.0.0"
 
 [features]
-default = ["test-tls-cert"]
-test-tls-cert = []
+default = []
 win32-hide-console = []
 
 [build-dependencies]
