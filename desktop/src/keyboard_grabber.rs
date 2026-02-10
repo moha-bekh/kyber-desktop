@@ -109,7 +109,7 @@ use crate::UserEvent;
 //             ^                      |                           | |
 //             |                      |                           ⌄ ⌄
 // -------------------------------------------------         -------------
-// | WindowProc(WM_INPUT) | LowLevelKeyboardProc() |         | libkynput |
+// | WindowProc(WM_INPUT) | LowLevelKeyboardProc() |         | kynput |
 // -------------------------------------------------         -------------
 //             ^                     ^
 //             |                     |
@@ -121,15 +121,15 @@ use crate::UserEvent;
 // The default keyboard acquisition mode let winit get RawInput (exposed as
 // winit::event::DeviceEvent). The application event loop gets the events and
 // forward them to InputHandler. This layer acts as a filter between the
-// application event loop and libkynput. It forwards only the events that are not
-// automatically acquired directly by libkynput.
+// application event loop and kynput. It forwards only the events that are not
+// automatically acquired directly by kynput.
 
 // To enable the immersive mode on windows, the app event loop must request winit
 // to unplug RawInput, and then plug a LowLevelKeyboard hook. In this case:
 // * The application event loop doesn't receive RawInput anymore
 // * The LowLevelKeyboard hook produces all the keyboard events
 
-// The LowLevelHook component is actually a special libkynput producer than can be
+// The LowLevelHook component is actually a special kynput producer than can be
 // instantiated and deleted by the application during runtime. The switch only
 // change the source of the keyboard events.
 

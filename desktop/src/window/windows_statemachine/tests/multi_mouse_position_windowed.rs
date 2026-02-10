@@ -27,14 +27,12 @@ fn multi_mouse_position_windowed() {
     let mut seq = Sequence::new();
 
     // Create InputPipeline
-    let pipeline_config = libkynput_rs::Config::default_dummy_client();
-    let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
+    let pipeline_config = kynput_rs::Config::default_dummy_client();
+    let pipeline = kynput_rs::Pipeline::new(pipeline_config);
 
     let input_producer = Arc::new(InputProducer::new(pipeline.get_input_sink()));
     pipeline
-        .plug_handler(libkynput_rs::create_handler_instance(
-            input_producer.clone(),
-        ))
+        .plug_handler(kynput_rs::create_handler_instance(input_producer.clone()))
         .unwrap();
 
     // Create mocks
@@ -95,7 +93,7 @@ fn multi_mouse_position_windowed() {
         .in_sequence(&mut seq)
         .returning(|| false);
 
-    let mouse_position = libkynput_rs::MousePosition {
+    let mouse_position = kynput_rs::MousePosition {
         display_id: window1_display,
         x: 960,
         y: 540,
@@ -119,7 +117,7 @@ fn multi_mouse_position_windowed() {
 
     window1
         .expect_set_cursor_rgba()
-        .with(predicate::eq(libkynput_rs::Cursor {
+        .with(predicate::eq(kynput_rs::Cursor {
             display_id: window1_display,
             visible: true,
             x: 0,
@@ -128,7 +126,7 @@ fn multi_mouse_position_windowed() {
             yhot: 0,
             width: 1,
             height: 1,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         }))
         .times(1)
         .in_sequence(&mut seq)
@@ -144,7 +142,7 @@ fn multi_mouse_position_windowed() {
 
     window2
         .expect_set_cursor_rgba()
-        .with(predicate::eq(libkynput_rs::Cursor {
+        .with(predicate::eq(kynput_rs::Cursor {
             display_id: window1_display,
             visible: true,
             x: 0,
@@ -153,7 +151,7 @@ fn multi_mouse_position_windowed() {
             yhot: 0,
             width: 1,
             height: 1,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         }))
         .times(1)
         .in_sequence(&mut seq)
@@ -165,7 +163,7 @@ fn multi_mouse_position_windowed() {
         .in_sequence(&mut seq)
         .returning(|| false);
 
-    let mouse_position = libkynput_rs::MousePosition {
+    let mouse_position = kynput_rs::MousePosition {
         display_id: window2_display,
         x: 960,
         y: 540,
@@ -189,7 +187,7 @@ fn multi_mouse_position_windowed() {
 
     window2
         .expect_set_cursor_rgba()
-        .with(predicate::eq(libkynput_rs::Cursor {
+        .with(predicate::eq(kynput_rs::Cursor {
             display_id: window2_display,
             visible: true,
             x: 0,
@@ -198,7 +196,7 @@ fn multi_mouse_position_windowed() {
             yhot: 0,
             width: 1,
             height: 1,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         }))
         .times(1)
         .in_sequence(&mut seq)
@@ -214,7 +212,7 @@ fn multi_mouse_position_windowed() {
 
     window1
         .expect_set_cursor_rgba()
-        .with(predicate::eq(libkynput_rs::Cursor {
+        .with(predicate::eq(kynput_rs::Cursor {
             display_id: window2_display,
             visible: true,
             x: 0,
@@ -223,7 +221,7 @@ fn multi_mouse_position_windowed() {
             yhot: 0,
             width: 1,
             height: 1,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         }))
         .times(1)
         .in_sequence(&mut seq)
@@ -235,7 +233,7 @@ fn multi_mouse_position_windowed() {
         .in_sequence(&mut seq)
         .returning(|| false);
 
-    let mouse_position = libkynput_rs::MousePosition {
+    let mouse_position = kynput_rs::MousePosition {
         display_id: window1_display,
         x: 640,
         y: 860,
@@ -259,7 +257,7 @@ fn multi_mouse_position_windowed() {
 
     window1
         .expect_set_cursor_rgba()
-        .with(predicate::eq(libkynput_rs::Cursor {
+        .with(predicate::eq(kynput_rs::Cursor {
             display_id: window1_display,
             visible: true,
             x: 0,
@@ -268,14 +266,14 @@ fn multi_mouse_position_windowed() {
             yhot: 0,
             width: 1,
             height: 1,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         }))
         .times(1)
         .in_sequence(&mut seq)
         .returning(|_| ());
 
     // Create InputContext
-    let pipeline_network = libkynput_rs::create_consumer_instance(Arc::new(mock_input_network));
+    let pipeline_network = kynput_rs::create_consumer_instance(Arc::new(mock_input_network));
     pipeline.plug_network(&pipeline_network).unwrap();
 
     let eventloop_proxy = EventLoopProxy::new(mock_eventloop_proxy);
@@ -338,7 +336,7 @@ fn multi_mouse_position_windowed() {
 
     // Change cursor
     windows
-        .set_cursor(libkynput_rs::Cursor {
+        .set_cursor(kynput_rs::Cursor {
             display_id: window1_display,
             visible: true,
             x: 0,
@@ -347,7 +345,7 @@ fn multi_mouse_position_windowed() {
             yhot: 0,
             width: 1,
             height: 1,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         })
         .unwrap();
 
@@ -358,11 +356,11 @@ fn multi_mouse_position_windowed() {
 
     input_producer
         .consumer
-        .consume(libkynput_rs::MouseMove { dx: 1, dy: -1 }.to_packet(InputTarget::Host));
+        .consume(kynput_rs::MouseMove { dx: 1, dy: -1 }.to_packet(InputTarget::Host));
 
     // Send Cursor update from Host
     windows
-        .set_cursor(libkynput_rs::Cursor {
+        .set_cursor(kynput_rs::Cursor {
             display_id: window2_display,
             visible: true,
             x: 0,
@@ -371,12 +369,12 @@ fn multi_mouse_position_windowed() {
             yhot: 0,
             width: 1,
             height: 1,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         })
         .unwrap();
 
     windows
-        .set_cursor(libkynput_rs::Cursor {
+        .set_cursor(kynput_rs::Cursor {
             display_id: window1_display,
             visible: false,
             x: 0,
@@ -385,7 +383,7 @@ fn multi_mouse_position_windowed() {
             yhot: 0,
             width: 0,
             height: 0,
-            data: libkynput_rs::CursorData::None,
+            data: kynput_rs::CursorData::None,
         })
         .unwrap();
 
@@ -396,7 +394,7 @@ fn multi_mouse_position_windowed() {
 
     // Send Cursor update from Host
     windows
-        .set_cursor(libkynput_rs::Cursor {
+        .set_cursor(kynput_rs::Cursor {
             display_id: window2_display,
             visible: false,
             x: 0,
@@ -405,12 +403,12 @@ fn multi_mouse_position_windowed() {
             yhot: 0,
             width: 0,
             height: 0,
-            data: libkynput_rs::CursorData::None,
+            data: kynput_rs::CursorData::None,
         })
         .unwrap();
 
     windows
-        .set_cursor(libkynput_rs::Cursor {
+        .set_cursor(kynput_rs::Cursor {
             display_id: window1_display,
             visible: true,
             x: 0,
@@ -419,7 +417,7 @@ fn multi_mouse_position_windowed() {
             yhot: 0,
             width: 1,
             height: 1,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         })
         .unwrap();
 }

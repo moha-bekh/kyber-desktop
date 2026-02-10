@@ -32,7 +32,7 @@ pub enum Error {
     Winit,
     WinitEventLoopClosed,
     Libclient(libclient_rs::Error),
-    Input(libkynput_rs::Error),
+    Input(kynput_rs::Error),
     // Window errors
     WindowFailed(winit::error::ExternalError),
     // Configuration errors
@@ -63,8 +63,8 @@ impl From<libclient_rs::Error> for Error {
     }
 }
 
-impl From<libkynput_rs::Error> for Error {
-    fn from(err: libkynput_rs::Error) -> Error {
+impl From<kynput_rs::Error> for Error {
+    fn from(err: kynput_rs::Error) -> Error {
         Error::Input(err)
     }
 }

@@ -90,7 +90,7 @@ package() {
         $src_bin/client \
         $src_bin/controller \
         $src_bin/ffmpeg \
-        $src_bin/inputserver \
+        $src_bin/kynputserver \
         $src_bin/txproto \
         $src_bin/kyber_config.toml \
         $staging_directory/bin

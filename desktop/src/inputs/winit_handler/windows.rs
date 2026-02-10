@@ -20,14 +20,14 @@
 
 use std::collections::HashMap;
 
-use libkynput_rs::{Consumer, InputType, Modifiers, MouseButtonType, MouseWheel};
+use kynput_rs::{Consumer, InputType, Modifiers, MouseButtonType, MouseWheel};
 use log::error;
 
 use super::WinitEventType;
 use crate::inputs::winit_handler::{scancodes::*, KeyboardGrabber};
 
-// Implement the KeyboardGrabber trait for libkynput's KeyboardGrabber
-impl<F> KeyboardGrabber for libkynput_rs::windows::KeyboardGrabber<F> where
+// Implement the KeyboardGrabber trait for kynput's KeyboardGrabber
+impl<F> KeyboardGrabber for kynput_rs::windows::KeyboardGrabber<F> where
     F: Fn(u16, &Modifiers) -> bool + Unpin
 {
 }
@@ -85,7 +85,7 @@ impl super::PlatformImpl for Impl {
     }
 
     fn create_keyboard_grabber(consumer: Consumer) -> Option<Box<dyn super::KeyboardGrabber>> {
-        let ret = libkynput_rs::windows::KeyboardGrabber::new(consumer, filter_keyboard_cb);
+        let ret = kynput_rs::windows::KeyboardGrabber::new(consumer, filter_keyboard_cb);
         match ret {
             Ok(grabber) => Some(Box::new(grabber)),
             Err(err) => {

@@ -24,7 +24,7 @@ use std::sync::Arc;
 use log::{info, warn};
 use winit::event::{DeviceEvent, WindowEvent};
 
-use libkynput_rs::{InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
+use kynput_rs::{InputType, MouseButton, Packet, Pipeline, RouterProcessingState};
 
 use crate::error::Result;
 use crate::event_loop::EventProxy;
@@ -61,7 +61,7 @@ impl InputContext {
             let winit_handler =
                 Arc::new(WinitHandler::new(pipeline.get_input_sink(), missing_types)?);
 
-            pipeline.plug_handler(libkynput_rs::create_handler_instance(winit_handler.clone()))?;
+            pipeline.plug_handler(kynput_rs::create_handler_instance(winit_handler.clone()))?;
 
             Some(winit_handler)
         } else {

@@ -22,7 +22,7 @@ use log::{debug, info, warn};
 use raw_window_handle::RawWindowHandle;
 use winit::window::WindowId;
 
-use libkynput_rs::Cursor;
+use kynput_rs::Cursor;
 
 use super::{Position, Rect, Size, VideoLayout};
 use crate::error::Result;

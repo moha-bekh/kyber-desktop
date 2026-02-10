@@ -95,7 +95,7 @@ package() {
 
     cp -a \
         $source_directory/lib/libkyaudioreg*.dylib \
-        $source_directory/lib/liblibkynput*.dylib \
+        $source_directory/lib/libkynput*.dylib \
         $source_directory/lib/liblibclient*.dylib \
         $source_directory/lib/libvlc*.dylib \
         $source_directory/lib/libSDL2*.dylib \
@@ -114,7 +114,7 @@ package() {
 
     # Prepare bundle dylib fixes
     KYAUDIOREG_NAME=libkyaudioreg.0.1.dylib
-    LIBKYNPUT_NAME=liblibkynput.0.1.dylib
+    LIBKYNPUT_NAME=libkynput.0.1.dylib
     LIBCLIENT_NAME=liblibclient.0.1.dylib
     SDL2_NAME=libSDL2-2.0.0.dylib
 

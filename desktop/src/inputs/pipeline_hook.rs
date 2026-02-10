@@ -23,8 +23,8 @@ use std::sync::{Arc, Mutex};
 
 use log::warn;
 
-use libkynput_rs::{InputType, KeyboardKey, MouseButton, MouseButtonType, Packet};
-use libkynput_rs::{RouterHook, RouterHookPacketResult};
+use kynput_rs::{InputType, KeyboardKey, MouseButton, MouseButtonType, Packet};
+use kynput_rs::{RouterHook, RouterHookPacketResult};
 
 use crate::event_loop::{EventProxy, UserEvent};
 use crate::inputs::winit_handler::scancodes::*;
@@ -234,7 +234,7 @@ mod tests {
     use mockall::predicate::*;
     use mockall::*;
 
-    use libkynput_rs::{CmpStruct, InputTarget, MousePosition, MouseWheel};
+    use kynput_rs::{CmpStruct, InputTarget, MousePosition, MouseWheel};
 
     use super::*;
     use crate::error::Result;

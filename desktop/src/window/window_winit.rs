@@ -21,7 +21,7 @@
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use winit::{dpi, window::Fullscreen};
 
-use libkynput_rs::{Cursor, CursorData};
+use kynput_rs::{Cursor, CursorData};
 use log::warn;
 
 use super::{Position, Size};

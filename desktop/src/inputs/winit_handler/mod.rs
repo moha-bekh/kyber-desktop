@@ -40,7 +40,7 @@ use winit::{
 
 use crate::error::Result;
 
-use libkynput_rs::{
+use kynput_rs::{
     Consumer, HandlerInterface, InputTarget, InputType, KeyboardKey, MouseButton, MouseButtonType,
     MouseMove, MousePosition, MouseWheel,
 };
@@ -84,7 +84,7 @@ trait PlatformImpl {
     }
 }
 
-fn winit_deviceevent_to_libkynput(event: &DeviceEvent) -> Option<InputType> {
+fn winit_deviceevent_to_kynput(event: &DeviceEvent) -> Option<InputType> {
     match event {
         DeviceEvent::Key(_) => Some(InputType::Keyboard),
         DeviceEvent::Button { .. } => Some(InputType::MouseButton),
@@ -94,7 +94,7 @@ fn winit_deviceevent_to_libkynput(event: &DeviceEvent) -> Option<InputType> {
     }
 }
 
-fn winit_windowevent_to_libkynput(event: &WindowEvent) -> Option<InputType> {
+fn winit_windowevent_to_kynput(event: &WindowEvent) -> Option<InputType> {
     match event {
         WindowEvent::KeyboardInput { .. } => Some(InputType::Keyboard),
         WindowEvent::MouseInput { .. } => Some(InputType::MouseButton),
@@ -193,18 +193,18 @@ impl WinitHandler {
 
     fn can_process_event(
         &self,
-        libkynput_type: Option<InputType>,
+        kynput_type: Option<InputType>,
         winit_type: WinitEventType,
     ) -> bool {
         // Unpack the InputType if valid
-        if let Some(libkynput_type) = libkynput_type {
+        if let Some(kynput_type) = kynput_type {
             // Filter events that shouldn't be produced here
-            if !self.produced_types.contains(&libkynput_type) {
+            if !self.produced_types.contains(&kynput_type) {
                 return false;
             }
 
             // Check if the winit event type can be processed for this platform
-            match self.handled_event_map.get(&libkynput_type) {
+            match self.handled_event_map.get(&kynput_type) {
                 Some(expected_type) => *expected_type == winit_type,
                 None => {
                     warn!("WinitEventType {:?} not found in platform map", winit_type);
@@ -218,10 +218,7 @@ impl WinitHandler {
 
     pub fn consume_device_event(&self, event: &DeviceEvent) {
         // Check if the DeviceEvent type should be handled by this producer
-        if !self.can_process_event(
-            winit_deviceevent_to_libkynput(event),
-            WinitEventType::Device,
-        ) {
+        if !self.can_process_event(winit_deviceevent_to_kynput(event), WinitEventType::Device) {
             return;
         }
 
@@ -277,10 +274,7 @@ impl WinitHandler {
 
     pub fn consume_window_event(&self, event: &WindowEvent, scale_factor: f64) {
         // Check if the DeviceEvent type should be handled by this producer
-        if !self.can_process_event(
-            winit_windowevent_to_libkynput(event),
-            WinitEventType::Window,
-        ) {
+        if !self.can_process_event(winit_windowevent_to_kynput(event), WinitEventType::Window) {
             return;
         }
 
@@ -364,7 +358,7 @@ mod tests {
     use serial_test::serial;
     use winit::event::{ElementState, KeyboardInput, ModifiersState};
 
-    use libkynput_rs::{ConsumerInterface, InputType, MouseButton, Packet};
+    use kynput_rs::{ConsumerInterface, InputType, MouseButton, Packet};
 
     use super::*;
 
@@ -381,7 +375,7 @@ mod tests {
         use std::collections::HashMap;
 
         use super::WinitEventType;
-        use libkynput_rs::{InputType, MouseButtonType, MouseWheel};
+        use kynput_rs::{InputType, MouseButtonType, MouseWheel};
 
         pub static mut PROVIDE_ALL_EVENTS: bool = false;
 
@@ -480,7 +474,7 @@ mod tests {
             InputType::MousePosition,
         ];
 
-        let consumer = libkynput_rs::create_consumer_instance(Arc::new(consumer));
+        let consumer = kynput_rs::create_consumer_instance(Arc::new(consumer));
 
         let handler =
             WinitHandler::new(consumer.clone(), expected_produced_events.clone()).unwrap();
@@ -505,7 +499,7 @@ mod tests {
             .times(1)
             .returning(|_| ());
 
-        let consumer = libkynput_rs::create_consumer_instance(Arc::new(consumer));
+        let consumer = kynput_rs::create_consumer_instance(Arc::new(consumer));
 
         let produced_events = vec![InputType::Keyboard, InputType::MouseMove];
         let handler = WinitHandler::new(consumer.clone(), produced_events.clone()).unwrap();
@@ -558,7 +552,7 @@ mod tests {
             .times(1)
             .returning(|_| ());
 
-        let consumer = libkynput_rs::create_consumer_instance(Arc::new(consumer));
+        let consumer = kynput_rs::create_consumer_instance(Arc::new(consumer));
 
         // Setup handler
         let produced_events = vec![
@@ -637,7 +631,7 @@ mod tests {
             .times(1)
             .returning(|_| ());
 
-        let consumer = libkynput_rs::create_consumer_instance(Arc::new(consumer));
+        let consumer = kynput_rs::create_consumer_instance(Arc::new(consumer));
 
         // Setup handler
         let produced_events = vec![

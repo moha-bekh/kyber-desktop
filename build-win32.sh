@@ -118,11 +118,11 @@ package() {
         $src_bin/client.exe \
         $src_bin/controller.exe \
         $src_bin/ffmpeg.exe \
-        $src_bin/inputserver.exe \
+        $src_bin/kynputserver.exe \
         $src_bin/service.exe \
         $src_bin/txproto.exe \
         $src_bin/libclient.dll \
-        $src_bin/libkynput.dll \
+        $src_bin/kynput.dll \
         $src_bin/kybertest_cert.pem \
         $src_bin/kybertest_key.pem \
         $src_bin/kybertest_rootca_cert.pem \

@@ -27,14 +27,12 @@ fn single_relative() {
     let mut seq = Sequence::new();
 
     // Create InputPipeline
-    let pipeline_config = libkynput_rs::Config::default_dummy_client();
-    let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
+    let pipeline_config = kynput_rs::Config::default_dummy_client();
+    let pipeline = kynput_rs::Pipeline::new(pipeline_config);
 
     let input_producer = Arc::new(InputProducer::new(pipeline.get_input_sink()));
     pipeline
-        .plug_handler(libkynput_rs::create_handler_instance(
-            input_producer.clone(),
-        ))
+        .plug_handler(kynput_rs::create_handler_instance(input_producer.clone()))
         .unwrap();
 
     // Create mocks
@@ -75,7 +73,7 @@ fn single_relative() {
         .returning(|_| Ok(()));
 
     // Mock requirements: MousePosition
-    let mouse_position = libkynput_rs::MousePosition {
+    let mouse_position = kynput_rs::MousePosition {
         display_id: 0,
         x: 960,
         y: 540,
@@ -100,7 +98,7 @@ fn single_relative() {
 
     window
         .expect_set_cursor_rgba()
-        .with(predicate::eq(libkynput_rs::Cursor {
+        .with(predicate::eq(kynput_rs::Cursor {
             display_id: 0,
             visible: true,
             width: 1,
@@ -109,7 +107,7 @@ fn single_relative() {
             yhot: 0,
             x: 960,
             y: 540,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         }))
         .times(1)
         .in_sequence(&mut seq)
@@ -131,7 +129,7 @@ fn single_relative() {
         .returning(|_| Ok(()));
 
     // Set mock requirements: MouseMove
-    let mousemove = libkynput_rs::MouseMove { dx: 1, dy: -1 };
+    let mousemove = kynput_rs::MouseMove { dx: 1, dy: -1 };
     let mousemove_pkt = mousemove.to_packet(InputTarget::Host);
 
     mock_input_network
@@ -151,7 +149,7 @@ fn single_relative() {
 
     window
         .expect_set_cursor_rgba()
-        .with(predicate::eq(libkynput_rs::Cursor {
+        .with(predicate::eq(kynput_rs::Cursor {
             display_id: 0,
             visible: true,
             width: 1,
@@ -160,7 +158,7 @@ fn single_relative() {
             yhot: 0,
             x: 480,
             y: 270,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         }))
         .times(1)
         .in_sequence(&mut seq)
@@ -197,7 +195,7 @@ fn single_relative() {
         .returning(|_| Ok(()));
 
     // Set mock requirements: MousePosition
-    let mouse_position = libkynput_rs::MousePosition {
+    let mouse_position = kynput_rs::MousePosition {
         display_id: 0,
         x: 1066,
         y: 753,
@@ -213,7 +211,7 @@ fn single_relative() {
         .returning(|_| ());
 
     // Create InputContext
-    let pipeline_network = libkynput_rs::create_consumer_instance(Arc::new(mock_input_network));
+    let pipeline_network = kynput_rs::create_consumer_instance(Arc::new(mock_input_network));
     pipeline.plug_network(&pipeline_network).unwrap();
     pipeline.start().unwrap();
 
@@ -252,7 +250,7 @@ fn single_relative() {
         .unwrap();
 
     windows
-        .set_cursor(libkynput_rs::Cursor {
+        .set_cursor(kynput_rs::Cursor {
             display_id: 0,
             visible: true,
             width: 1,
@@ -261,18 +259,18 @@ fn single_relative() {
             yhot: 0,
             x: 960,
             y: 540,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         })
         .unwrap();
 
     // Send MouseMove. Must be ignored
     input_producer
         .consumer
-        .consume(libkynput_rs::MouseMove { dx: 1, dy: -1 }.to_packet(InputTarget::Host));
+        .consume(kynput_rs::MouseMove { dx: 1, dy: -1 }.to_packet(InputTarget::Host));
 
     // Hide cursor to trigger relative mode
     windows
-        .set_cursor(libkynput_rs::Cursor {
+        .set_cursor(kynput_rs::Cursor {
             display_id: 0,
             visible: false,
             width: 0,
@@ -281,14 +279,14 @@ fn single_relative() {
             yhot: 0,
             x: 0,
             y: 0,
-            data: libkynput_rs::CursorData::None,
+            data: kynput_rs::CursorData::None,
         })
         .unwrap();
 
     // Send MouseMove and MousePosition
     input_producer
         .consumer
-        .consume(libkynput_rs::MouseMove { dx: 1, dy: -1 }.to_packet(InputTarget::Host));
+        .consume(kynput_rs::MouseMove { dx: 1, dy: -1 }.to_packet(InputTarget::Host));
 
     windows
         .cursor_moved(0.into(), Position { x: 100.0, y: 200.0 })
@@ -296,7 +294,7 @@ fn single_relative() {
 
     // Restore cursor
     windows
-        .set_cursor(libkynput_rs::Cursor {
+        .set_cursor(kynput_rs::Cursor {
             display_id: 0,
             visible: true,
             width: 1,
@@ -305,7 +303,7 @@ fn single_relative() {
             yhot: 0,
             x: 480,
             y: 270,
-            data: libkynput_rs::CursorData::Raw(vec![0x43434343]),
+            data: kynput_rs::CursorData::Raw(vec![0x43434343]),
         })
         .unwrap();
 
@@ -316,5 +314,5 @@ fn single_relative() {
 
     input_producer
         .consumer
-        .consume(libkynput_rs::MouseMove { dx: 1, dy: -1 }.to_packet(InputTarget::Host));
+        .consume(kynput_rs::MouseMove { dx: 1, dy: -1 }.to_packet(InputTarget::Host));
 }

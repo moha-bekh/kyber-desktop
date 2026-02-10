@@ -27,14 +27,12 @@ fn single_keypress() {
     let mut seq = Sequence::new();
 
     // Create InputPipeline
-    let pipeline_config = libkynput_rs::Config::default_dummy_client();
-    let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
+    let pipeline_config = kynput_rs::Config::default_dummy_client();
+    let pipeline = kynput_rs::Pipeline::new(pipeline_config);
 
     let input_producer = Arc::new(InputProducer::new(pipeline.get_input_sink()));
     pipeline
-        .plug_handler(libkynput_rs::create_handler_instance(
-            input_producer.clone(),
-        ))
+        .plug_handler(kynput_rs::create_handler_instance(input_producer.clone()))
         .unwrap();
 
     // Create mocks
@@ -79,7 +77,7 @@ fn single_keypress() {
         .returning(|_| Ok(()));
 
     // Mock requirements: KeyboardKey
-    let key = libkynput_rs::KeyboardKey {
+    let key = kynput_rs::KeyboardKey {
         pressed: true,
         scancode: 43,
     };
@@ -94,7 +92,7 @@ fn single_keypress() {
         .returning(|_| ());
 
     // Mock requirements: Focus lost
-    let flush_pkt = libkynput_rs::ControlEvent::FlushKeys.to_packet(InputTarget::Host);
+    let flush_pkt = kynput_rs::ControlEvent::FlushKeys.to_packet(InputTarget::Host);
 
     mock_input_network
         .expect_consume()
@@ -132,7 +130,7 @@ fn single_keypress() {
         .returning(|_| ());
 
     // Create InputContext
-    let pipeline_network = libkynput_rs::create_consumer_instance(Arc::new(mock_input_network));
+    let pipeline_network = kynput_rs::create_consumer_instance(Arc::new(mock_input_network));
     pipeline.plug_network(&pipeline_network).unwrap();
     pipeline.start().unwrap();
 
@@ -167,7 +165,7 @@ fn single_keypress() {
 
     // Send KeyboardKey
     input_producer.consumer.consume(
-        libkynput_rs::KeyboardKey {
+        kynput_rs::KeyboardKey {
             pressed: true,
             scancode: 43,
         }
@@ -180,7 +178,7 @@ fn single_keypress() {
         .unwrap();
 
     input_producer.consumer.consume(
-        libkynput_rs::KeyboardKey {
+        kynput_rs::KeyboardKey {
             pressed: false,
             scancode: 43,
         }
@@ -193,7 +191,7 @@ fn single_keypress() {
         .unwrap();
 
     input_producer.consumer.consume(
-        libkynput_rs::KeyboardKey {
+        kynput_rs::KeyboardKey {
             pressed: true,
             scancode: 43,
         }

@@ -22,7 +22,7 @@ use std::sync::Arc;
 
 use log::warn;
 
-use libkynput_rs::{
+use kynput_rs::{
     ConsumerInterface, Cursor, CursorFormat, Handler, HandlerConsumerInterface, HandlerInterface,
     InputType, InputTypeMetadata, Packet,
 };
@@ -96,5 +96,5 @@ where
     T: EventProxy,
 {
     let consumer = Arc::new(WindowCursorHandler::new(event_loop_proxy));
-    Ok(libkynput_rs::create_handler_consumer_instance(consumer))
+    Ok(kynput_rs::create_handler_consumer_instance(consumer))
 }

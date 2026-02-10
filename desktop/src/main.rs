@@ -223,7 +223,7 @@ fn load_tls_conf(matches: &clap::ArgMatches) -> Result<TlsConfig> {
 fn main() {
     let _log_handle = setup_logs("client", LevelFilter::Info);
 
-    libkynput_rs::init_logger();
+    kynput_rs::init_logger();
     libclient_rs::init();
 
     info!("Kyber client. Revision {}", env!("VERGEN_GIT_DESCRIBE"));

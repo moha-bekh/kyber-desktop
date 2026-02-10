@@ -31,7 +31,7 @@ use winit::{
     window::WindowId,
 };
 
-use libkynput_rs::Cursor;
+use kynput_rs::Cursor;
 
 use super::window::{CursorGrabMode, CursorVisible};
 use super::{Position, Size, Window, WindowControl};
@@ -527,7 +527,7 @@ where
         }
     }
 
-    fn handle_cursor(&mut self, cursor: libkynput_rs::Cursor) -> Option<Vec<CursorAction>> {
+    fn handle_cursor(&mut self, cursor: kynput_rs::Cursor) -> Option<Vec<CursorAction>> {
         // If Relative mode must be enabled, we need to grab the cursor
         // within the last active window. Otherwise on X11, the cursor will be
         // wrapped into the grabbed window.
@@ -608,7 +608,7 @@ where
         Some(actions)
     }
 
-    pub(crate) fn set_cursor(&mut self, cursor: libkynput_rs::Cursor) -> Result<()> {
+    pub(crate) fn set_cursor(&mut self, cursor: kynput_rs::Cursor) -> Result<()> {
         let cursor_grab_mode = self.cursor_grab_mode();
 
         let actions = self.handle_cursor(cursor);

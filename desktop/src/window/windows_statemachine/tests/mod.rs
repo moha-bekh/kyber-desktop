@@ -32,8 +32,8 @@ use mockall::predicate::*;
 use mockall::*;
 use raw_window_handle::RawWindowHandle;
 
+use kynput_rs::{InputTarget, InputType};
 use libclient_rs::Display;
-use libkynput_rs::{InputTarget, InputType};
 
 use super::*;
 use crate::event_loop::UserEvent;
@@ -46,16 +46,16 @@ fn fake_event_loop_target() -> &'static winit::event_loop::EventLoopWindowTarget
 }
 
 struct InputProducer {
-    consumer: libkynput_rs::Consumer,
+    consumer: kynput_rs::Consumer,
 }
 
 impl InputProducer {
-    fn new(consumer: libkynput_rs::Consumer) -> Self {
+    fn new(consumer: kynput_rs::Consumer) -> Self {
         Self { consumer }
     }
 }
 
-impl libkynput_rs::HandlerInterface for InputProducer {
+impl kynput_rs::HandlerInterface for InputProducer {
     fn start(&self) {}
 
     fn stop(&self) {}
@@ -74,8 +74,8 @@ mock! {
 
     }
 
-    impl libkynput_rs::ConsumerInterface for InputNetwork {
-        fn consume(&self, packet: libkynput_rs::Packet);
+    impl kynput_rs::ConsumerInterface for InputNetwork {
+        fn consume(&self, packet: kynput_rs::Packet);
     }
 }
 

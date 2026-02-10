@@ -23,7 +23,7 @@ use std::collections::HashMap;
 use keycode::{KeyMap, KeyMapping};
 use winit::dpi::{LogicalPosition, PhysicalPosition};
 
-use libkynput_rs::{InputType, MouseButtonType, MouseWheel};
+use kynput_rs::{InputType, MouseButtonType, MouseWheel};
 
 use super::WinitEventType;
 

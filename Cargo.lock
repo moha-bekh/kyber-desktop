@@ -402,9 +402,9 @@ dependencies = [
  "env_logger",
  "image",
  "keycode",
+ "kynput-rs",
  "libc",
  "libclient-rs",
- "libkynput-rs",
  "log",
  "log4rs",
  "mockall",
@@ -1487,6 +1487,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "kynput-rs"
+version = "0.1.0"
+dependencies = [
+ "enum-iterator",
+ "kynput-sys",
+ "libc",
+ "log",
+ "thiserror",
+]
+
+[[package]]
+name = "kynput-sys"
+version = "0.1.0"
+dependencies = [
+ "bindgen 0.72.1",
+ "libc",
+ "pkg-config",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1516,10 +1536,10 @@ dependencies = [
 name = "libclient-rs"
 version = "0.1.0"
 dependencies = [
+ "kynput-rs",
  "libc",
  "libclient-common",
  "libclient-sys",
- "libkynput-rs",
  "log",
 ]
 
@@ -1528,27 +1548,7 @@ name = "libclient-sys"
 version = "0.1.0"
 dependencies = [
  "bindgen 0.69.4",
- "libc",
- "libkynput-sys",
- "pkg-config",
-]
-
-[[package]]
-name = "libkynput-rs"
-version = "0.1.0"
-dependencies = [
- "enum-iterator",
- "libc",
- "libkynput-sys",
- "log",
- "thiserror",
-]
-
-[[package]]
-name = "libkynput-sys"
-version = "0.1.0"
-dependencies = [
- "bindgen 0.72.1",
+ "kynput-sys",
  "libc",
  "pkg-config",
 ]

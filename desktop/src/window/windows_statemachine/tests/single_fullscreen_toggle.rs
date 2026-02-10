@@ -27,14 +27,12 @@ fn single_fullscreen_toggle() {
     let mut seq = Sequence::new();
 
     // Create InputPipeline
-    let pipeline_config = libkynput_rs::Config::default_dummy_client();
-    let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
+    let pipeline_config = kynput_rs::Config::default_dummy_client();
+    let pipeline = kynput_rs::Pipeline::new(pipeline_config);
 
     let input_producer = Arc::new(InputProducer::new(pipeline.get_input_sink()));
     pipeline
-        .plug_handler(libkynput_rs::create_handler_instance(
-            input_producer.clone(),
-        ))
+        .plug_handler(kynput_rs::create_handler_instance(input_producer.clone()))
         .unwrap();
 
     // Create mocks
@@ -125,7 +123,7 @@ fn single_fullscreen_toggle() {
         .returning(|_| Ok(()));
 
     // Mock requirements: Send MousePosition
-    let mouse_position = libkynput_rs::MousePosition {
+    let mouse_position = kynput_rs::MousePosition {
         display_id: 0,
         x: 960,
         y: 540,
@@ -184,7 +182,7 @@ fn single_fullscreen_toggle() {
         .returning(|_| ());
 
     // Create InputContext
-    let pipeline_network = libkynput_rs::create_consumer_instance(Arc::new(mock_input_network));
+    let pipeline_network = kynput_rs::create_consumer_instance(Arc::new(mock_input_network));
     pipeline.plug_network(&pipeline_network).unwrap();
 
     let eventloop_proxy = EventLoopProxy::new(mock_eventloop_proxy);

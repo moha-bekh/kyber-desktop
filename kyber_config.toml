@@ -124,7 +124,7 @@ disable_same_site_protection = false
 #key = { plain = "kyber-authentication-development-key" }
 #key = { file = "/tmp/RSA256-pub.pem" }
 
-[inputserver]
+[kynputserver]
 # Force to plug Xbox 360 controllers
 #
 # Only supported on Windows

@@ -66,7 +66,7 @@ pub enum UserEvent {
     StopRequest,
     Shortcut(ShortcutType),
     Client(libclient_rs::Event),
-    SetCursor(libkynput_rs::Cursor),
+    SetCursor(kynput_rs::Cursor),
     LeftButtonReleased,
 }
 
@@ -489,8 +489,8 @@ impl State {
     fn start_streaming(&mut self) -> Result<()> {
         // Recreate input pipeline (handlers are not restartable after stop)
         if self.cli_args.inputs {
-            let pipeline_config = libkynput_rs::Config::default_client();
-            let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
+            let pipeline_config = kynput_rs::Config::default_client();
+            let pipeline = kynput_rs::Pipeline::new(pipeline_config);
 
             let eventloop_proxy = EventProxyWinit::new(self.eventloop_proxy.clone());
             let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline)?);

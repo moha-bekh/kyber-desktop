@@ -27,14 +27,12 @@ fn single_mouse_drag() {
     let mut seq = Sequence::new();
 
     // Create InputPipeline
-    let pipeline_config = libkynput_rs::Config::default_dummy_client();
-    let pipeline = libkynput_rs::Pipeline::new(pipeline_config);
+    let pipeline_config = kynput_rs::Config::default_dummy_client();
+    let pipeline = kynput_rs::Pipeline::new(pipeline_config);
 
     let input_producer = Arc::new(InputProducer::new(pipeline.get_input_sink()));
     pipeline
-        .plug_handler(libkynput_rs::create_handler_instance(
-            input_producer.clone(),
-        ))
+        .plug_handler(kynput_rs::create_handler_instance(input_producer.clone()))
         .unwrap();
 
     // Create mocks
@@ -82,7 +80,7 @@ fn single_mouse_drag() {
     mock_input_network
         .expect_consume()
         .with(predicate::eq(
-            libkynput_rs::MousePosition {
+            kynput_rs::MousePosition {
                 display_id: 0,
                 x: 960,
                 y: 540,
@@ -97,8 +95,8 @@ fn single_mouse_drag() {
     mock_input_network
         .expect_consume()
         .with(predicate::eq(
-            libkynput_rs::MouseButton {
-                button: libkynput_rs::MouseButtonType::Left,
+            kynput_rs::MouseButton {
+                button: kynput_rs::MouseButtonType::Left,
                 pressed: true,
             }
             .to_packet(InputTarget::Host),
@@ -111,7 +109,7 @@ fn single_mouse_drag() {
     mock_input_network
         .expect_consume()
         .with(predicate::eq(
-            libkynput_rs::MousePosition {
+            kynput_rs::MousePosition {
                 display_id: 0,
                 x: 1917,
                 y: 220,
@@ -125,7 +123,7 @@ fn single_mouse_drag() {
     mock_input_network
         .expect_consume()
         .with(predicate::eq(
-            libkynput_rs::MousePosition {
+            kynput_rs::MousePosition {
                 display_id: 0,
                 x: 960,
                 y: 1077,
@@ -150,8 +148,8 @@ fn single_mouse_drag() {
     mock_input_network
         .expect_consume()
         .with(predicate::eq(
-            libkynput_rs::MouseButton {
-                button: libkynput_rs::MouseButtonType::Left,
+            kynput_rs::MouseButton {
+                button: kynput_rs::MouseButtonType::Left,
                 pressed: false,
             }
             .to_packet(InputTarget::Host),
@@ -161,7 +159,7 @@ fn single_mouse_drag() {
         .returning(|_| ());
 
     // Create InputContext
-    let pipeline_network = libkynput_rs::create_consumer_instance(Arc::new(mock_input_network));
+    let pipeline_network = kynput_rs::create_consumer_instance(Arc::new(mock_input_network));
     pipeline.plug_network(&pipeline_network).unwrap();
     pipeline.start().unwrap();
 
@@ -201,8 +199,8 @@ fn single_mouse_drag() {
 
     // Send Mouse press
     input_producer.consumer.consume(
-        libkynput_rs::MouseButton {
-            button: libkynput_rs::MouseButtonType::Left,
+        kynput_rs::MouseButton {
+            button: kynput_rs::MouseButtonType::Left,
             pressed: true,
         }
         .to_packet(InputTarget::Host),
@@ -231,8 +229,8 @@ fn single_mouse_drag() {
 
     // Send Mouse release
     input_producer.consumer.consume(
-        libkynput_rs::MouseButton {
-            button: libkynput_rs::MouseButtonType::Left,
+        kynput_rs::MouseButton {
+            button: kynput_rs::MouseButtonType::Left,
             pressed: false,
         }
         .to_packet(InputTarget::Host),
