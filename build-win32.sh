@@ -142,7 +142,7 @@ package() {
 
     # Copy resources
     cp \
-        desktop/res/kyber.ico \
+        kyclient/res/kyber.ico \
         $staging_directory
 
     local zipname=$(basename $staging_directory).zip
@@ -212,12 +212,12 @@ fi
 case "$ACTION" in
     "build")
         cargo build \
-            -p client \
+            -p kyclient \
             --release \
             --target x86_64-pc-windows-gnu \
             $HIDE_CONSOLE_FEATURE
 
-        cp target/x86_64-pc-windows-gnu/release/client.exe $OUT_DIR/bin
+        cp target/x86_64-pc-windows-gnu/release/kyclient.exe $OUT_DIR/bin
 
         # Copy default configuration
         cp \
@@ -253,10 +253,10 @@ case "$ACTION" in
         done
     ;;
     "clippy")
-        cargo clippy -p client --target x86_64-pc-windows-gnu -- -D warnings
+        cargo clippy -p kyclient --target x86_64-pc-windows-gnu -- -D warnings
     ;;
     "test")
-        cargo test -p client --target x86_64-pc-windows-gnu
+        cargo test -p kyclient --target x86_64-pc-windows-gnu
     ;;
     "none")
         echo "No action requested"

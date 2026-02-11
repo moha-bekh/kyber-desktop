@@ -179,8 +179,8 @@ fi
 # Run action
 case "$ACTION" in
     "build")
-        cargo build -p client --release
-        cp target/release/client $OUT_DIR/bin
+        cargo build -p kyclient --release
+        cp target/release/kyclient $OUT_DIR/bin
 
         # Copy default configuration
         cp \
@@ -196,14 +196,14 @@ case "$ACTION" in
 
         # Copy resources
         cp \
-            desktop/res/kyber.ico \
+            kyclient/res/kyber.ico \
             $OUT_DIR/share
     ;;
     "clippy")
-        cargo clippy -p client -- -D warnings
+        cargo clippy -p kyclient -- -D warnings
     ;;
     "test")
-        cargo test -p client
+        cargo test -p kyclient
     ;;
     "none")
         echo "No action requested"

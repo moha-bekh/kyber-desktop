@@ -218,30 +218,30 @@ CARGO_TARGET=`get_cargo_target $HOST_ARCH`
 case "$ACTION" in
     "build")
         cargo build \
-            -p client \
+            -p kyclient \
             --target $CARGO_TARGET \
             --release
 
         cp \
-            target/$CARGO_TARGET/release/client \
+            target/$CARGO_TARGET/release/kyclient \
             test/tls/kybertest_rootca_cert.pem \
             $OUT_DIR/bin
         
         mkdir -p $OUT_DIR/share/kyber
 
         cp \
-            desktop/res/Info.plist \
+            kyclient/res/Info.plist \
             $OUT_DIR/share/kyber
 
         cp \
-            desktop/res/kyber.icns \
+            kyclient/res/kyber.icns \
             $OUT_DIR/share/kyber
     ;;
     "clippy")
-        cargo clippy -p client --target $CARGO_TARGET -- -D warnings
+        cargo clippy -p kyclient --target $CARGO_TARGET -- -D warnings
     ;;
     "test")
-        cargo test -p client
+        cargo test -p kyclient
     ;;
     "none")
         echo "No action requested"

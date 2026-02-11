@@ -393,28 +393,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "client"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "clap",
- "ctrlc",
- "env_logger",
- "image",
- "keycode",
- "kyclient-rs",
- "kynput-rs",
- "libc",
- "log",
- "log4rs",
- "mockall",
- "raw-window-handle",
- "serial_test",
- "vergen",
- "winit",
-]
-
-[[package]]
 name = "clru"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1484,6 +1462,28 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
+]
+
+[[package]]
+name = "kyclient"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "clap",
+ "ctrlc",
+ "env_logger",
+ "image",
+ "keycode",
+ "kyclient-rs",
+ "kynput-rs",
+ "libc",
+ "log",
+ "log4rs",
+ "mockall",
+ "raw-window-handle",
+ "serial_test",
+ "vergen",
+ "winit",
 ]
 
 [[package]]

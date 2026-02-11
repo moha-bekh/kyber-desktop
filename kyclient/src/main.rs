@@ -221,7 +221,7 @@ fn load_tls_conf(matches: &clap::ArgMatches) -> Result<TlsConfig> {
 }
 
 fn main() {
-    let _log_handle = setup_logs("client", LevelFilter::Info);
+    let _log_handle = setup_logs("kyclient", LevelFilter::Info);
 
     kynput_rs::init_logger();
     kyclient_rs::init();
