@@ -114,7 +114,7 @@ package() {
 
     # Copy all exe
     cp \
-        $src_bin/avserver.exe \
+        $src_bin/kyavserver.exe \
         $src_bin/client.exe \
         $src_bin/controller.exe \
         $src_bin/ffmpeg.exe \

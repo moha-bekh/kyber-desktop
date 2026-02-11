@@ -1,4 +1,4 @@
-[avserver]
+[kyavserver]
 # Configure the video encoder to use
 #
 # Possible values: "x264", "nvenc", "qsv", "amf", "vaapi"
@@ -15,7 +15,7 @@ encoder = "nvenc"
 # NvFBC: Works only with Nvidia GPUs with X11 and nvenc encoder.
 #grab_backend = "nvfbc"
 
-#[avserver.watermark]
+#[kyavserver.watermark]
 # Configure the watermark overlay
 #
 # The watermark is drawn on top of the encoded video.

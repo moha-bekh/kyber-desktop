@@ -86,7 +86,7 @@ package() {
 
     # Copy bin directory
     cp \
-        $src_bin/avserver \
+        $src_bin/kyavserver \
         $src_bin/client \
         $src_bin/controller \
         $src_bin/ffmpeg \
