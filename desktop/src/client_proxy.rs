@@ -20,7 +20,7 @@
 
 use winit::event_loop::EventLoopProxy;
 
-use libclient_rs::{Event, EventSink};
+use kyclient_rs::{Event, EventSink};
 
 use super::UserEvent;
 

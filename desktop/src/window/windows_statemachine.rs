@@ -489,7 +489,7 @@ where
         }
     }
 
-    pub(crate) fn display_list_updated(&mut self, displays: &[libclient_rs::Display]) {
+    pub(crate) fn display_list_updated(&mut self, displays: &[kyclient_rs::Display]) {
         for window in self.windows.iter_mut() {
             let Some(display) = displays.iter().find(|&d| d.id == window.display_id()) else {
                 continue;

@@ -33,7 +33,7 @@ mod window;
 use log::{error, info, warn, LevelFilter};
 use winit::event_loop::EventLoopBuilder;
 
-use libclient_rs::{
+use kyclient_rs::{
     AuthCredentials, KymuxAudioProtocol, KymuxVideoProtocol, StreamingProtocol, VideoCodec,
 };
 
@@ -224,7 +224,7 @@ fn main() {
     let _log_handle = setup_logs("client", LevelFilter::Info);
 
     kynput_rs::init_logger();
-    libclient_rs::init();
+    kyclient_rs::init();
 
     info!("Kyber client. Revision {}", env!("VERGEN_GIT_DESCRIBE"));
 
@@ -478,7 +478,7 @@ fn main() {
         if values.len() == 2 {
             let hostname = values[0];
             let fingerprint = values[1];
-            match libclient_rs::known_hosts_add(hostname, fingerprint) {
+            match kyclient_rs::known_hosts_add(hostname, fingerprint) {
                 Ok(()) => {
                     info!("Added host '{}' to known_hosts", hostname);
                     println!("Host '{}' added to known_hosts.", hostname);
@@ -499,7 +499,7 @@ fn main() {
     }
 
     if let Some(hostname) = matches.value_of("tls-tofu-remove") {
-        match libclient_rs::known_hosts_remove(hostname) {
+        match kyclient_rs::known_hosts_remove(hostname) {
             Ok(true) => {
                 info!("Removed host '{}' from known_hosts", hostname);
                 println!("Host '{}' removed from known_hosts.", hostname);
@@ -519,7 +519,7 @@ fn main() {
     }
 
     if matches.is_present("tls-tofu-list") {
-        match libclient_rs::known_hosts_list() {
+        match kyclient_rs::known_hosts_list() {
             Ok(hosts) => {
                 if hosts.is_empty() {
                     println!("No hosts in known_hosts.");

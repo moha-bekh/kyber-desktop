@@ -13,7 +13,7 @@ log = "0.4.21"
 log4rs = "1.3.0"
 raw-window-handle = "0.5.0"
 
-libclient-rs = "0.1.0"
+kyclient-rs = "0.1.0"
 kynput-rs = "0.1.0"
 winit = { version = "0.28.1", features = ["x11"] }
 

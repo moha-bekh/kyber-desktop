@@ -32,7 +32,7 @@ use winit::{
     window::{Icon, WindowBuilder},
 };
 
-use libclient_rs::{
+use kyclient_rs::{
     Client, ConnectConfig, StreamingSessionConfig, TofuPrompt, VideoPlayerConfig, WindowHandle,
 };
 
@@ -65,7 +65,7 @@ pub enum UserEvent {
     Start,
     StopRequest,
     Shortcut(ShortcutType),
-    Client(libclient_rs::Event),
+    Client(kyclient_rs::Event),
     SetCursor(kynput_rs::Cursor),
     LeftButtonReleased,
 }
@@ -223,7 +223,7 @@ struct State {
 
 impl State {
     fn create_connect_config(&self) -> Result<ConnectConfig> {
-        let connect_config = libclient_rs::ConnectConfig::default(&self.cli_args.streamer_ip)?;
+        let connect_config = kyclient_rs::ConnectConfig::default(&self.cli_args.streamer_ip)?;
 
         if let Some(credentials) = &self.cli_args.auth_credentials {
             connect_config.set_credentials(credentials)?;
@@ -260,7 +260,7 @@ impl State {
         }
     }
 
-    fn get_initial_window_size(display: &libclient_rs::Display) -> LogicalSize<f64> {
+    fn get_initial_window_size(display: &kyclient_rs::Display) -> LogicalSize<f64> {
         const RATIO: f64 = 1.5;
         LogicalSize::new(display.width as f64 / RATIO, display.height as f64 / RATIO)
     }
@@ -268,7 +268,7 @@ impl State {
     fn create_single_window(
         &mut self,
         event_loop: &EventLoopWindowTarget<UserEvent>,
-        display: &libclient_rs::Display,
+        display: &kyclient_rs::Display,
         monitor: Option<MonitorHandle>,
     ) -> Result<()> {
         let window_size = Self::get_initial_window_size(display);
@@ -297,7 +297,7 @@ impl State {
     fn create_multiple_windows(
         &mut self,
         event_loop: &EventLoopWindowTarget<UserEvent>,
-        host_displays: &[libclient_rs::Display],
+        host_displays: &[kyclient_rs::Display],
         requested_display_count: usize,
     ) -> Result<()> {
         // Sort host displays
@@ -348,7 +348,7 @@ impl State {
     fn create_windows(
         &mut self,
         event_loop: &EventLoopWindowTarget<UserEvent>,
-        displays: &[libclient_rs::Display],
+        displays: &[kyclient_rs::Display],
     ) -> Result<()> {
         match &self.cli_args.display_params {
             DisplayParams::Single(display_idx) => {
@@ -375,7 +375,7 @@ impl State {
     }
 
     fn create_streaming_session_config(&mut self) -> Result<StreamingSessionConfig> {
-        let session_config = libclient_rs::StreamingSessionConfig::default(self.cli_args.protocol)?;
+        let session_config = kyclient_rs::StreamingSessionConfig::default(self.cli_args.protocol)?;
 
         if let Some(bitrate) = self.bitrate {
             session_config.set_bitrate(bitrate);
@@ -390,7 +390,7 @@ impl State {
                 Self::create_player_config(&self.cli_args, window.raw_window_handle())?;
 
             let video_config =
-                libclient_rs::VideoSessionConfig::default(window.display_id(), player_config)?;
+                kyclient_rs::VideoSessionConfig::default(window.display_id(), player_config)?;
             video_config.set_codec(self.cli_args.video_codec);
             video_config.set_yuv444(self.cli_args.yuv444);
 
@@ -402,7 +402,7 @@ impl State {
         }
 
         if self.cli_args.audio {
-            let audio_config = libclient_rs::AudioSessionConfig::new_default()?;
+            let audio_config = kyclient_rs::AudioSessionConfig::new_default()?;
             if let Some(audio_buffer) = self.cli_args.audio_buffer {
                 audio_config.set_audio_buffer(audio_buffer);
             }
@@ -410,7 +410,7 @@ impl State {
         }
 
         if let Some(input_ctx) = self.input_ctx.as_ref() {
-            let input_config = libclient_rs::InputSessionConfig::default(&input_ctx.pipeline())?;
+            let input_config = kyclient_rs::InputSessionConfig::default(&input_ctx.pipeline())?;
 
             if let Some(force) = self.cli_args.gamepad_force_xbox360 {
                 input_config.gamepad_force_xbox360(force);
@@ -450,7 +450,7 @@ impl State {
             }
         };
 
-        let player_config = libclient_rs::VideoPlayerConfig::default(Some(window_handle))?;
+        let player_config = kyclient_rs::VideoPlayerConfig::default(Some(window_handle))?;
         player_config.set_software_decode(cli_args.software_decode);
         player_config.set_video_buffer(cli_args.video_buffer);
 
@@ -645,30 +645,30 @@ impl State {
                     },
                 );
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnected {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::ControlPlaneConnected {
                 displays,
             })) => {
                 self.create_windows(event_loop, &displays)?;
                 self.start_streaming()?;
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::ControlPlaneConnectFailed)) => {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::ControlPlaneConnectFailed)) => {
                 warn!("Control plane connect failed");
                 *control_flow = ControlFlow::Exit;
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::DataPlaneConnectFailed)) => {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::DataPlaneConnectFailed)) => {
                 warn!("Data plane connect failed");
                 *control_flow = ControlFlow::Exit;
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::DataPlaneClosed)) => {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::DataPlaneClosed)) => {
                 warn!("Data plane closed - waiting for reconnection");
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::Reconnecting {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::Reconnecting {
                 attempt,
                 max_attempts,
             })) => {
                 info!("Reconnecting... (attempt {}/{})", attempt, max_attempts);
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::Reconnected {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::Reconnected {
                 should_restart_streaming,
             })) => {
                 info!("Successfully reconnected to server");
@@ -678,24 +678,24 @@ impl State {
                     self.start_streaming()?;
                 }
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::ReconnectionFailed)) => {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::ReconnectionFailed)) => {
                 warn!("Reconnection failed after all attempts - exiting");
                 *control_flow = ControlFlow::Exit;
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::StreamingStartFailed)) => {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::StreamingStartFailed)) => {
                 warn!("Streaming start failed");
                 *control_flow = ControlFlow::Exit;
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::StreamingStopped)) => {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::StreamingStopped)) => {
                 info!("Streaming stopped. Restart streaming");
                 self.start_streaming()?;
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::InputServiceConnected)) => {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::InputServiceConnected)) => {
                 info!("Input service connected");
 
                 self.windows.sync_cursor_position();
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::Stopped { reason })) => {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::Stopped { reason })) => {
                 info!("Stopped. Reason: {reason:?}");
 
                 let client = self.client.as_mut().ok_or(Error::NoClient)?;
@@ -703,51 +703,49 @@ impl State {
 
                 // Only exit if user requested disconnect, otherwise reconnection will be attempted
                 match reason {
-                    libclient_rs::StopReason::Requested => {
+                    kyclient_rs::StopReason::Requested => {
                         info!("User requested disconnect - exiting");
                         *control_flow = ControlFlow::Exit;
                     }
-                    libclient_rs::StopReason::ControlPlaneClosed => {
+                    kyclient_rs::StopReason::ControlPlaneClosed => {
                         info!("Control plane closed - waiting for reconnection");
                     }
-                    libclient_rs::StopReason::ControlPlaneIoError => {
+                    kyclient_rs::StopReason::ControlPlaneIoError => {
                         info!("Control plane I/O error - waiting for reconnection");
                     }
-                    libclient_rs::StopReason::ControlPlaneTimeout => {
+                    kyclient_rs::StopReason::ControlPlaneTimeout => {
                         info!("Control plane timeout - waiting for reconnection");
                     }
-                    libclient_rs::StopReason::DecodeError => {
+                    kyclient_rs::StopReason::DecodeError => {
                         warn!("Decode error occurred - exiting");
                         *control_flow = ControlFlow::Exit;
                     }
                 }
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::DisplayListUpdated {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::DisplayListUpdated {
                 displays,
             })) => {
                 info!("Display list updated");
                 self.windows.display_list_updated(&displays);
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::StreamerPipelineEvent {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::StreamerPipelineEvent {
                 type_,
                 stage,
                 event,
             })) => {
                 info!("Got StreamerPipelineEvent. Type: {type_:?} - Stage: {stage:?} - Event: {event:?}");
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::AudioVolumeChanged {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::AudioVolumeChanged {
                 volume,
             })) => {
                 info!("Volume changed: {volume}");
                 self.volume = volume;
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::AudioMuteChanged { mute })) => {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::AudioMuteChanged { mute })) => {
                 info!("Volume muted: {mute}");
                 self.mute = mute;
             }
-            Event::UserEvent(UserEvent::Client(libclient_rs::Event::BitrateChanged {
-                bitrate,
-            })) => {
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::BitrateChanged { bitrate })) => {
                 info!("Bitrate changed: {bitrate}");
                 self.bitrate = Some(bitrate);
             }

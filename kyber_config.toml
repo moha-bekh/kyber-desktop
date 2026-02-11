@@ -65,7 +65,7 @@ encoder = "nvenc"
 # Default: 5 mbps
 #minimum_bitrate = 5000000
 
-[controller]
+[kycontroller]
 # Listening port
 #
 # Used for the HTTP server (TCP) and Quic connection (UDP)
@@ -78,7 +78,7 @@ encoder = "nvenc"
 # Used for Quic connection (UDP).
 #
 # Warning:
-# * Overrides value for data plane even if controller.port is set
+# * Overrides value for data plane even if kycontroller.port is set
 # * This is likely to break controllers deployed behind a NAT.
 #   To make it work, NAT forwarding rule in the router must not change to UDP
 #   port during redirection
@@ -102,7 +102,7 @@ encoder = "nvenc"
 # Default: true
 #webtransport_gen_certificate = true
 
-[controller.session]
+[kycontroller.session]
 # Downgrade `SameSite` session cookie attribute to "SameSite: none; Secure".
 #
 # Warning: This is intended for dev environments and **SHOULD NOT** be disabled
@@ -114,7 +114,7 @@ disable_same_site_protection = false
 # JWT authentication backend
 # 
 # Setup the JWT expected token signature.
-[controller.auth.jwt]
+[kycontroller.auth.jwt]
 # Warning: For now, only HS256 or RS256 are officially supported.
 # Default: "HS256"
 #algorithm = "HS256"
@@ -150,7 +150,7 @@ disable_same_site_protection = false
 # Default: true
 #keyboard_key_repeat = true
 
-[windows_service.kidd]
+[kyservice.kidd]
 # Enable or disable Kidd
 #
 # Possible values
@@ -177,7 +177,7 @@ disable_same_site_protection = false
 
 # Add one or more display mode for the plugged monitor.
 # The section can be specified multiple times to add multiple modes.
-#[[windows_service.kidd.extra_modes]]
+#[[kyservice.kidd.extra_modes]]
 #width = 1920
 #height = 800
 #vsync = 60

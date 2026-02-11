@@ -32,8 +32,8 @@ use mockall::predicate::*;
 use mockall::*;
 use raw_window_handle::RawWindowHandle;
 
+use kyclient_rs::Display;
 use kynput_rs::{InputTarget, InputType};
-use libclient_rs::Display;
 
 use super::*;
 use crate::event_loop::UserEvent;

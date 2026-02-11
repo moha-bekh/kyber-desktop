@@ -87,8 +87,8 @@ package() {
     # Copy bin directory
     cp \
         $src_bin/kyavserver \
-        $src_bin/client \
-        $src_bin/controller \
+        $src_bin/kyclient \
+        $src_bin/kycontroller \
         $src_bin/ffmpeg \
         $src_bin/kynputserver \
         $src_bin/txproto \
@@ -118,8 +118,8 @@ package() {
 
     # Copy scripts
     cp \
-        scripts/linux/run_client.sh \
-        scripts/linux/run_controller.sh \
+        scripts/linux/run_kyclient.sh \
+        scripts/linux/run_kycontroller.sh \
         $staging_directory
 
     tar cfvj $(basename $staging_directory).tar.bz2 $staging_directory

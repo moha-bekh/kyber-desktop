@@ -11,9 +11,7 @@ exclude = [
 ]
 
 [patch.crates-io]
-libclient-common = { path = "kysdk/kyctl/libclient-common" }
-libclient-rs = { path = "kysdk/kyctl/libclient-rs" }
-libclient-sys = { path = "kysdk/kyctl/libclient-rs/libclient-sys" }
+kyclient-rs = { path = "kysdk/kyctl/kyclient-rs" }
 kynput-rs = { path = "kysdk/kynput/kynput-rs" }
 kynput-sys = { path = "kysdk/kynput/kynput-rs/kynput-sys" }
 winit = { path = "external/winit" }

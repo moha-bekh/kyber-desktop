@@ -23,7 +23,7 @@ use crate::error::Result;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 
-use libclient_rs::{Metric, MetricsJSONProducer};
+use kyclient_rs::{Metric, MetricsJSONProducer};
 
 pub struct MetricsProcessor {
     json_producer: MetricsJSONProducer,

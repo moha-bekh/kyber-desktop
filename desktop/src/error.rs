@@ -31,7 +31,7 @@ pub enum Error {
     UnknownWindow,
     Winit,
     WinitEventLoopClosed,
-    Libclient(libclient_rs::Error),
+    Libclient(kyclient_rs::Error),
     Input(kynput_rs::Error),
     // Window errors
     WindowFailed(winit::error::ExternalError),
@@ -57,8 +57,8 @@ impl<T> From<std::sync::PoisonError<T>> for Error {
     }
 }
 
-impl From<libclient_rs::Error> for Error {
-    fn from(err: libclient_rs::Error) -> Error {
+impl From<kyclient_rs::Error> for Error {
+    fn from(err: kyclient_rs::Error) -> Error {
         Error::Libclient(err)
     }
 }

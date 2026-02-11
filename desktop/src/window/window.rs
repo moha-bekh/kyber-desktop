@@ -93,7 +93,7 @@ impl<T> Window<T>
 where
     T: WindowControl,
 {
-    pub(crate) fn new(window: T, display: &libclient_rs::Display) -> Result<Self> {
+    pub(crate) fn new(window: T, display: &kyclient_rs::Display) -> Result<Self> {
         let window_size = window.inner_size();
 
         let window_size = Size {
@@ -233,7 +233,7 @@ where
         self.window.scale_factor()
     }
 
-    pub(crate) fn set_host_display_size(&mut self, display: &libclient_rs::Display) {
+    pub(crate) fn set_host_display_size(&mut self, display: &kyclient_rs::Display) {
         if display.id != self.display_id {
             warn!("Trying to update host size from another display");
             return;

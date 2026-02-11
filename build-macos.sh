@@ -80,7 +80,7 @@ package() {
     local source_directory=$1
 
     if [[ -z "${KYBER_APP_DIRECTORY}" ]]; then
-        local app_dir="kyber-client.app"
+        local app_dir="kyber-kyclient.app"
     else
         local app_dir="${KYBER_APP_DIRECTORY}"
     fi
@@ -89,14 +89,14 @@ package() {
     mkdir -p $app_dir/Contents/MacOS $app_dir/Contents/Frameworks/plugins $app_dir/Contents/Resources
 
     cp \
-        $source_directory/bin/client \
+        $source_directory/bin/kyclient \
         $source_directory/bin/kybertest_rootca_cert.pem \
         $app_dir/Contents/MacOS
 
     cp -a \
         $source_directory/lib/libkyaudioreg*.dylib \
         $source_directory/lib/libkynput*.dylib \
-        $source_directory/lib/liblibclient*.dylib \
+        $source_directory/lib/libkyclient*.dylib \
         $source_directory/lib/libvlc*.dylib \
         $source_directory/lib/libSDL2*.dylib \
         $app_dir/Contents/Frameworks/
@@ -115,19 +115,19 @@ package() {
     # Prepare bundle dylib fixes
     KYAUDIOREG_NAME=libkyaudioreg.0.1.dylib
     LIBKYNPUT_NAME=libkynput.0.1.dylib
-    LIBCLIENT_NAME=liblibclient.0.1.dylib
+    LIBKYCLIENT_NAME=libkyclient.0.1.dylib
     SDL2_NAME=libSDL2-2.0.0.dylib
 
-    # Fix client
-    install_name_tool -add_rpath "@executable_path/../Frameworks/" $app_dir/Contents/MacOS/client
-    install_name_tool -change $source_directory/lib/$LIBKYNPUT_NAME @rpath/$LIBKYNPUT_NAME $app_dir/Contents/MacOS/client
-    install_name_tool -change $source_directory/lib/$LIBCLIENT_NAME @rpath/$LIBCLIENT_NAME $app_dir/Contents/MacOS/client
+    # Fix kyclient
+    install_name_tool -add_rpath "@executable_path/../Frameworks/" $app_dir/Contents/MacOS/kyclient
+    install_name_tool -change $source_directory/lib/$LIBKYNPUT_NAME @rpath/$LIBKYNPUT_NAME $app_dir/Contents/MacOS/kyclient
+    install_name_tool -change $source_directory/lib/$LIBKYCLIENT_NAME @rpath/$LIBKYCLIENT_NAME $app_dir/Contents/MacOS/kyclient
 
     # Fix libkyaudioreg_plugin
     install_name_tool -change $source_directory/lib/$KYAUDIOREG_NAME @rpath/$KYAUDIOREG_NAME $app_dir/Contents/Frameworks/plugins/libkyaudioreg_plugin.dylib
 
-    # Fix libclient
-    install_name_tool -change $source_directory/lib/$LIBKYNPUT_NAME @rpath/$LIBKYNPUT_NAME $app_dir/Contents/Frameworks/$LIBCLIENT_NAME
+    # Fix libkyclient
+    install_name_tool -change $source_directory/lib/$LIBKYNPUT_NAME @rpath/$LIBKYNPUT_NAME $app_dir/Contents/Frameworks/$LIBKYCLIENT_NAME
 
     # Fix libkynput
     install_name_tool -change $source_directory/lib/$SDL2_NAME @rpath/$SDL2_NAME $app_dir/Contents/Frameworks/$LIBKYNPUT_NAME

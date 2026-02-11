@@ -115,13 +115,13 @@ package() {
     # Copy all exe
     cp \
         $src_bin/kyavserver.exe \
-        $src_bin/client.exe \
-        $src_bin/controller.exe \
+        $src_bin/kyclient.exe \
+        $src_bin/kycontroller.exe \
         $src_bin/ffmpeg.exe \
         $src_bin/kynputserver.exe \
-        $src_bin/service.exe \
+        $src_bin/kyservice.exe \
         $src_bin/txproto.exe \
-        $src_bin/libclient.dll \
+        $src_bin/kyclient.dll \
         $src_bin/kynput.dll \
         $src_bin/kybertest_cert.pem \
         $src_bin/kybertest_key.pem \
