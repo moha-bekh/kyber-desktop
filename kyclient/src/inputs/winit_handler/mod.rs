@@ -24,8 +24,6 @@
 #[cfg_attr(target_os = "windows", path = "./windows.rs")]
 mod platform;
 
-pub mod scancodes;
-
 #[cfg(test)]
 use tests::platform;
 

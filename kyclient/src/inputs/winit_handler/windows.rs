@@ -20,11 +20,12 @@
 
 use std::collections::HashMap;
 
+use keycode::{KeyMap, KeyMappingId};
 use kynput_rs::{Consumer, InputType, Modifiers, MouseButtonType, MouseWheel};
 use log::error;
 
 use super::WinitEventType;
-use crate::inputs::winit_handler::{scancodes::*, KeyboardGrabber};
+use crate::inputs::winit_handler::KeyboardGrabber;
 
 // Implement the KeyboardGrabber trait for kynput's KeyboardGrabber
 impl<F> KeyboardGrabber for kynput_rs::windows::KeyboardGrabber<F> where
@@ -41,9 +42,9 @@ fn filter_keyboard_cb(scancode: u16, _modifiers: &Modifiers) -> bool {
     // Because the leds on the keyboard are managed by Windows, we don't want to filter
     // the keys that can change the state of the leds. If we filter them, the leds
     // will not change state when the user press them.
-    let led_related_keys = (scancode == SCANCODE_SCROLLLOCK)
-        || (scancode == SCANCODE_NUMLOCK)
-        || (scancode == SCANCODE_CAPTSLOCK);
+    let led_related_keys = (scancode == KeyMap::from(KeyMappingId::ScrollLock).win)
+        || (scancode == KeyMap::from(KeyMappingId::NumLock).win)
+        || (scancode == KeyMap::from(KeyMappingId::CapsLock).win);
 
     !led_related_keys
 }

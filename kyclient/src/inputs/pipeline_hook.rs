@@ -19,23 +19,53 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::collections::HashSet;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 
+use keycode::{KeyMap, KeyMappingId};
 use log::warn;
 
 use kynput_rs::{InputType, KeyboardKey, MouseButton, MouseButtonType, Packet};
 use kynput_rs::{RouterHook, RouterHookPacketResult};
 
 use crate::event_loop::{EventProxy, UserEvent};
-use crate::inputs::winit_handler::scancodes::*;
 
-const SHORTCUT_FULLSCREEN: &[u16] = &[SCANCODE_F, SCANCODE_LCTRL, SCANCODE_LALT];
-const SHORTCUT_RESTART_STREAM: &[u16] = &[SCANCODE_R, SCANCODE_LCTRL, SCANCODE_LALT];
-const SHORTCUT_TOGGLE_MUTE: &[u16] = &[SCANCODE_M, SCANCODE_LCTRL];
-const SHORTCUT_BITRATE_UP: &[u16] = &[SCANCODE_UP, SCANCODE_LCTRL, SCANCODE_B];
-const SHORTCUT_BITRATE_DOWN: &[u16] = &[SCANCODE_DOWN, SCANCODE_LCTRL, SCANCODE_B];
-const SHORTCUT_VOLUME_UP: &[u16] = &[SCANCODE_UP, SCANCODE_LCTRL];
-const SHORTCUT_VOLUME_DOWN: &[u16] = &[SCANCODE_DOWN, SCANCODE_LCTRL];
+const SCANCODE_UNKNOWN: u16 = 0;
+
+static SHORTCUTS: LazyLock<Vec<(Vec<u16>, ShortcutType)>> = LazyLock::new(|| {
+    let ctrl = KeyMap::from(KeyMappingId::ControlLeft).win;
+    let alt = KeyMap::from(KeyMappingId::AltLeft).win;
+    let b = KeyMap::from(KeyMappingId::UsB).win;
+    vec![
+        (
+            vec![KeyMap::from(KeyMappingId::UsF).win, ctrl, alt],
+            ShortcutType::Fullscreen,
+        ),
+        (
+            vec![KeyMap::from(KeyMappingId::UsR).win, ctrl, alt],
+            ShortcutType::RestartStreaming,
+        ),
+        (
+            vec![KeyMap::from(KeyMappingId::UsM).win, ctrl],
+            ShortcutType::ToggleMute,
+        ),
+        (
+            vec![KeyMap::from(KeyMappingId::ArrowUp).win, ctrl],
+            ShortcutType::VolumeUp,
+        ),
+        (
+            vec![KeyMap::from(KeyMappingId::ArrowDown).win, ctrl],
+            ShortcutType::VolumeDown,
+        ),
+        (
+            vec![KeyMap::from(KeyMappingId::ArrowUp).win, ctrl, b],
+            ShortcutType::BitrateUp,
+        ),
+        (
+            vec![KeyMap::from(KeyMappingId::ArrowDown).win, ctrl, b],
+            ShortcutType::BitrateDown,
+        ),
+    ]
+});
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ShortcutType {
@@ -47,16 +77,6 @@ pub enum ShortcutType {
     BitrateDown,
     ToggleMute,
 }
-
-const SHORTCUT_MAP: &[(&[u16], ShortcutType)] = &[
-    (SHORTCUT_FULLSCREEN, ShortcutType::Fullscreen),
-    (SHORTCUT_RESTART_STREAM, ShortcutType::RestartStreaming),
-    (SHORTCUT_TOGGLE_MUTE, ShortcutType::ToggleMute),
-    (SHORTCUT_VOLUME_UP, ShortcutType::VolumeUp),
-    (SHORTCUT_VOLUME_DOWN, ShortcutType::VolumeDown),
-    (SHORTCUT_BITRATE_UP, ShortcutType::BitrateUp),
-    (SHORTCUT_BITRATE_DOWN, ShortcutType::BitrateDown),
-];
 
 struct InternalState {
     scancodes: HashSet<u16>,
@@ -86,8 +106,7 @@ impl InternalState {
         }
 
         // Find active shortcut
-        SHORTCUT_MAP.iter().find_map(|(scancodes, shortcut)| {
-            // Ignore shortcuts with a mismatching length
+        SHORTCUTS.iter().find_map(|(scancodes, shortcut)| {
             if scancodes.len() != self.scancodes.len() {
                 return None;
             }
@@ -310,8 +329,12 @@ mod tests {
 
     #[test]
     fn shortcuts() {
-        let shortcut = SHORTCUT_FULLSCREEN;
         let shortcut_event = ShortcutType::Fullscreen;
+        let (shortcut, _) = SHORTCUTS
+            .iter()
+            .find(|(_, s)| *s == shortcut_event)
+            .expect("Fullscreen shortcut must exist");
+        let shortcut = shortcut.as_slice();
 
         let shortcut_compare = move |e: &UserEvent| {
             let UserEvent::Shortcut(e) = e else {
@@ -334,8 +357,8 @@ mod tests {
             process_event: true,
         };
 
-        let shortcut_begin = &SHORTCUT_FULLSCREEN[0..shortcut.len() - 1];
-        let shortcut_end = SHORTCUT_FULLSCREEN[shortcut.len() - 1];
+        let shortcut_begin = &shortcut[0..shortcut.len() - 1];
+        let shortcut_end = shortcut[shortcut.len() - 1];
 
         for &scancode in shortcut_begin {
             let key = KeyboardKey {
