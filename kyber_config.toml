@@ -79,6 +79,13 @@ encoder = "nvenc"
 # Default: 8080
 #port = 8080
 
+# Configure IP version for listening
+#
+# Possible values: "ipv4", "dual_stack"
+#
+# Default: "dual_stack"
+#listen_mode = "dual_stack"
+
 # Override data plane listening port
 #
 # Used for Quic connection (UDP).
