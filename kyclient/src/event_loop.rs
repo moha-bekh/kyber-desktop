@@ -223,11 +223,10 @@ struct State {
 
 impl State {
     fn create_connect_config(&self) -> Result<ConnectConfig> {
-        let connect_config = kyclient_rs::ConnectConfig::default(&self.cli_args.streamer_ip)?;
-
-        if let Some(credentials) = &self.cli_args.auth_credentials {
-            connect_config.set_credentials(credentials)?;
-        }
+        let connect_config = kyclient_rs::ConnectConfig::default(
+            &self.cli_args.streamer_ip,
+            &self.cli_args.auth_credentials,
+        )?;
 
         if let Some(tls_host) = &self.cli_args.tls_host {
             connect_config.set_tls_host(tls_host)?;

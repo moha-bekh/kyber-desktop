@@ -145,6 +145,23 @@ trusted_origins = []
 # Default: true
 same_site = true
 
+# Basic authentication backend
+#
+# Setup the "Basic" HTTP authentication scheme allowed users
+[kycontroller.auth.basic]
+# Enable/Disable the backend.
+# Default: true
+enabled = true
+
+# List of allowed login pairs.
+#   - username: A string representing the user name
+#   - password: A Sha256Sum of the password
+# Strings must be compliant to RFC 7617.
+# Default: []
+logins = [
+    { username = "Default user", password = "c2bb5d1edbff196e3a879ec0a59aeb3952822266909b5ba07b45072d20a05446" },
+]
+
 # JWT authentication backend
 # 
 # Setup the JWT expected token signature.

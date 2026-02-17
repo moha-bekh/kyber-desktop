@@ -136,7 +136,7 @@ pub struct CliArgs {
     tls_host: Option<String>,
     tls_verification: TlsVerification,
 
-    auth_credentials: Option<AuthCredentials>,
+    auth_credentials: AuthCredentials,
     protocol: StreamingProtocol,
     video_codec: VideoCodec,
     bitrate: Option<u32>,
@@ -455,18 +455,31 @@ fn main() {
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
+        .next_help_heading("Authentication")
         .arg(
-            clap::Arg::with_name("auth-type")
-                .long("auth-type")
-                .help("Authentication method")
-                .value_parser(["basic", "jwt"])
-                .default_value("basic"),
+            clap::Arg::new("username")
+                .long("auth-username")
+                .help("Basic authentication username")
+                .default_value("Default user"),
         )
         .arg(
-            clap::Arg::with_name("auth-creds")
-                .long("auth-credentials")
-                .help("Authentication credentials")
-                .default_value("anonymous"),
+            clap::Arg::new("password")
+                .long("auth-password")
+                .help("Basic authentication password")
+                .default_value("Default password"),
+        )
+        .arg(
+            clap::Arg::new("jwt")
+                .long("auth-token")
+                .help("JsonWebToken authentication token")
+                .takes_value(true),
+        )
+        .group(
+            clap::ArgGroup::new("basic_auth")
+                .args(&["username", "password"])
+                .requires_all(&["username", "password"])
+                .multiple(true)
+                .conflicts_with("jwt"),
         )
         .arg(clap::Arg::with_name("STREAMER_IP").index(1));
 
@@ -609,11 +622,14 @@ fn main() {
         }
     };
 
-    let creds = matches.value_of("auth-creds").unwrap().to_owned();
-    let auth_credentials = match matches.value_of("auth-type") {
-        Some("basic") => Some(AuthCredentials::Basic { username: creds }),
-        Some("jwt") => Some(AuthCredentials::Jwt { token: creds }),
-        None | Some(_) => unreachable!(),
+    let auth_credentials = if let Some(jwt) = matches.get_one::<String>("jwt") {
+        AuthCredentials::Jwt { token: jwt.clone() }
+    } else {
+        AuthCredentials::Basic {
+            // Presence check is done by clap.
+            username: matches.get_one::<String>("username").unwrap().clone(),
+            password: matches.get_one::<String>("password").unwrap().clone(),
+        }
     };
 
     let yuv444 = matches.is_present("444");
