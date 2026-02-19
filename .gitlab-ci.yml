@@ -2,7 +2,7 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   DEBIAN_IMAGE: ${CI_REGISTRY}/${ROOT_NAMESPACE}/ops/docker-images/debian-trixie:1708fd23b028cc9369b568f9ff976a84f7c869c2
   UBUNTU_IMAGE: ${CI_REGISTRY}/${ROOT_NAMESPACE}/ops/docker-images/ubuntu-noble:1708fd23b028cc9369b568f9ff976a84f7c869c2
-  WIN64_IMAGE: ${CI_REGISTRY}/${ROOT_NAMESPACE}/ops/docker-images/debian-win64:1708fd23b028cc9369b568f9ff976a84f7c869c2
+  WIN64_IMAGE: ${CI_REGISTRY}/${ROOT_NAMESPACE}/ops/docker-images/debian-win64:fbcb780ae307a192d9037db595c02d755be9d83e
   MACOS_RUST_VERSION: 1.89.0
 stages:
   - lint

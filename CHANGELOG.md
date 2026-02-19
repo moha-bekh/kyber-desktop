@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* kyclient: Update VLC. Kymux branch is now based on 4962271021
+
 ## [0.23.0] - 2026-01-30
 
 * avserver/ffmpeg: Remove ffmpeg --non-free flag
