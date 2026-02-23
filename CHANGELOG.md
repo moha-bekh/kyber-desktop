@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller: Correctly log toml parsing errors
 * kymux: Update wtransport to official 0.7.0
 * kynput: Limit clipboard size
+* kycontroller: Improve cross origin protections
 
 ## [0.23.0] - 2026-01-30
 
