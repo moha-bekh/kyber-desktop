@@ -86,22 +86,13 @@ package() {
 
     # Copy all dll
     cp \
-        $src_bin/avcodec-62.dll \
-        $src_bin/avdevice-62.dll \
-        $src_bin/avfilter-11.dll \
-        $src_bin/avformat-62.dll \
-        $src_bin/avutil-60.dll \
-        $src_bin/kyaudioreg.dll \
         $src_bin/liblua.dll \
-        $src_bin/libplacebo-351.dll \
         $src_bin/libspirv-cross-c-shared.dll \
         $src_bin/libSPIRV-Tools-shared.dll \
         $src_bin/libtxproto-0.dll \
-        $src_bin/libvlccore.dll \
+        $src_bin/libvlccore-9.dll \
         $src_bin/libvlc.dll \
         $src_bin/SDL2.dll \
-        $src_bin/swresample-6.dll \
-        $src_bin/swscale-9.dll \
         $src_bin/libstdc++-6.dll \
         $src_bin/libgcc_s_seh-1.dll \
         $src_bin/libwinpthread-1.dll \

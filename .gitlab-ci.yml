@@ -249,7 +249,10 @@ clippy-windows-x86_64:
   artifacts:
     paths:
       - rootfs
+      - kysdk/kymedia/builddir-macos/meson-logs
+      - kysdk/kymedia/builddir-macos/subprojects/FFmpeg-n8.1/build/ffbuild/config.log
     expire_in: 1 week
+    when: always
 
 .build-macos-common:
   extends: .macos-common

@@ -33,6 +33,16 @@ sudo apt-get install -y \
 sudo apt-get build-dep -y vlc
 ```
 
+The kysdk/kymedia meson build requires meson **1.10.0+**. Debian/Ubuntu apt
+(including Trixie) ship an older meson, so install a recent one with `uv` if the
+build complains:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv tool install meson==1.10.0 --with jinja2
+export PATH="$HOME/.local/bin:$PATH"
+```
+
 Tested distros
 * Debian Bookworm
 * Ubuntu 24.04
@@ -130,6 +140,16 @@ sudo apt-get install -y \
     lua5.4 gettext bison flex ant ragel help2man nasm
 ```
 
+The kysdk/kymedia meson build requires meson **1.10.0+**. Debian/Ubuntu apt
+(including Trixie) ship an older meson, so install a recent one with `uv` if the
+build complains:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv tool install meson==1.10.0 --with jinja2
+export PATH="$HOME/.local/bin:$PATH"
+```
+
 #### Install Rust and required Rust tools
 
 ```bash
@@ -175,7 +195,19 @@ The command outputs:
 brew install \
     m4 nasm openssl@3 pkg-config \
     autoconf automake libtool \
-    cmake gettext meson ragel ant help2man
+    cmake gettext meson ragel ant help2man \
+    bison
+```
+
+The bison bundled with macOS is too old, so the homebrew one must be installed
+and put ahead on PATH:
+
+```bash
+echo 'export PATH="/opt/homebrew/opt/bison/bin:$PATH"' >> ~/.zshrc
+
+# or for the current shell only
+
+export PATH="/opt/homebrew/opt/bison/bin:$PATH"
 ```
 
 #### Install Rust and required Rust tools

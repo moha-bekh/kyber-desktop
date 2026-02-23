@@ -98,10 +98,23 @@ package() {
         $source_directory/lib/libkynput*.dylib \
         $source_directory/lib/libkyclient*.dylib \
         $source_directory/lib/libvlc*.dylib \
+        $source_directory/lib/libvlccore*.dylib \
         $source_directory/lib/libSDL2*.dylib \
         $app_dir/Contents/Frameworks/
 
     find "$source_directory/lib/vlc/plugins" -name 'lib*_plugin.dylib' -exec cp -a {} $app_dir/Contents/Frameworks/plugins \;
+
+    # Fix VLC plugins: replace absolute build paths with @loader_path
+    for plugin in $app_dir/Contents/Frameworks/plugins/lib*_plugin.dylib; do
+        for dep in $(otool -L $plugin | grep $source_directory | awk '{print $1}'); do
+            libname=$(basename $dep)
+            # Copy missing dep to Frameworks if not already there
+            if [ ! -e "$app_dir/Contents/Frameworks/$libname" ] && [ -e "$source_directory/lib/$libname" ]; then
+                cp -a "$source_directory/lib/$libname" "$app_dir/Contents/Frameworks/"
+            fi
+            install_name_tool -change $dep @loader_path/../$libname $plugin
+        done
+    done
 
     # Copy resources
     cp \
@@ -117,17 +130,22 @@ package() {
     LIBKYNPUT_NAME=libkynput.0.1.dylib
     LIBKYCLIENT_NAME=libkyclient.0.1.dylib
     SDL2_NAME=libSDL2-2.0.0.dylib
+    LIBVLC_NAME=libvlc.dylib
+    LIBVLCCORE_NAME=libvlccore.9.dylib
 
     # Fix kyclient
     install_name_tool -add_rpath "@executable_path/../Frameworks/" $app_dir/Contents/MacOS/kyclient
     install_name_tool -change $source_directory/lib/$LIBKYNPUT_NAME @rpath/$LIBKYNPUT_NAME $app_dir/Contents/MacOS/kyclient
     install_name_tool -change $source_directory/lib/$LIBKYCLIENT_NAME @rpath/$LIBKYCLIENT_NAME $app_dir/Contents/MacOS/kyclient
 
-    # Fix libkyaudioreg_plugin
-    install_name_tool -change $source_directory/lib/$KYAUDIOREG_NAME @rpath/$KYAUDIOREG_NAME $app_dir/Contents/Frameworks/plugins/libkyaudioreg_plugin.dylib
-
     # Fix libkyclient
+    install_name_tool -id @rpath/$LIBKYCLIENT_NAME $app_dir/Contents/Frameworks/$LIBKYCLIENT_NAME
+    install_name_tool -change $source_directory/lib/$KYAUDIOREG_NAME @rpath/$KYAUDIOREG_NAME $app_dir/Contents/Frameworks/$LIBKYCLIENT_NAME
     install_name_tool -change $source_directory/lib/$LIBKYNPUT_NAME @rpath/$LIBKYNPUT_NAME $app_dir/Contents/Frameworks/$LIBKYCLIENT_NAME
+    install_name_tool -change $source_directory/lib/$LIBVLC_NAME @rpath/$LIBVLC_NAME $app_dir/Contents/Frameworks/$LIBKYCLIENT_NAME
+
+    # Fix libvlc
+    install_name_tool -change $source_directory/lib/$LIBVLCCORE_NAME @rpath/$LIBVLCCORE_NAME $app_dir/Contents/Frameworks/$LIBVLC_NAME
 
     # Fix libkynput
     install_name_tool -change $source_directory/lib/$SDL2_NAME @rpath/$SDL2_NAME $app_dir/Contents/Frameworks/$LIBKYNPUT_NAME

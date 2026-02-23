@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * kycontroller: Implement kydup
+* kymedia: Contrib build is now based on meson
 
 ## [0.26.0] - 2026-05-12
 
