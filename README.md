@@ -40,11 +40,11 @@ Tested distros
 #### Arch: Install required system packages
 
 ```bash
-pacman -S base-devel cmake meson ninja pkg-config llvm clang openssl-1.1 \
-    autoconf libtool curl git wget unzip python3 python-setuptools lua gettext \
-    bison flex nasm ant ragel help2man libdrm mesa glslang lcms2 pulseaudio  \
-    libxcb libxkbcommon xcb-util xcb-util-renderutil wayland wayland-protocols \
-    libevdev libinput libidn11 ffmpeg a52dec vulkan-headers
+pacman -Sy base-devel clang cmake meson ninja pkg-config \
+    git wget unzip nasm python-jinja lua \
+    libxcb libxrandr libxkbcommon libva wayland-protocols vulkan-headers \
+    opus libpulse alsa-lib \
+    libinput
 ```
 
 #### Install Rust and required Rust tools
