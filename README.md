@@ -27,8 +27,8 @@ sudo apt-get install -y \
     libdrm-dev libgbm-dev glslang-dev liblcms2-dev libpulse-dev \
     libxcb-xkb-dev libxkbcommon-dev libxcb-xtest0-dev \
     libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
-    libwayland-dev wayland-protocols \
-    libssl-dev libevdev-dev libudev-dev libinput-dev libidn11
+    libwayland-dev wayland-protocols libvulkan-dev \
+    libssl-dev libevdev-dev libudev-dev libinput-dev \
 
 sudo apt-get build-dep -y vlc
 ```
