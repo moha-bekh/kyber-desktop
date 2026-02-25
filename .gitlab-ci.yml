@@ -33,7 +33,7 @@ lint:
 .contrib-linux-x86_64-common:
   stage: contrib
   tags:
-    - docker
+    - heavy
   only:
     - main
     - merge_requests
@@ -157,7 +157,7 @@ contrib-windows-x86_64:
   stage: contrib
   image: $WIN64_IMAGE
   tags:
-    - docker
+    - heavy
   only:
     - main
     - merge_requests
