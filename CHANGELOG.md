@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 * Rename kysdk components
 * Correctly place shebang in build scripts
 * kyclient: Update VLC. Kymux branch is now based on 4962271021
+* kycontroller: Correctly log toml parsing errors
+* kymux: Update wtransport to official 0.7.0
+* kynput: Limit clipboard size
 
 ## [0.23.0] - 2026-01-30
 
