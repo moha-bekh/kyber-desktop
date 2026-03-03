@@ -166,6 +166,10 @@ logins = [
 # 
 # Setup the JWT expected token signature.
 [kycontroller.auth.jwt]
+# Enable/Disable the backend.
+# Default: true
+enabled = true
+
 # Warning: For now, only HS256 or RS256 are officially supported.
 # Default: "HS256"
 #algorithm = "HS256"

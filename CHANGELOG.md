@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 * kynput: Limit clipboard size
 * kycontroller: Improve cross origin protections
 * Add basic authentication password support
+* Allow to disable jwt backend
 
 ## [0.23.0] - 2026-01-30
 
