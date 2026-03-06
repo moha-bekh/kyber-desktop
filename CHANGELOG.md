@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-03-06
+
 * Rename kysdk components
 * Correctly place shebang in build scripts
 * kyclient: Update VLC. Kymux branch is now based on 4962271021
