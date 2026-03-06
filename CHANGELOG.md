@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 * kycontroller: Improve cross origin protections
 * Add basic authentication password support
 * Allow to disable jwt backend
+* kyavserver: Fix QSV acquisition
+* kyavserver: set log level based on KYBER_VERBOSE environment variable
 
 ## [0.23.0] - 2026-01-30
 
