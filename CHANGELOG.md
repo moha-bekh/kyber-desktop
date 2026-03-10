@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller/win32: Add tray icon
 * linux: Implement DRM/KMS grab
 * kyavservice/dxgi: Correctly handle display unplug at runtime
+* kyctl: Expose control plan connection error
 
 ## [0.24.0] - 2026-03-06
 

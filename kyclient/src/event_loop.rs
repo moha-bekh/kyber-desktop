@@ -650,8 +650,10 @@ impl State {
                 self.create_windows(event_loop, &displays)?;
                 self.start_streaming()?;
             }
-            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::ControlPlaneConnectFailed)) => {
-                warn!("Control plane connect failed");
+            Event::UserEvent(UserEvent::Client(
+                kyclient_rs::Event::ControlPlaneConnectFailed { reason },
+            )) => {
+                warn!("Control plane connect failed: {reason:?}");
                 *control_flow = ControlFlow::Exit;
             }
             Event::UserEvent(UserEvent::Client(kyclient_rs::Event::DataPlaneConnectFailed)) => {
