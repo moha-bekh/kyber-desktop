@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 * kynput/win32: Monitor keyboard setting changes
 * kyclient: Use rustls-platform-verifier
 * kycontroller/win32: Add tray icon
+* linux: Implement DRM/KMS grab
 
 ## [0.24.0] - 2026-03-06
 

@@ -8,11 +8,12 @@ encoder = "nvenc"
 
 # Linux: Select screen capture backend
 #
-# Possible values: "nvfbc"
+# Possible values: "nvfbc", "drm"
 #
 # Default: "nvfbc"
 #
 # NvFBC: Works only with Nvidia GPUs with X11 and nvenc encoder.
+# DRM/KMS: Works non Nvidia GPUs with vaapi encoder.
 #grab_backend = "nvfbc"
 
 #[kyavserver.watermark]
