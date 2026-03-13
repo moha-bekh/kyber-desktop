@@ -355,7 +355,8 @@ where
 
         let active_cursor = self.active_cursor.clone();
 
-        let (window_id, entered_window) = if let Some(window) = self.get_window_mut(&id) {
+        let (window_id, entered_window, left_video) = if let Some(window) = self.get_window_mut(&id)
+        {
             // Avoid to send the same MouseMove multiple time
             if let Some(last_cursor_pos) = window.last_cursor_pos() {
                 if last_cursor_pos == position {
@@ -363,8 +364,11 @@ where
                 }
             }
 
-            let last_cursor_pos = window.set_last_cursor_pos(Some(position));
-            let entered_window = last_cursor_pos.is_none();
+            let inside_video = window.position_inside_video(&position);
+            let new_pos = if inside_video { Some(position) } else { None };
+            let last_cursor_pos = window.set_last_cursor_pos(new_pos);
+            let entered_window = last_cursor_pos.is_none() && inside_video;
+            let left_video = last_cursor_pos.is_some() && !inside_video;
 
             // Assume the Host cursor is still the same after entering the window.
             // We can't be sure that there will be any new cursor sent by the host
@@ -377,7 +381,7 @@ where
                 }
             }
 
-            (window.id(), entered_window)
+            (window.id(), entered_window, left_video)
         } else {
             return Ok(());
         };
@@ -393,6 +397,10 @@ where
                 .for_each(|window| {
                     window.set_last_cursor_pos(None);
                 });
+        } else if left_video {
+            if let Some(input_ctx) = self.input_ctx.upgrade() {
+                input_ctx.set_mouse_button_allowed(false)?;
+            }
         }
 
         if let Some(input_ctx) = self.input_ctx.upgrade() {
@@ -413,9 +421,7 @@ where
         let multi_window = self.windows.len() > 1;
 
         if let Some(window) = self.get_window_mut(&id) {
-            if !window.cursor_entered() {
-                window.set_cursor_entered(entered);
-            }
+            window.set_cursor_entered(entered);
 
             if multi_window && entered && window.is_fullscreen() {
                 window.gain_focus();
@@ -424,10 +430,12 @@ where
             }
         }
 
-        let entered = self.windows.iter().any(|window| window.cursor_entered());
+        let any_entered = self.windows.iter().any(|window| window.cursor_entered());
+        let any_inside_video = self.windows.iter().any(|w| w.last_cursor_pos().is_some());
 
         if let Some(input_ctx) = self.input_ctx.upgrade() {
-            input_ctx.cursor_inside_window(entered)?;
+            input_ctx.set_mouse_wheel_allowed(any_entered)?;
+            input_ctx.set_mouse_button_allowed(any_inside_video)?;
         }
 
         Ok(())

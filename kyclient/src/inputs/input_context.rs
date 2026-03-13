@@ -108,23 +108,28 @@ impl InputContext {
         }
     }
 
-    pub(crate) fn cursor_inside_window(&self, inside: bool) -> Result<()> {
+    pub(crate) fn set_mouse_wheel_allowed(&self, allowed: bool) -> Result<()> {
         self.pipeline.set_type_processing_state(
             InputType::MouseWheel,
-            RouterProcessingState::from_boolean(inside),
+            RouterProcessingState::from_boolean(allowed),
         )?;
 
-        if inside {
-            self.pipeline.set_type_processing_state(
-                InputType::MouseButton,
-                RouterProcessingState::from_boolean(true),
-            )?;
+        Ok(())
+    }
+
+    pub(crate) fn set_mouse_button_allowed(&self, allowed: bool) -> Result<()> {
+        let state = if allowed {
+            RouterProcessingState::from_boolean(true)
+        } else if self.state_reader.has_one_mouse_button_pressed() {
+            // A button is held from a valid press inside the video.
+            // Allow releases so the remote doesn't get stuck buttons.
+            RouterProcessingState::from_callback(Box::new(Self::mouse_button_filter_pressed))
         } else {
-            self.pipeline.set_type_processing_state(
-                InputType::MouseButton,
-                RouterProcessingState::from_callback(Box::new(Self::mouse_button_filter_pressed)),
-            )?;
-        }
+            RouterProcessingState::from_boolean(false)
+        };
+
+        self.pipeline
+            .set_type_processing_state(InputType::MouseButton, state)?;
 
         Ok(())
     }

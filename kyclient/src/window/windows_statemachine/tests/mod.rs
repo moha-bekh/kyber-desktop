@@ -24,6 +24,7 @@ mod multi_mouse_position_windowed;
 mod multi_relative_fullscreen;
 mod single_fullscreen_toggle;
 mod single_keypress;
+mod single_mouse_button_outside_video;
 mod single_mouse_drag;
 mod single_mouse_position_windowed;
 mod single_relative;
