@@ -66,6 +66,11 @@ encoder = "nvenc"
 #minimum_bitrate = 5000000
 
 [kycontroller]
+# Enable or disable the system tray icon (Windows only)
+#
+# Default: true
+#tray = true
+
 # Listening port
 #
 # Used for the HTTP server (TCP) and Quic connection (UDP)
