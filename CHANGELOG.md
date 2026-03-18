@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * kycontroller: Redirect /webclient to /webclient/
+* kynput/win32: Monitor keyboard setting changes
 
 ## [0.24.0] - 2026-03-06
 
