@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 * kyclient: Use rustls-platform-verifier
 * kycontroller/win32: Add tray icon
 * linux: Implement DRM/KMS grab
+* kyavservice/dxgi: Correctly handle display unplug at runtime
 
 ## [0.24.0] - 2026-03-06
 
