@@ -183,14 +183,37 @@ logins = [
 # Default: true
 enabled = true
 
-# Warning: For now, only HS256 or RS256 are officially supported.
+# Specify the token signature algorithm.
+#
+# Supported values:
+#   - HS256: symmetrical HMAC, useful for testing but weak security guarantees
+#   - RS256: asymmetrical RSA, Kyber uses an RSA public key
 # Default: "HS256"
 #algorithm = "HS256"
 
-# The key can either be filled as plain text or as a filesystem path.
-# Default: "{ plain = "kyber-authentication-development-key" }"
-#key = { plain = "kyber-authentication-development-key" }
-#key = { file = "/tmp/RSA256-pub.pem" }
+# Specify the token signature decoding key.
+#
+# The key can either be filled as plain text, with the `plain` attribute or as
+# a filesystem path with the `file` attribute.
+#
+# ## HS256 key
+#
+# The key string should contain the HMAC secret key.
+#
+# ```toml
+# key = { plain = "Secret-key" }
+# ```
+#
+# ## RS256 key
+#
+# The key string should contain a PEM encoded RS256 public key in the PKCS#8 format.
+#
+# ```toml
+# key = { file = "/tmp/RS256-pub.pem" }
+# ```
+#
+# Default: { plain = "kyber-authentication-development-key" }
+#key = { file = "public.pem" }
 
 [kynputserver]
 # Force to plug Xbox 360 controllers
