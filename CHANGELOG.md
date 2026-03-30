@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 * kyclient: Add HTTP timeout to all requests
 * kycontroller: Fix public_port incorrectly cached in shared Kymux infrastructure
 * kyctl/jwt-gen: Add key generation support
+* kycontroller: Improve robustness of kymux incoming connection accept
 
 ## [0.24.0] - 2026-03-06
 
