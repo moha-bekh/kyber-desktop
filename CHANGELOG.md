@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 * kyctl: Expose control plan connection error
 * kyclient: Add HTTP timeout to all requests
 * kycontroller: Fix public_port incorrectly cached in shared Kymux infrastructure
+* kyctl/jwt-gen: Add key generation support
 
 ## [0.24.0] - 2026-03-06
 
