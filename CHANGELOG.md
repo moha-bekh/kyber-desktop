@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller: Fix public_port incorrectly cached in shared Kymux infrastructure
 * kyctl/jwt-gen: Add key generation support
 * kycontroller: Improve robustness of kymux incoming connection accept
+* kycontroller: Fix /login blocking forever on mutex contention
 
 ## [0.24.0] - 2026-03-06
 
