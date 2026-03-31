@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-03-31
+
 * kycontroller: Redirect /webclient to /webclient/
 * kynput/win32: Monitor keyboard setting changes
 * kyclient: Use rustls-platform-verifier
