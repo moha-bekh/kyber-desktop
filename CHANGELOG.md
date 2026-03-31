@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 * kyctl/jwt-gen: Add key generation support
 * kycontroller: Improve robustness of kymux incoming connection accept
 * kycontroller: Fix /login blocking forever on mutex contention
+* Add IPv6 support
 
 ## [0.24.0] - 2026-03-06
 
