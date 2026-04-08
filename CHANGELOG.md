@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller: make watchdog optional
 * kymedia: Bump to ffmpeg 8.1
 * kymedia: Correctly configure amf and vaapi encode settings
+* kymedia/vlc: Replace Intel HEVC 422/444 support by the Microsoft one
 
 ## [0.25.0] - 2026-03-31
 
