@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 * kyservice/win32: Stop restart loop on invalid config
 * kycontroller: Update tray client count on session timeout
 * kycontroller: make watchdog optional
+* kymedia: Bump to ffmpeg 8.1
 
 ## [0.25.0] - 2026-03-31
 
