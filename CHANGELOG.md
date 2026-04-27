@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 * kynput/x11: Add clipboard support
 * libkynput/win32: Add HTML clipboard support
+* controller/ws: Use kycom to interact with kyavserver and kynput
 
 ## [0.25.0] - 2026-03-31
 
