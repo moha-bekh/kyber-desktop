@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 * libkynput/win32: Add HTML clipboard support
 * controller/ws: Use kycom to interact with kyavserver and kynput
 * kycontroller/win32: Make tray init non-fatal with TaskbarCreated recovery
+* kyservice/win32: Stop restart loop on invalid config
 
 ## [0.25.0] - 2026-03-31
 
