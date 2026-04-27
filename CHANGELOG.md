@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller/win32: Make tray init non-fatal with TaskbarCreated recovery
 * kyservice/win32: Stop restart loop on invalid config
 * kycontroller: Update tray client count on session timeout
+* kycontroller: make watchdog optional
 
 ## [0.25.0] - 2026-03-31
 
