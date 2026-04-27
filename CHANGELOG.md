@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* kynput/x11: Add clipboard support
+
 ## [0.25.0] - 2026-03-31
 
 * kycontroller: Redirect /webclient to /webclient/
