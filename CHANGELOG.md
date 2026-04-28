@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* kycontroller: Implement kydup
+
 ## [0.26.0] - 2026-05-12
 
 * kynput/x11: Add clipboard support

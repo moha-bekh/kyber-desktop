@@ -117,6 +117,20 @@ encoder = "nvenc"
 # Default: true
 #webtransport_gen_certificate = true
 
+# Allow multiple concurrent clients to share a streaming session
+#
+# When false, only one client can be logged in at a time. A second
+# login attempt while a session is active is rejected with 409 Conflict.
+# Video/audio is encoded per-session and forwarded directly to the client
+# (lowest latency, full backpressure from client to encoder).
+#
+# When true (default), multiple clients can stream concurrently. Video/audio is
+# encoded once per display/audio source and fanned out to all clients via a
+# broadcast duplicator (kydup). The RTP backend is not available in this mode.
+#
+# Default: true
+#multi_client = true
+
 [kycontroller.security]
 # List of origins allowed to query the controller via cross-origin requests.
 #
