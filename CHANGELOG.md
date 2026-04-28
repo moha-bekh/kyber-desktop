@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller: Update tray client count on session timeout
 * kycontroller: make watchdog optional
 * kymedia: Bump to ffmpeg 8.1
+* kymedia: Correctly configure amf and vaapi encode settings
 
 ## [0.25.0] - 2026-03-31
 
