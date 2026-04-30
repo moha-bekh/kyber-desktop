@@ -8,12 +8,14 @@ encoder = "nvenc"
 
 # Linux: Select screen capture backend
 #
-# Possible values: "nvfbc", "drm"
+# Possible values: "nvfbc", "drm", "xcb", "wlroots"
 #
 # Default: "nvfbc"
 #
 # NvFBC: Works only with Nvidia GPUs with X11 and nvenc encoder.
-# DRM/KMS: Works non Nvidia GPUs with vaapi encoder.
+# DRM/KMS: Works on non Nvidia GPUs with vaapi encoder.
+# XCB: Generic X11 fallback (CPU-side RGB capture). Works with any encoder.
+# Wlroots: wlroots screencopy/dmabuf capture. Works with any encoder.
 #grab_backend = "nvfbc"
 
 #[kyavserver.watermark]
