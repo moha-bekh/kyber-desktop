@@ -217,6 +217,56 @@ enabled = true
 # Default: { plain = "kyber-authentication-development-key" }
 #key = { file = "public.pem" }
 
+# OIDC authentication backend
+#
+# Delegates authentication to an external OpenID Connect provider.
+# Clients discover the issuer and client_id from the controller's
+# WWW-Authenticate challenge, then perform Authorization Code + PKCE.
+#
+# Example with Keycloak:
+#
+#   [kycontroller.auth.oidc]
+#   enabled = true
+#   issuer = "https://keycloak.example.com/realms/myrealm"
+#   client_id = "kyber-app"
+#   identity_claim = "email"
+#   allowed_identifiers = ["alice@example.com"]
+#   allowed_groups = ["friends"]
+#
+[kycontroller.auth.oidc]
+# Enable/Disable the backend.
+# Default: false
+enabled = false
+
+# OIDC issuer URL. Must support OpenID Connect Discovery
+# (/.well-known/openid-configuration).
+# issuer = "https://keycloak.example.com/realms/myrealm"
+
+# OAuth2 public client ID registered with the provider.
+# client_id = "kyber-app"
+
+# JWT claim used to identify the user.
+# Supported values: "sub" (default), "email", "preferred_username"
+# identity_claim = "sub"
+
+# Access control lists (OR logic):
+#   - If both lists are empty, all authenticated users are allowed.
+#   - If either list is set, the user must match at least one entry
+#     in allowed_identifiers OR belong to at least one allowed_groups.
+#   - The groups claim must be present in the access token (configure
+#     a "groups" client scope in the IdP).
+
+# Allowed user identities (matched against identity_claim).
+# allowed_identifiers = ["alice@example.com", "bob@example.com"]
+
+# Allowed group memberships.
+# allowed_groups = ["friends", "admins"]
+
+# How long (in seconds) the JWKS key set is cached before re-fetching.
+# A kid miss always triggers an immediate refresh regardless of TTL.
+# Default: 300 (5 minutes)
+# jwks_cache_ttl = 300
+
 [kynputserver]
 # Force to plug Xbox 360 controllers
 #
