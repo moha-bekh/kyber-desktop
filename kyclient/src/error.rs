@@ -37,6 +37,8 @@ pub enum Error {
     WindowFailed(winit::error::ExternalError),
     // Configuration errors
     Config(String),
+    // OIDC flow errors
+    Oidc(kyc::Error),
 }
 
 impl From<std::io::Error> for Error {
@@ -75,6 +77,12 @@ impl From<winit::error::ExternalError> for Error {
     }
 }
 
+impl From<kyc::Error> for Error {
+    fn from(err: kyc::Error) -> Error {
+        Error::Oidc(err)
+    }
+}
+
 impl From<winit::event_loop::EventLoopClosed<UserEvent>> for Error {
     fn from(_: winit::event_loop::EventLoopClosed<UserEvent>) -> Error {
         Error::WinitEventLoopClosed
@@ -96,6 +104,7 @@ impl std::fmt::Display for Error {
             Error::Input(e) => write!(f, "Input error: {:?}", e),
             Error::WindowFailed(e) => write!(f, "Window failed: {}", e),
             Error::Config(msg) => write!(f, "{}", msg),
+            Error::Oidc(e) => write!(f, "OIDC error: {}", e),
         }
     }
 }

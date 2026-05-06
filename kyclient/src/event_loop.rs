@@ -68,6 +68,8 @@ pub enum UserEvent {
     Client(kyclient_rs::Event),
     SetCursor(kynput_rs::Cursor),
     LeftButtonReleased,
+    OidcTokenReceived(crate::oidc_manager::OidcResult),
+    OidcFlowFailed,
 }
 
 pub(crate) trait EventProxy: Send + 'static {

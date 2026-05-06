@@ -11,6 +11,7 @@ exclude = [
 ]
 
 [patch.crates-io]
+kyc = { path = "kysdk/kyctl/kyc" }
 kyclient-rs = { path = "kysdk/kyctl/kyclient-rs" }
 kynput-rs = { path = "kysdk/kynput/kynput-rs" }
 kynput-sys = { path = "kysdk/kynput/kynput-rs/kynput-sys" }

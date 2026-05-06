@@ -27,6 +27,7 @@ mod icon;
 mod inputs;
 mod keyboard_grabber;
 mod metrics;
+mod oidc_manager;
 mod parse_utils;
 mod window;
 
