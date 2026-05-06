@@ -22,7 +22,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::sync::Arc;
 
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use raw_window_handle::RawWindowHandle;
 use winit::{
     dpi::{LogicalPosition, LogicalSize},
@@ -39,6 +39,7 @@ use kyclient_rs::{
 use crate::error::{Error, Result};
 use crate::inputs::{InputContext, ShortcutType};
 use crate::metrics::MetricsProcessor;
+use crate::oidc_manager::OidcManager;
 use crate::window::{Position, Size, Window, WindowControlWinit, WindowsStateMachine};
 use crate::{client_proxy::ClientEventProxy, DisplayParams};
 use crate::{CliArgs, TlsVerification};
@@ -221,6 +222,7 @@ struct State {
     mute: bool,
     bitrate: Option<u32>,
     saved_streaming_config: Option<StreamingSessionConfig>,
+    oidc: Option<OidcManager>,
 }
 
 impl State {
@@ -658,6 +660,36 @@ impl State {
                 warn!("Control plane connect failed: {reason:?}");
                 *control_flow = ControlFlow::Exit;
             }
+            Event::UserEvent(UserEvent::Client(kyclient_rs::Event::AuthenticationRequired {
+                issuer,
+                client_id,
+            })) => {
+                debug!("OIDC challenge received: issuer={issuer}, client_id={client_id}");
+                let oidc = match &mut self.oidc {
+                    Some(oidc) => oidc,
+                    None => match OidcManager::new() {
+                        Ok(oidc) => self.oidc.insert(oidc),
+                        Err(e) => {
+                            error!("Failed to create OIDC manager: {e:?}");
+                            *control_flow = ControlFlow::Exit;
+                            return Ok(());
+                        }
+                    },
+                };
+                if oidc.is_flow_active() {
+                    warn!("OIDC flow already in progress, skipping");
+                    return Ok(());
+                }
+                // Stop the probe client. It was only used to discover the
+                // challenge. A fresh client will be created after the OIDC
+                // flow completes with the real token.
+                if let Some(c) = self.client.take() {
+                    if let Err(e) = c.stop() {
+                        warn!("Failed to stop probe client: {e:?}");
+                    }
+                }
+                oidc.start_flow(issuer, client_id, self.eventloop_proxy.clone());
+            }
             Event::UserEvent(UserEvent::Client(kyclient_rs::Event::DataPlaneConnectFailed)) => {
                 warn!("Data plane connect failed");
                 *control_flow = ControlFlow::Exit;
@@ -701,8 +733,16 @@ impl State {
             Event::UserEvent(UserEvent::Client(kyclient_rs::Event::Stopped { reason })) => {
                 info!("Stopped. Reason: {reason:?}");
 
-                let client = self.client.as_mut().ok_or(Error::NoClient)?;
-                client.stop()?;
+                // No active client — this is a stale event from a
+                // previous client (e.g. replaced during OIDC reconnect)
+                // or we already processed Requested. Ignore it.
+                let Some(client) = self.client.as_mut() else {
+                    return Ok(());
+                };
+
+                if let Err(e) = client.stop() {
+                    warn!("client.stop() during Stopped event: {e:?}");
+                }
 
                 // Only exit if user requested disconnect, otherwise reconnection will be attempted
                 match reason {
@@ -751,6 +791,37 @@ impl State {
             Event::UserEvent(UserEvent::Client(kyclient_rs::Event::BitrateChanged { bitrate })) => {
                 info!("Bitrate changed: {bitrate}");
                 self.bitrate = Some(bitrate);
+            }
+            Event::UserEvent(UserEvent::OidcTokenReceived(oidc)) => {
+                info!("OIDC token received, updating credentials");
+                if let Some(ref mut mgr) = self.oidc {
+                    mgr.on_token_received(&oidc);
+                }
+                let crate::oidc_manager::OidcResult {
+                    access_token,
+                    refresh_token: _,
+                    exp,
+                } = oidc;
+                self.cli_args.auth_credentials = kyclient_rs::AuthCredentials::Oidc {
+                    token: access_token,
+                };
+                match self.connect() {
+                    Ok(()) => {
+                        if let Some(ref mut mgr) = self.oidc {
+                            mgr.schedule_refresh(exp, self.eventloop_proxy.clone());
+                        }
+                    }
+                    Err(e) => {
+                        warn!("Failed to connect after OIDC authentication: {e:?}");
+                        *control_flow = ControlFlow::Exit;
+                    }
+                }
+            }
+            Event::UserEvent(UserEvent::OidcFlowFailed) => {
+                warn!("OIDC flow failed, allowing retry");
+                if let Some(ref mut mgr) = self.oidc {
+                    mgr.on_flow_failed();
+                }
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::Fullscreen)) => {
                 self.windows.toggle_fullscreen(event_loop);
@@ -857,6 +928,7 @@ impl EventLoopWrapper {
                 mute: false,
                 bitrate: None,
                 saved_streaming_config: None,
+                oidc: None,
             }),
         })
     }
@@ -871,7 +943,9 @@ impl EventLoopWrapper {
 
     pub fn run(self) -> Result<()> {
         self.event_loop.run(move |event, event_loop, control_flow| {
-            *control_flow = ControlFlow::Wait;
+            if *control_flow != ControlFlow::Exit {
+                *control_flow = ControlFlow::Wait;
+            }
 
             let mut state = self.state.borrow_mut();
             if let Err(err) = state.handle_event(event, event_loop, control_flow) {

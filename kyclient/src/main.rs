@@ -475,12 +475,19 @@ fn main() {
                 .help("JsonWebToken authentication token")
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::new("oidc")
+                .long("auth-oidc")
+                .help("Use OIDC authentication (server-initiated challenge)")
+                .takes_value(false)
+                .conflicts_with("jwt"),
+        )
         .group(
             clap::ArgGroup::new("basic_auth")
                 .args(&["username", "password"])
                 .requires_all(&["username", "password"])
                 .multiple(true)
-                .conflicts_with("jwt"),
+                .conflicts_with_all(&["jwt", "oidc"]),
         )
         .arg(clap::Arg::with_name("STREAMER_IP").index(1));
 
@@ -623,7 +630,11 @@ fn main() {
         }
     };
 
-    let auth_credentials = if let Some(jwt) = matches.get_one::<String>("jwt") {
+    let auth_credentials = if matches.is_present("oidc") {
+        AuthCredentials::Oidc {
+            token: String::new(),
+        }
+    } else if let Some(jwt) = matches.get_one::<String>("jwt") {
         AuthCredentials::Jwt { token: jwt.clone() }
     } else {
         AuthCredentials::Basic {
