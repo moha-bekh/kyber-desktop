@@ -483,9 +483,11 @@ impl State {
         Ok(())
     }
 
-    fn stop_client(&mut self) -> Result<()> {
-        let client = self.client.as_mut().ok_or(Error::NoClient)?;
-        client.disconnect()?;
+    fn request_stop(&mut self, control_flow: &mut ControlFlow) -> Result<()> {
+        if let Some(client) = self.client.take() {
+            client.disconnect()?;
+        }
+        *control_flow = ControlFlow::Exit;
         Ok(())
     }
 
@@ -523,7 +525,7 @@ impl State {
                 event: WindowEvent::CloseRequested,
                 ..
             } => {
-                self.stop_client()?;
+                self.request_stop(control_flow)?;
             }
             Event::UserEvent(UserEvent::Start) => {
                 if let Err(e) = self.connect() {
@@ -533,7 +535,7 @@ impl State {
                 }
             }
             Event::UserEvent(UserEvent::StopRequest) => {
-                self.stop_client()?;
+                self.request_stop(control_flow)?;
             }
             Event::WindowEvent {
                 window_id,
@@ -733,9 +735,8 @@ impl State {
             Event::UserEvent(UserEvent::Client(kyclient_rs::Event::Stopped { reason })) => {
                 info!("Stopped. Reason: {reason:?}");
 
-                // No active client — this is a stale event from a
-                // previous client (e.g. replaced during OIDC reconnect)
-                // or we already processed Requested. Ignore it.
+                // Stale event: the client was already taken (probe client during
+                // the OIDC challenge, or via request_stop on user disconnect).
                 let Some(client) = self.client.as_mut() else {
                     return Ok(());
                 };
