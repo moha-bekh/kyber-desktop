@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
 * kymedia: Correctly configure amf and vaapi encode settings
 * kymedia/vlc: Replace Intel HEVC 422/444 support by the Microsoft one
 * kymedia: Add "xcb" and "wlroots" grab_backend
+* kycontroller: Add OIDC support
+* desktop: Add OIDC support
 
 ## [0.25.0] - 2026-03-31
 
