@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 * kymedia: Add "xcb" and "wlroots" grab_backend
 * kycontroller: Add OIDC support
 * desktop: Add OIDC support
+* kycontroller: Fix RTP backend. Was broken since IPv6 support
+* kynput: Export scancode conversion helpers for all platforms
 
 ## [0.25.0] - 2026-03-31
 
