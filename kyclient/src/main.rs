@@ -704,10 +704,7 @@ fn main() {
     let mut event_loop = event_loop::EventLoopWrapper::new(event_loop, cli_args, icon).unwrap();
 
     let stop_req_cb = event_loop.create_stop_request_cb();
-    ctrlc::set_handler(move || {
-        stop_req_cb();
-    })
-    .unwrap();
+    ctrlc::set_handler(stop_req_cb).unwrap();
 
     eventloop_proxy.send_event(UserEvent::Start).unwrap();
 

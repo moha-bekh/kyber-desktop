@@ -18,7 +18,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::sync::Arc;
 
@@ -95,8 +94,6 @@ impl EventProxy for EventProxyWinit {
         Ok(())
     }
 }
-
-pub type StopRequestCb = Box<dyn Fn() + Send>;
 
 fn configure_tls_verification(
     connect_config: &ConnectConfig,
@@ -829,7 +826,7 @@ impl State {
 
 pub struct EventLoopWrapper {
     event_loop: EventLoop<UserEvent>,
-    state: RefCell<State>,
+    state: State,
 }
 
 impl EventLoopWrapper {
@@ -842,7 +839,7 @@ impl EventLoopWrapper {
 
         Ok(Self {
             event_loop,
-            state: RefCell::new(State {
+            state: State {
                 eventloop_proxy,
                 windows: WindowsStateMachine::<WindowControlWinit>::new(cli_args.keyboard_grab),
                 cli_args,
@@ -854,26 +851,25 @@ impl EventLoopWrapper {
                 bitrate: None,
                 saved_streaming_config: None,
                 oidc: None,
-            }),
+            },
         })
     }
 
-    pub fn create_stop_request_cb(&mut self) -> StopRequestCb {
+    pub fn create_stop_request_cb(&mut self) -> impl Fn() + Send {
         let proxy = self.event_loop.create_proxy();
 
-        Box::new(move || {
+        move || {
             proxy.send_event(UserEvent::StopRequest).unwrap();
-        })
+        }
     }
 
-    pub fn run(self) -> Result<()> {
+    pub fn run(mut self) -> Result<()> {
         self.event_loop.run(move |event, event_loop, control_flow| {
             if *control_flow != ControlFlow::Exit {
                 *control_flow = ControlFlow::Wait;
             }
 
-            let mut state = self.state.borrow_mut();
-            if let Err(err) = state.handle_event(event, event_loop, control_flow) {
+            if let Err(err) = self.state.handle_event(event, event_loop, control_flow) {
                 warn!("Event handler failed during processing: {:?}", err);
             }
         });
