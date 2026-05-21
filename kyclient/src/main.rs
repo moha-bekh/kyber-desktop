@@ -156,6 +156,27 @@ pub struct CliArgs {
     auto_reconnect: bool,
 }
 
+impl CliArgs {
+    fn create_connect_config(&self) -> Result<kyclient_rs::ConnectConfig> {
+        let connect_config =
+            kyclient_rs::ConnectConfig::default(&self.streamer_ip, &self.auth_credentials)?;
+
+        if let Some(tls_host) = &self.tls_host {
+            connect_config.set_tls_host(tls_host)?;
+        }
+
+        event_loop::configure_tls_verification(&connect_config, &self.tls_verification)?;
+
+        if let Some(port) = self.streamer_port {
+            connect_config.set_streamer_port(port);
+        }
+
+        connect_config.set_auto_reconnection(self.auto_reconnect);
+
+        Ok(connect_config)
+    }
+}
+
 fn load_tls_conf(matches: &clap::ArgMatches) -> Result<TlsConfig> {
     let tls_host: Option<String> = matches.get_one("tls-host").cloned();
     let tls_root_cert: Option<String> = matches.get_one("tls-root-cert").cloned();
@@ -697,7 +718,6 @@ fn main() {
 
     // Create window
     let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
-    let eventloop_proxy = event_loop.create_proxy();
 
     let icon = icon::load_icon().ok();
 
@@ -705,8 +725,6 @@ fn main() {
 
     let stop_req_cb = event_loop.create_stop_request_cb();
     ctrlc::set_handler(stop_req_cb).unwrap();
-
-    eventloop_proxy.send_event(UserEvent::Start).unwrap();
 
     event_loop.run().unwrap();
 }

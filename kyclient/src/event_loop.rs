@@ -35,7 +35,7 @@ use kyclient_rs::{
     Client, ConnectConfig, StreamingSessionConfig, TofuPrompt, VideoPlayerConfig, WindowHandle,
 };
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::inputs::{InputContext, ShortcutType};
 use crate::metrics::MetricsProcessor;
 use crate::oidc_manager::OidcManager;
@@ -62,7 +62,6 @@ fn print_cert_changed_warning(hostname: &str, expected: &str, actual: &str) {
 
 #[derive(Clone, Debug)]
 pub enum UserEvent {
-    Start,
     StopRequest,
     Shortcut(ShortcutType),
     Client(kyclient_rs::Event),
@@ -95,7 +94,7 @@ impl EventProxy for EventProxyWinit {
     }
 }
 
-fn configure_tls_verification(
+pub(crate) fn configure_tls_verification(
     connect_config: &ConnectConfig,
     verification: &TlsVerification,
 ) -> Result<()> {
@@ -211,7 +210,7 @@ fn configure_tls_verification(
 struct State {
     eventloop_proxy: EventLoopProxy<UserEvent>,
     cli_args: CliArgs,
-    client: Option<Client>,
+    client: Client,
     input_ctx: Option<Arc<InputContext>>,
     icon: Option<Icon>,
     windows: WindowsStateMachine<WindowControlWinit>,
@@ -223,27 +222,6 @@ struct State {
 }
 
 impl State {
-    fn create_connect_config(&self) -> Result<ConnectConfig> {
-        let connect_config = kyclient_rs::ConnectConfig::default(
-            &self.cli_args.streamer_ip,
-            &self.cli_args.auth_credentials,
-        )?;
-
-        if let Some(tls_host) = &self.cli_args.tls_host {
-            connect_config.set_tls_host(tls_host)?;
-        }
-
-        configure_tls_verification(&connect_config, &self.cli_args.tls_verification)?;
-
-        if let Some(port) = self.cli_args.streamer_port {
-            connect_config.set_streamer_port(port);
-        }
-
-        connect_config.set_auto_reconnection(self.cli_args.auto_reconnect);
-
-        Ok(connect_config)
-    }
-
     fn get_initial_window_position(
         monitor: &winit::monitor::MonitorHandle,
         window_size: LogicalSize<f64>,
@@ -457,14 +435,14 @@ impl State {
         Ok(player_config)
     }
 
-    fn connect(&mut self) -> Result<()> {
-        let metrics = self.cli_args.metrics;
+    fn connect(cli_args: &CliArgs, event_loop: &EventLoopProxy<UserEvent>) -> Result<Client> {
+        let metrics = cli_args.metrics;
 
         // Create client
-        let connect_config = self.create_connect_config()?;
+        let connect_config = cli_args.create_connect_config()?;
         let client = Client::new(&connect_config, metrics)?;
 
-        let client_proxy = Box::new(ClientEventProxy::new(self.eventloop_proxy.clone()));
+        let client_proxy = Box::new(ClientEventProxy::new(event_loop.clone()));
         client.set_event_handler(client_proxy)?;
 
         if metrics {
@@ -475,15 +453,12 @@ impl State {
         }
 
         client.connect()?;
-        self.client = Some(client);
 
-        Ok(())
+        Ok(client)
     }
 
     fn request_stop(&mut self, control_flow: &mut ControlFlow) -> Result<()> {
-        if let Some(client) = self.client.take() {
-            client.disconnect()?;
-        }
+        self.client.disconnect()?;
         *control_flow = ControlFlow::Exit;
         Ok(())
     }
@@ -503,8 +478,7 @@ impl State {
 
         let streaming_config = self.create_streaming_session_config()?;
 
-        let client = self.client.as_mut().ok_or(Error::NoClient)?;
-        client.start_streaming(&streaming_config)?;
+        self.client.start_streaming(&streaming_config)?;
 
         self.saved_streaming_config = Some(streaming_config);
 
@@ -523,13 +497,6 @@ impl State {
                 ..
             } => {
                 self.request_stop(control_flow)?;
-            }
-            Event::UserEvent(UserEvent::Start) => {
-                if let Err(e) = self.connect() {
-                    error!("Failed to connect: {:?}", e);
-                    *control_flow = ControlFlow::Exit;
-                    return Err(e);
-                }
             }
             Event::UserEvent(UserEvent::StopRequest) => {
                 self.request_stop(control_flow)?;
@@ -669,13 +636,7 @@ impl State {
                     warn!("Stopped: {reason:?} - exiting");
                 }
 
-                // Stale event: the client was already taken (probe client during
-                // the OIDC challenge, or via request_stop on user disconnect).
-                let Some(client) = self.client.as_mut() else {
-                    return Ok(());
-                };
-
-                if let Err(e) = client.stop() {
+                if let Err(e) = self.client.stop() {
                     warn!("client.stop() during Stopped event: {e:?}");
                 }
 
@@ -718,16 +679,10 @@ impl State {
                     refresh_token: _,
                     exp,
                 } = oidc;
-                let credentials = kyclient_rs::AuthCredentials::Oidc {
+                self.cli_args.auth_credentials = kyclient_rs::AuthCredentials::Oidc {
                     token: access_token,
                 };
-                self.cli_args.auth_credentials = credentials.clone();
-                let Some(ref client) = self.client else {
-                    warn!("No client when OIDC token received");
-                    *control_flow = ControlFlow::Exit;
-                    return Ok(());
-                };
-                match client.renew_session(&credentials) {
+                match self.client.renew_session(&self.cli_args.auth_credentials) {
                     Ok(()) => {
                         if let Some(ref mut mgr) = self.oidc {
                             mgr.schedule_refresh(exp, self.eventloop_proxy.clone());
@@ -753,8 +708,7 @@ impl State {
 
                 self.input_ctx = None;
 
-                let client = self.client.as_mut().ok_or(Error::NoClient)?;
-                client.stop_streaming()?;
+                self.client.stop_streaming()?;
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::VolumeUp)) => {
                 let mut volume = self.volume + 0.1;
@@ -762,9 +716,7 @@ impl State {
                     volume = 1.0;
                 }
 
-                if let Some(client) = &self.client {
-                    client.audio_set_volume(volume).unwrap();
-                }
+                self.client.audio_set_volume(volume)?;
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::VolumeDown)) => {
                 let mut volume = self.volume - 0.1;
@@ -772,9 +724,7 @@ impl State {
                     volume = 0.0;
                 }
 
-                if let Some(client) = &self.client {
-                    client.audio_set_volume(volume).unwrap();
-                }
+                self.client.audio_set_volume(volume)?;
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::BitrateUp)) => {
                 let Some(mut bitrate) = self.bitrate else {
@@ -786,9 +736,7 @@ impl State {
                     bitrate = 70_000_000;
                 }
 
-                if let Some(client) = &self.client {
-                    client.set_bitrate(bitrate).unwrap();
-                }
+                self.client.set_bitrate(bitrate)?;
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::BitrateDown)) => {
                 let Some(mut bitrate) = self.bitrate else {
@@ -800,16 +748,12 @@ impl State {
                     bitrate = 5_000_000;
                 }
 
-                if let Some(client) = &self.client {
-                    client.set_bitrate(bitrate).unwrap();
-                }
+                self.client.set_bitrate(bitrate)?;
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::ToggleMute)) => {
                 let mute = !self.mute;
 
-                if let Some(client) = &self.client {
-                    client.audio_set_mute(mute).unwrap();
-                }
+                self.client.audio_set_mute(mute)?;
             }
             Event::UserEvent(UserEvent::SetCursor(cursor)) => {
                 self.windows.set_cursor(cursor)?;
@@ -836,6 +780,7 @@ impl EventLoopWrapper {
         icon: Option<Icon>,
     ) -> Result<Self> {
         let eventloop_proxy = event_loop.create_proxy();
+        let client = State::connect(&cli_args, &eventloop_proxy)?;
 
         Ok(Self {
             event_loop,
@@ -843,7 +788,7 @@ impl EventLoopWrapper {
                 eventloop_proxy,
                 windows: WindowsStateMachine::<WindowControlWinit>::new(cli_args.keyboard_grab),
                 cli_args,
-                client: None,
+                client,
                 input_ctx: None,
                 icon,
                 volume: 1.0,
