@@ -139,7 +139,7 @@ fn single_keypress() {
 
     // Plug window
     let mut windows = WindowsStateMachine::<MockWindowControl>::new(false);
-    windows.set_input_ctx(Arc::downgrade(&input_ctx));
+    windows.set_input_ctx(&input_ctx);
 
     windows.add_window(
         Window::<MockWindowControl>::new(

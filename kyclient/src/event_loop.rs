@@ -500,7 +500,7 @@ impl State {
             let eventloop_proxy = EventProxyWinit::new(self.eventloop_proxy.clone());
             let input_ctx = Arc::new(InputContext::new(eventloop_proxy, pipeline)?);
 
-            self.windows.set_input_ctx(Arc::downgrade(&input_ctx));
+            self.windows.set_input_ctx(&input_ctx);
             self.input_ctx = Some(input_ctx);
         }
 

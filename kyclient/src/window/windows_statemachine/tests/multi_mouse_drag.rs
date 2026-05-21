@@ -273,7 +273,7 @@ fn multi_mouse_drag() {
 
     // Create windows
     let mut windows = WindowsStateMachine::<MockWindowControl>::new(false);
-    windows.set_input_ctx(Arc::downgrade(&input_ctx));
+    windows.set_input_ctx(&input_ctx);
 
     // Window 1
     windows.add_window(

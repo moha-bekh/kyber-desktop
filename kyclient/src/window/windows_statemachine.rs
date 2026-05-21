@@ -60,7 +60,7 @@ pub(crate) struct WindowsStateMachine<W>
 where
     W: WindowControl,
 {
-    input_ctx: Option<Weak<InputContext>>,
+    input_ctx: Weak<InputContext>,
     windows: Vec<Window<W>>,
     windows_map: HashMap<WindowId, usize>,
     active_cursor: Option<Rc<Cursor>>,
@@ -75,7 +75,7 @@ where
 {
     pub(crate) fn new(enable_keyboard_grab: bool) -> Self {
         Self {
-            input_ctx: None,
+            input_ctx: Weak::new(),
             windows: vec![],
             windows_map: HashMap::new(),
             active_cursor: None,
@@ -89,24 +89,14 @@ where
         }
     }
 
-    pub(crate) fn set_input_ctx(&mut self, input_ctx: Weak<InputContext>) {
-        self.input_ctx = Some(input_ctx.clone());
+    pub(crate) fn set_input_ctx(&mut self, input_ctx: &Arc<InputContext>) {
+        self.input_ctx = Arc::downgrade(input_ctx);
 
         // Set the input handler on the keyboard grabber
-        if let Some(input_ctx_arc) = input_ctx.upgrade() {
-            if let Some(winit_handler) = input_ctx_arc.winit_handler() {
-                if let Some(keyboard_grabber) = self.keyboard_grabber.as_mut() {
-                    keyboard_grabber.set_input_handler(winit_handler);
-                }
+        if let Some(winit_handler) = input_ctx.winit_handler() {
+            if let Some(keyboard_grabber) = self.keyboard_grabber.as_mut() {
+                keyboard_grabber.set_input_handler(winit_handler);
             }
-        }
-    }
-
-    pub(crate) fn input_ctx(input_ctx: &Option<Weak<InputContext>>) -> Option<Arc<InputContext>> {
-        if let Some(input_ctx) = input_ctx {
-            input_ctx.upgrade()
-        } else {
-            None
         }
     }
 
@@ -172,7 +162,7 @@ where
                 window.grab_cursor(grab_mod);
             }
         } else if !focused {
-            if let Some(input_ctx) = Self::input_ctx(&self.input_ctx) {
+            if let Some(input_ctx) = self.input_ctx.upgrade() {
                 input_ctx.flush_keys()?;
             }
 
@@ -191,7 +181,7 @@ where
             }
         }
 
-        if let Some(input_ctx) = Self::input_ctx(&self.input_ctx) {
+        if let Some(input_ctx) = self.input_ctx.upgrade() {
             input_ctx.set_global_processing_state(focused)?;
         }
 
@@ -269,7 +259,7 @@ where
             window.gain_focus();
         }
 
-        if let Some(input_ctx) = Self::input_ctx(&self.input_ctx) {
+        if let Some(input_ctx) = self.input_ctx.upgrade() {
             let ret = self.send_position(&input_ctx, position.window_id, position.position, false);
             if let Err(err) = ret {
                 warn!("Failed to sync host cursor position: {err:?}");
@@ -405,7 +395,7 @@ where
                 });
         }
 
-        if let Some(input_ctx) = Self::input_ctx(&self.input_ctx) {
+        if let Some(input_ctx) = self.input_ctx.upgrade() {
             self.send_position(
                 &input_ctx,
                 window_id,
@@ -436,7 +426,7 @@ where
 
         let entered = self.windows.iter().any(|window| window.cursor_entered());
 
-        if let Some(input_ctx) = Self::input_ctx(&self.input_ctx) {
+        if let Some(input_ctx) = self.input_ctx.upgrade() {
             input_ctx.cursor_inside_window(entered)?;
         }
 
@@ -470,7 +460,7 @@ where
     }
 
     pub(crate) fn device_event(&self, event: DeviceEvent) {
-        if let Some(input_ctx) = Self::input_ctx(&self.input_ctx) {
+        if let Some(input_ctx) = self.input_ctx.upgrade() {
             input_ctx.device_event(&event);
         }
     }
@@ -484,7 +474,7 @@ where
             window.scale_factor()
         };
 
-        if let Some(input_ctx) = Self::input_ctx(&self.input_ctx) {
+        if let Some(input_ctx) = self.input_ctx.upgrade() {
             input_ctx.window_event(&event, scale_factor);
         }
     }
@@ -520,7 +510,7 @@ where
     }
 
     fn mouse_mode_relative(&self) -> bool {
-        if let Some(input_ctx) = Self::input_ctx(&self.input_ctx) {
+        if let Some(input_ctx) = self.input_ctx.upgrade() {
             input_ctx.mouse_relative()
         } else {
             false
@@ -660,7 +650,7 @@ where
                             .for_each(|window| window.grab_cursor(CursorGrabMode::None));
                     }
 
-                    if let Some(input_ctx) = Self::input_ctx(&self.input_ctx) {
+                    if let Some(input_ctx) = self.input_ctx.upgrade() {
                         input_ctx.set_mouse_relative(false)?;
                     }
                 }
@@ -692,7 +682,7 @@ where
 
                     self.active_cursor = None;
 
-                    if let Some(input_ctx) = Self::input_ctx(&self.input_ctx) {
+                    if let Some(input_ctx) = self.input_ctx.upgrade() {
                         input_ctx.set_mouse_relative(true)?;
                     }
                 }
