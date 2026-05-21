@@ -242,7 +242,7 @@ impl State {
             connect_config.set_streamer_port(port);
         }
 
-        connect_config.set_auto_reconnection(true);
+        connect_config.set_auto_reconnection(self.cli_args.auto_reconnect);
 
         Ok(connect_config)
     }

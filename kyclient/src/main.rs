@@ -153,6 +153,7 @@ pub struct CliArgs {
     clipboard: Option<bool>,
     keyboard_grab: bool,
     metrics: bool,
+    auto_reconnect: bool,
 }
 
 fn load_tls_conf(matches: &clap::ArgMatches) -> Result<TlsConfig> {
@@ -456,6 +457,13 @@ fn main() {
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("auto-reconnect")
+                .long("auto-reconnect")
+                .help("Enable automatic reconnection on connection loss. Default: true")
+                .value_parser(clap::value_parser!(bool))
+                .takes_value(true),
+        )
         .next_help_heading("Authentication")
         .arg(
             clap::Arg::new("username")
@@ -655,6 +663,7 @@ fn main() {
     let clipboard = matches.get_one("clipboard").copied();
     let keyboard_grab = matches.get_one("keyboard-grab").copied().unwrap_or(true);
     let metrics = matches.get_one("metrics").copied().unwrap_or(false);
+    let auto_reconnect = matches.get_one("auto-reconnect").copied().unwrap_or(true);
 
     let tls_config = load_tls_conf(&matches).unwrap_or_else(|e| {
         error!("{}", e);
@@ -683,6 +692,7 @@ fn main() {
         clipboard,
         keyboard_grab,
         metrics,
+        auto_reconnect,
     };
 
     // Create window
