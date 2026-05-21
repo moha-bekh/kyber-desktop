@@ -540,21 +540,18 @@ impl State {
             Event::WindowEvent {
                 window_id,
                 event: WindowEvent::Focused(focused),
-                ..
             } => {
                 self.windows.focused(window_id, event_loop, focused)?;
             }
             Event::WindowEvent {
                 window_id,
                 event: WindowEvent::CursorEntered { device_id: _ },
-                ..
             } => {
                 self.windows.cursor_entered(window_id, true)?;
             }
             Event::WindowEvent {
                 window_id,
                 event: WindowEvent::CursorLeft { device_id: _ },
-                ..
             } => {
                 self.windows.cursor_entered(window_id, false)?;
             }
@@ -565,7 +562,6 @@ impl State {
                         os_size: Some(os_size),
                         ..
                     },
-                ..
             } => {
                 let size = Size {
                     width: os_size.width,
@@ -577,7 +573,6 @@ impl State {
             Event::WindowEvent {
                 window_id,
                 event: WindowEvent::CursorMoved { os_position, .. },
-                ..
             } => {
                 let position = Position {
                     x: os_position.x,
@@ -589,67 +584,9 @@ impl State {
             Event::DeviceEvent { event, .. } => {
                 self.windows.device_event(event);
             }
-            Event::WindowEvent {
-                window_id,
-                event:
-                    WindowEvent::KeyboardInput {
-                        device_id,
-                        input,
-                        is_synthetic,
-                    },
-                ..
-            } => {
-                self.windows.window_event(
-                    window_id,
-                    WindowEvent::KeyboardInput {
-                        device_id,
-                        input,
-                        is_synthetic,
-                    },
-                );
-            }
-            Event::WindowEvent {
-                window_id,
-                event:
-                    WindowEvent::MouseInput {
-                        device_id,
-                        state,
-                        button,
-                        ..
-                    },
-                ..
-            } => {
-                self.windows.window_event(
-                    window_id,
-                    WindowEvent::MouseInput {
-                        device_id,
-                        state,
-                        button,
-                        modifiers: winit::event::ModifiersState::default(),
-                    },
-                );
-            }
-            Event::WindowEvent {
-                window_id,
-                event:
-                    WindowEvent::MouseWheel {
-                        device_id,
-                        delta,
-                        phase,
-                        ..
-                    },
-                ..
-            } => {
-                self.windows.window_event(
-                    window_id,
-                    WindowEvent::MouseWheel {
-                        device_id,
-                        delta,
-                        phase,
-                        modifiers: winit::event::ModifiersState::default(),
-                    },
-                );
-            }
+
+            Event::WindowEvent { window_id, event } => self.windows.window_event(window_id, event),
+
             Event::UserEvent(UserEvent::Client(kyclient_rs::Event::ControlPlaneConnected {
                 displays,
             })) => {
