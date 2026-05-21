@@ -219,6 +219,7 @@ struct State {
     bitrate: Option<u32>,
     saved_streaming_config: Option<StreamingSessionConfig>,
     oidc: Option<OidcManager>,
+    close_requested: bool,
 }
 
 impl State {
@@ -458,8 +459,15 @@ impl State {
     }
 
     fn request_stop(&mut self, control_flow: &mut ControlFlow) -> Result<()> {
-        self.client.disconnect()?;
-        *control_flow = ControlFlow::Exit;
+        // Give `client` a chance to properly shut down, but force quit if the
+        // user get impatient.
+        if self.close_requested {
+            *control_flow = ControlFlow::Exit;
+        } else {
+            self.close_requested = true;
+            self.client.disconnect()?;
+        }
+
         Ok(())
     }
 
@@ -796,6 +804,7 @@ impl EventLoopWrapper {
                 bitrate: None,
                 saved_streaming_config: None,
                 oidc: None,
+                close_requested: false,
             },
         })
     }
