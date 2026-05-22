@@ -682,14 +682,6 @@ impl State {
                     warn!("OIDC flow already in progress, skipping");
                     return Ok(());
                 }
-                // Stop the probe client. It was only used to discover the
-                // challenge. A fresh client will be created after the OIDC
-                // flow completes with the real token.
-                if let Some(c) = self.client.take() {
-                    if let Err(e) = c.stop() {
-                        warn!("Failed to stop probe client: {e:?}");
-                    }
-                }
                 oidc.start_flow(issuer, client_id, self.eventloop_proxy.clone());
             }
             Event::UserEvent(UserEvent::Client(kyclient_rs::Event::DataPlaneConnectFailed)) => {
@@ -794,7 +786,7 @@ impl State {
                 self.bitrate = Some(bitrate);
             }
             Event::UserEvent(UserEvent::OidcTokenReceived(oidc)) => {
-                info!("OIDC token received, updating credentials");
+                info!("OIDC token received");
                 if let Some(ref mut mgr) = self.oidc {
                     mgr.on_token_received(&oidc);
                 }
@@ -803,17 +795,23 @@ impl State {
                     refresh_token: _,
                     exp,
                 } = oidc;
-                self.cli_args.auth_credentials = kyclient_rs::AuthCredentials::Oidc {
+                let credentials = kyclient_rs::AuthCredentials::Oidc {
                     token: access_token,
                 };
-                match self.connect() {
+                self.cli_args.auth_credentials = credentials.clone();
+                let Some(ref client) = self.client else {
+                    warn!("No client when OIDC token received");
+                    *control_flow = ControlFlow::Exit;
+                    return Ok(());
+                };
+                match client.renew_session(&credentials) {
                     Ok(()) => {
                         if let Some(ref mut mgr) = self.oidc {
                             mgr.schedule_refresh(exp, self.eventloop_proxy.clone());
                         }
                     }
                     Err(e) => {
-                        warn!("Failed to connect after OIDC authentication: {e:?}");
+                        warn!("Failed to enqueue renew_session: {e:?}");
                         *control_flow = ControlFlow::Exit;
                     }
                 }
