@@ -61,14 +61,8 @@ cargo install --locked cargo-c@0.10.15
 ./build-linux.sh
 ```
 
-The script outputs files in folder `rootfs-x86_64-linux-gnu`.
-
-There are helper scripts in `scripts/linux` to setup all the required envvars to
-run the client and the server:
-
-```bash
-cp scripts/linux/*.sh rootfs-x86_64-linux-gnu
-```
+The script outputs files in folder `rootfs-x86_64-linux-gnu`, including helper
+scripts to setup all the required envvars to run the client and the server.
 
 Note that there are some options in the build script to avoid some build steps:
 * `-n`: Skip git fetch/checkout (preserves your local changes)
@@ -80,7 +74,7 @@ Note that there are some options in the build script to avoid some build steps:
 ```bash
 # Force X11 Compatibility Mode
 export WAYLAND_DISPLAY=""
-./rootfs-x86_64-linux-gnu/run_client.sh <host_ip>`
+./rootfs-x86_64-linux-gnu/run_kyclient.sh <host_ip>
 ```
 
 ### Input notes for client
@@ -93,7 +87,7 @@ export WAYLAND_DISPLAY=""
 #### Run host
 
 ```bash
-./rootfs-x86_64-linux-gnu/run_controller.sh
+./rootfs-x86_64-linux-gnu/run_kycontroller.sh
 ```
 
 #### Grant Input Device Permissions for Controller

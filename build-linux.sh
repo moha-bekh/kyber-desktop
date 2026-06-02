@@ -198,6 +198,12 @@ case "$ACTION" in
         cp \
             kyclient/res/kyber.ico \
             $OUT_DIR/share
+
+        # Copy scripts
+        cp \
+            scripts/linux/run_kyclient.sh \
+            scripts/linux/run_kycontroller.sh \
+            "$OUT_DIR"
     ;;
     "clippy")
         cargo clippy -p kyclient -- -D warnings
