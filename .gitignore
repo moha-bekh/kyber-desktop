@@ -10,3 +10,4 @@ libkynput
 libkypc
 rootfs-*
 target
+/log
