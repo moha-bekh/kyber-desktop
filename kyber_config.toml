@@ -18,6 +18,27 @@ encoder = "nvenc"
 # Wlroots: wlroots screencopy/dmabuf capture. Works with any encoder.
 #grab_backend = "nvfbc"
 
+# Enable or disable Intra Refresh
+#
+# Only supported when using Kymux + nvenc
+#
+# Default: true
+#intra_refresh = true
+
+# Configure the clock used to generate PTS
+#
+# Used for both audio and video
+#
+# Possible values: "ZeroedOrigin", "System"
+#
+# Default: "ZeroedOrigin"
+#clock_type = "ZeroedOrigin"
+
+# Configure the minimum allowed bitrate
+#
+# Default: 5 mbps
+#minimum_bitrate = 5000000
+
 #[kyavserver.watermark]
 # Configure the watermark overlay
 #
@@ -46,27 +67,6 @@ encoder = "nvenc"
 #
 # Default: 0.0
 #y = 0.0
-
-# Enable or disable Intra Refresh
-#
-# Only supported when using Kymux + nvenc
-#
-# Default: true
-#intra_refresh = true
-
-# Configure the clock used to generate PTS
-#
-# Used for both audio and video
-#
-# Possible values: "ZeroedOrigin", "System"
-#
-# Default: "ZeroedOrigin"
-#clock_type = "ZeroedOrigin"
-
-# Configure the minimum allowed bitrate
-#
-# Default: 5 mbps
-#minimum_bitrate = 5000000
 
 [kycontroller]
 # Enable or disable the system tray icon (Windows only)
