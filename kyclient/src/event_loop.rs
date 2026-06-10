@@ -725,7 +725,15 @@ impl State {
                 self.windows.sync_cursor_position();
             }
             Event::UserEvent(UserEvent::Client(kyclient_rs::Event::Stopped { reason })) => {
-                info!("Stopped. Reason: {reason:?}");
+                // Stopped is terminal: the SDK reconnects internally and only
+                // emits it once reconnection is disabled or exhausted (or for a
+                // user disconnect / decode error), so we always exit. A clean
+                // user disconnect logs at info; every other reason is abnormal.
+                if reason == kyclient_rs::StopReason::Requested {
+                    info!("Stopped: {reason:?} - exiting");
+                } else {
+                    warn!("Stopped: {reason:?} - exiting");
+                }
 
                 // Stale event: the client was already taken (probe client during
                 // the OIDC challenge, or via request_stop on user disconnect).
@@ -737,26 +745,7 @@ impl State {
                     warn!("client.stop() during Stopped event: {e:?}");
                 }
 
-                // Only exit if user requested disconnect, otherwise reconnection will be attempted
-                match reason {
-                    kyclient_rs::StopReason::Requested => {
-                        info!("User requested disconnect - exiting");
-                        *control_flow = ControlFlow::Exit;
-                    }
-                    kyclient_rs::StopReason::ControlPlaneClosed => {
-                        info!("Control plane closed - waiting for reconnection");
-                    }
-                    kyclient_rs::StopReason::ControlPlaneIoError => {
-                        info!("Control plane I/O error - waiting for reconnection");
-                    }
-                    kyclient_rs::StopReason::ControlPlaneTimeout => {
-                        info!("Control plane timeout - waiting for reconnection");
-                    }
-                    kyclient_rs::StopReason::DecodeError => {
-                        warn!("Decode error occurred - exiting");
-                        *control_flow = ControlFlow::Exit;
-                    }
-                }
+                *control_flow = ControlFlow::Exit;
             }
             Event::UserEvent(UserEvent::Client(kyclient_rs::Event::DisplayListUpdated {
                 displays,
