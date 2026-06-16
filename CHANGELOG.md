@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 * kymedia: Contrib build is now based on meson
 * libkypc: automatically kill child on drop
 * kynput/x11: Enable clipboard on server side
+* libkynput/windows: Revert pass custom vendor_id/product_id to ViGEm virtual gamepads"
 
 ## [0.26.0] - 2026-05-12
 
