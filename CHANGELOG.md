@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 * kyclient: Add --auto-reconnect CLI flag
 * kyclient: Exit on Stopped event regardless of reason
 * kyservice: Fix a random issue where kycontroller start was rejected by Windows
+* Support KYBER_CONFIG to override the config file for kyservice, kycontroller, kyavserver, kynputserver
 
 ## [0.26.0] - 2026-05-12
 
