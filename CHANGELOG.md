@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller: Add more ways to set configuration parameters
 * kyclient: Add --auto-reconnect CLI flag
 * kyclient: Exit on Stopped event regardless of reason
+* kyservice: Fix a random issue where kycontroller start was rejected by Windows
 
 ## [0.26.0] - 2026-05-12
 
