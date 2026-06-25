@@ -131,6 +131,19 @@ encoder = "nvenc"
 # Default: true
 #multi_client = true
 
+# Path to the web client directory served under /webclient
+#
+# When unset, the controller looks for a "webclient" folder next to the
+# executable (on Linux, one level above the "bin" directory). Set an absolute
+# path to serve the web client from a custom location.
+#
+# On Windows, use forward slashes. Windows accepts "/" as a path separator, and
+# in a TOML string a backslash is an escape character (so "C:\path" is invalid
+# and would need "C:\\path").
+#
+# Default: derived from the executable location
+#webclient = "C:/absolute/path/to/webclient"
+
 [kycontroller.security]
 # List of origins allowed to query the controller via cross-origin requests.
 #
