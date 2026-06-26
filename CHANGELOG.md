@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-06-26
+
 * kycontroller: Implement kydup
 * kymedia: Contrib build is now based on meson
 * libkypc: automatically kill child on drop
