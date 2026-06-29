@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * desktop: Update client app icon to new Kyber brand mark
+* kymedia: generate vulkan.pc pkg-config file
+* kyctl: Improve mutex handling
+* kycontroller: Show connected in tray only after stream session
+* kyctl: Refactors and improvements for kyclient
+* kymux: Make ProtocolSend and ProtocolRecv cancel-safe
+* kymux: Implement AsyncRead/AsyncWrite and factorize serialization
+* libkypc: Refactor internals and API
 
 ## [0.27.0] - 2026-06-26
 
