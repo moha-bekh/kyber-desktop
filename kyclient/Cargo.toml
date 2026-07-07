@@ -33,4 +33,4 @@ default = []
 win32-hide-console = []
 
 [build-dependencies]
-vergen = { version = "8.3.1", features = ["build", "git", "gix"] }
+vergen = { version = "8.3.1", features = ["build", "git", "gitcl"] }
