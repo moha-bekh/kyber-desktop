@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 * libkypc: Refactor internals and API
 * kyutil: Expose new named pipe API
 * kymux: preallocate datagram segment merge buffers
+* kynput: Remove a lot of `unsafe` from C API
 
 ## [0.27.0] - 2026-06-26
 
