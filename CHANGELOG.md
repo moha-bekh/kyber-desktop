@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 * kynput: Remove a lot of `unsafe` from C API
 * kynput: Use upstream `keycode` crate
 * txproto: bump for wayland display geometry discovery
+* txproto/dxgi_cursor: retry pipe connection instead of dying on first failure
 
 ## [0.27.0] - 2026-06-26
 
