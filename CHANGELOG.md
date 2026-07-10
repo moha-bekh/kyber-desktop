@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 * kyavservice: Make grab_backend more consistent with other fields
 * kycom: Add a `Serializable` trait
 * kyclient: Use existing runtime in main loop if possible
+* kyctl: Use git cli instead of gix in vergen
 
 ## [0.27.0] - 2026-06-26
 
