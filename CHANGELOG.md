@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 * kymux: preallocate datagram segment merge buffers
 * kynput: Remove a lot of `unsafe` from C API
 * kynput: Use upstream `keycode` crate
+* kyctl: Use upstream keycode
 * txproto: bump for wayland display geometry discovery
 * txproto/dxgi_cursor: retry pipe connection instead of dying on first failure
 * txproto/drm: log card init failures once per device instead of every poll
