@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 * kymux: Implement AsyncRead/AsyncWrite and factorize serialization
 * libkypc: Refactor internals and API
 * kyutil: Expose new named pipe API
+* kymux: preallocate datagram segment merge buffers
 
 ## [0.27.0] - 2026-06-26
 
