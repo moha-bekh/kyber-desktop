@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 * kycom: Add a `Serializable` trait
 * kyclient: Use existing runtime in main loop if possible
 * kyctl: Use git cli instead of gix in vergen
+* kymux: Move forwarding functions from kycom to kymux-utils
 
 ## [0.27.0] - 2026-06-26
 
