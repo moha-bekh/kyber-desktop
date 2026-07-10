@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 * txproto: bump for wayland display geometry discovery
 * txproto/dxgi_cursor: retry pipe connection instead of dying on first failure
 * txproto/drm: log card init failures once per device instead of every poll
+* kymedia/watermark: make it an optional feature
 
 ## [0.27.0] - 2026-06-26
 
