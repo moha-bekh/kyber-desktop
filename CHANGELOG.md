@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 * kyclient/metrics: Replace asserts with warnings
 * kyclient/metrics: Stop unused tasks after disconnect
 * kyber_config.toml: encoder is now optional (defaults to nvenc)
+* kycontroller: Correctly log git version in startup logs
 
 ## [0.27.0] - 2026-06-26
 
