@@ -31,6 +31,8 @@ All notable changes to this project will be documented in this file.
 * kyclient/metrics: Stop unused tasks after disconnect
 * kyber_config.toml: encoder is now optional (defaults to nvenc)
 * kycontroller: Correctly log git version in startup logs
+* kyclient: Log correct kyclient revision
+* kyclient: Add --version to log revision
 
 ## [0.27.0] - 2026-06-26
 

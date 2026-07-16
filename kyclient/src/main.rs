@@ -252,6 +252,7 @@ fn main() {
     info!("Kyber client. Revision {}", env!("VERGEN_GIT_DESCRIBE"));
 
     let app = clap::App::new("Streaming client")
+        .version(env!("VERGEN_GIT_DESCRIBE"))
         .about("IP of the streamer to connect to")
         .arg(
             clap::Arg::with_name("protocol")

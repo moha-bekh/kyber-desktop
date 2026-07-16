@@ -18,7 +18,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use std::process::Command;
+
 use vergen::EmitBuilder;
+
+fn git_output(args: &[&str]) -> Option<String> {
+    let output = Command::new("git").args(args).output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let value = String::from_utf8(output.stdout).ok()?.trim().to_string();
+    (!value.is_empty()).then_some(value)
+}
 
 fn generate_rc() {
     use std::env;
@@ -62,10 +73,34 @@ fn generate_rc() {
 }
 
 fn main() {
+    // Fetch tags when none are reachable (shallow or detached checkout) so
+    // git-describe resolves the release tag. Best-effort: offline builds fail
+    // the fetch and fall back to the short SHA below. Bound a stalled HTTP fetch
+    // (aborts below 1 KB/s for 15s) so it can't hang the build; ignored for ssh
+    // remotes, which CI does not use. vergen emits rerun-if-changed on the git
+    // HEAD, so this only runs when the commit moves.
+    if git_output(&["describe", "--tags"]).is_none() {
+        Command::new("git")
+            .args(["fetch", "--tags", "--quiet"])
+            .env("GIT_HTTP_LOW_SPEED_LIMIT", "1000")
+            .env("GIT_HTTP_LOW_SPEED_TIME", "15")
+            .status()
+            .ok();
+    }
+
     EmitBuilder::builder()
         .git_describe(false, true, None)
         .emit()
-        .unwrap();
+        .expect("vergen failed to emit git describe");
+
+    // vergen leaves VERGEN_GIT_DESCRIBE empty when no tag is reachable, e.g. a
+    // shallow CI checkout with no tags fetched. Fall back to the short commit
+    // SHA so the logged revision and --version output are never blank.
+    if git_output(&["describe", "--tags"]).is_none() {
+        if let Some(sha) = git_output(&["rev-parse", "--short", "HEAD"]) {
+            println!("cargo:rustc-env=VERGEN_GIT_DESCRIBE={sha}");
+        }
+    }
 
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
     println!("{target_os}");
