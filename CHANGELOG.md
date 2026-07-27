@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 * kyctl: Use git cli instead of gix in vergen
 * kymux: Move forwarding functions from kycom to kymux-utils
 * kyclient: Avoid to route metrics in main loop
+* kyclient/metrics: Replace asserts with warnings
 
 ## [0.27.0] - 2026-06-26
 
