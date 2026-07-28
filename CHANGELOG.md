@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 * kyclient: Avoid to route metrics in main loop
 * kyclient/metrics: Replace asserts with warnings
 * kyclient/metrics: Stop unused tasks after disconnect
+* kyber_config.toml: encoder is now optional (defaults to nvenc)
 
 ## [0.27.0] - 2026-06-26
 
