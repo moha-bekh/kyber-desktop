@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>tech.kyber.server</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Applications/Kyber-Server.app/Contents/MacOS/kycontroller</string>
+    </array>
+
+    <key>LimitLoadToSessionType</key>
+    <array>
+        <string>Aqua</string>
+        <string>LoginWindow</string>
+    </array>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/Shared/Kyber-Server</string>
+
+    <key>StandardOutPath</key>
+    <string>/Users/Shared/Kyber-Server/out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/Shared/Kyber-Server/err.log</string>
+
+    <key>ProcessType</key>
+    <string>Interactive</string>
+
+    <key>Disabled</key>
+    <false/>
+
+    <key>EnableTransactions</key>
+    <false/>
+</dict>
+</plist>

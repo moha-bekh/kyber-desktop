@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+LABEL="tech.kyber.server"
+
+get_gui_uid() {
+    local uid
+    uid=$(scutil <<< "show State:/Users/ConsoleUser" 2>/dev/null \
+          | awk '/^ *UID *:/{print $3}')
+    [[ -z "$uid" || "$uid" == "0" ]] && echo "" || echo "$uid"
+}
+
+uid=$(get_gui_uid)
+
+if [[ -n "$uid" ]] && launchctl print "gui/${uid}/${LABEL}" &>/dev/null; then
+    launchctl bootout "gui/${uid}/${LABEL}" 2>/dev/null || true
+fi
+
+exit 0
