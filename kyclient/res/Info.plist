@@ -7,7 +7,7 @@
         <key>CFBundleIdentifier</key>
         <string>com.kyber.client</string>
         <key>CFBundleExecutable</key>
-        <string>client</string>
+        <string>kyclient</string>
         <key>CFBundleName</key>
         <string>Kyber Client</string>
         <key>CFBundleVersion</key>
