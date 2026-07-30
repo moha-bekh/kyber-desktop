@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 * kysdk: Integrate log4ky
 * kyclient: Replace log4rs with log4ky
 * kyclient: Block clicks outside video area
+* avservice: Add avconv backend
 
 ## [0.27.0] - 2026-06-26
 

@@ -1,7 +1,7 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-  DEBIAN_IMAGE: ${CI_REGISTRY}/${ROOT_NAMESPACE}/ops/docker-images/debian-trixie:a3d1e282885b1ef5fd5fdbbf7a7d8e0b3a33de15
-  UBUNTU_IMAGE: ${CI_REGISTRY}/${ROOT_NAMESPACE}/ops/docker-images/ubuntu-noble:a3d1e282885b1ef5fd5fdbbf7a7d8e0b3a33de15
+  DEBIAN_IMAGE: ${CI_REGISTRY}/${ROOT_NAMESPACE}/ops/docker-images/debian-trixie:82eefa1cd6bf2f1365708bbf980f6b667898b20a
+  UBUNTU_IMAGE: ${CI_REGISTRY}/${ROOT_NAMESPACE}/ops/docker-images/ubuntu-noble:82eefa1cd6bf2f1365708bbf980f6b667898b20a
   WIN64_IMAGE: ${CI_REGISTRY}/${ROOT_NAMESPACE}/ops/docker-images/debian-win64:a3d1e282885b1ef5fd5fdbbf7a7d8e0b3a33de15
   MACOS_RUST_VERSION: 1.89.0
 stages:

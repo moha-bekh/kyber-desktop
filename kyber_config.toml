@@ -62,6 +62,16 @@
 # Default: same as log_level
 #txproto_log_level = "warn"
 
+# Select which AV engine handles capture/encode/mux.
+#
+# Possible values: "libavconv", "txproto"
+#
+# libavconv: New backend.
+# txproto:   Legacy backend, kept as a fallback during the libavconv rollout.
+#
+# Default: "txproto"
+#backend = "txproto"
+
 # Configure the video encoder to use
 #
 # Possible values: "x264", "nvenc", "qsv", "amf", "vaapi", "videotoolbox"
