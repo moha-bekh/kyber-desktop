@@ -241,7 +241,7 @@ clippy-windows-x86_64:
     export KYBER_DIRNAME=rootfs
     export KYBER_PREFIX=$(pwd)/$KYBER_DIRNAME
     # Build contribs
-    ./build-macos.sh -d -a $HOST_ARCH -o $KYBER_PREFIX
+    ./build-macos.sh -d -a $HOST_ARCH -o $KYBER_PREFIX both
     # Prepare rootfs to be shared to other jobs
     cd $KYBER_PREFIX
     ../scripts/change_prefix.sh $(pwd)
@@ -269,17 +269,20 @@ clippy-windows-x86_64:
     cd $ROOTFS_PATH
     ../scripts/change_prefix.sh
     cd -
-    # Set output name
+    # Set output names (both targets, one job)
     if [ -n "$CI_COMMIT_TAG" ]; then
-      export KYBER_APP_DIRECTORY=kyber-client-$HOST_ARCH-$CI_COMMIT_TAG.app
+      export KYBER_CLIENT_APP_DIRECTORY=Kyber-Client-$HOST_ARCH-$CI_COMMIT_TAG.app
+      export KYBER_SERVER_APP_DIRECTORY=Kyber-Server-$HOST_ARCH-$CI_COMMIT_TAG.app
     else
-      export KYBER_APP_DIRECTORY=kyber-client-$HOST_ARCH-$CI_COMMIT_SHORT_SHA.app
+      export KYBER_CLIENT_APP_DIRECTORY=Kyber-Client-$HOST_ARCH-$CI_COMMIT_SHORT_SHA.app
+      export KYBER_SERVER_APP_DIRECTORY=Kyber-Server-$HOST_ARCH-$CI_COMMIT_SHORT_SHA.app
     fi
-    # Build
-    ./build-macos.sh -s -p -a $HOST_ARCH -o $ROOTFS_PATH
+    # Build both client and server in one shot
+    ./build-macos.sh -s -p -a $HOST_ARCH -o $ROOTFS_PATH both
   artifacts:
     paths:
-      - kyber-client-*.app.zip
+      - Kyber-Client-*.app.zip
+      - Kyber-Server-*.dmg
     expire_in: 1 week
 
 contrib-macos-x86_64:
