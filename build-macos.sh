@@ -218,6 +218,9 @@ export PATH=$OUT_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$OUT_DIR/lib
 export PKG_CONFIG_PATH=$OUT_DIR/lib/pkgconfig
 
+# The desktop build requires the client-side kymedia dependencies.
+export KYBER_BUILD_CLIENT_DEPS=1
+
 # Build dependencies
 if [ "$BUILD_DEPS" = true ]; then
     build_deps
