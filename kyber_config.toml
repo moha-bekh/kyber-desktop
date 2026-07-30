@@ -1,9 +1,11 @@
 [kyavserver]
 # Configure the video encoder to use
 #
-# Possible values: "x264", "nvenc", "qsv", "amf", "vaapi"
+# Possible values: "x264", "nvenc", "qsv", "amf", "vaapi", "videotoolbox"
 #
-# Default: "nvenc"
+# Default:
+# * macOS: "videotoolbox"
+# * Other platforms: "nvenc"
 #encoder = "nvenc"
 
 # Linux: Select screen capture backend
