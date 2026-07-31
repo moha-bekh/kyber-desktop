@@ -174,7 +174,7 @@ get_cargo_target()
 BUILD_DEPS=true
 PACKAGE=false
 ACTION="build"
-OUT_DIR=$(pwd)/rootfs-$HOST_ARCH-macos
+OUT_DIR=""
 
 while getopts "hfsdctpo:a:" OPTION
 do
@@ -207,6 +207,10 @@ do
     esac
 done
 shift $(($OPTIND - 1))
+
+if [ -z "$OUT_DIR" ]; then
+    OUT_DIR=$(pwd)/rootfs-$HOST_ARCH-macos
+fi
 
 if [ "x$1" != "x" ]; then
     usage
