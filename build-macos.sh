@@ -35,7 +35,7 @@ BASE_DIR=$(realpath $(dirname $0))
 usage()
 {
 cat << EOF
-usage: $0 -o <path> [options]
+usage: $0 [options] [target]
 
 Build Desktop Application.
 
@@ -49,6 +49,11 @@ OPTIONS:
    -p            Generate a package of the app
    -o <path>     Install the built binaries in the absolute path (Default: ./rootfs-$HOST_ARCH-macos)
    -a <arch>     Use the specified arch (default: $HOST_ARCH)
+
+TARGET:
+   client        Build the desktop client (default)
+   server        Build the host/server
+   both          Build client and server
 
 ENVIRONMENT:
    KYBER_CLIENT_APP_DIRECTORY   Override the kyclient bundle directory name
@@ -77,7 +82,18 @@ git_clone() {
 
 build_deps() {
     cd kysdk/kyctl
-    ./build-macos.sh -a $HOST_ARCH -o $OUT_DIR
+    case "$TARGET" in
+        client)
+            ./build-macos.sh -a $HOST_ARCH -o $OUT_DIR build-kyclient
+            ;;
+        server)
+            ./build-macos.sh -a $HOST_ARCH -o $OUT_DIR build-kycontroller
+            ;;
+        both)
+            ./build-macos.sh -a $HOST_ARCH -o $OUT_DIR build-kyclient
+            ./build-macos.sh -s -a $HOST_ARCH -o $OUT_DIR build-kycontroller
+            ;;
+    esac
     cd -
 }
 
@@ -181,6 +197,7 @@ get_cargo_target()
 BUILD_DEPS=true
 PACKAGE=false
 ACTION="build"
+TARGET="client"
 OUT_DIR=""
 
 while getopts "hfsdctpo:a:" OPTION
@@ -215,22 +232,42 @@ do
 done
 shift $(($OPTIND - 1))
 
+# Get target from positional argument
+if [ "x$1" != "x" ]; then
+    TARGET=$1
+    shift
+fi
+
+# Ensure no extra arguments
+if [ "x$1" != "x" ]; then
+    echo "Error: Unexpected argument '$1'" >&2
+    usage
+    exit 1
+fi
+
 if [ -z "$OUT_DIR" ]; then
     OUT_DIR=$(pwd)/rootfs-$HOST_ARCH-macos
 fi
 
-if [ "x$1" != "x" ]; then
-    usage
-    exit 1
-fi
+case "$TARGET" in
+    client|server|both) ;;
+    *)
+        echo "Error: invalid target '$TARGET' (must be client, server, or both)" >&2
+        usage
+        exit 1
+        ;;
+esac
 
 # Build local repository
 export PATH=$OUT_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$OUT_DIR/lib
 export PKG_CONFIG_PATH=$OUT_DIR/lib/pkgconfig
 
-# The desktop build requires the client-side kymedia dependencies.
-export KYBER_BUILD_CLIENT_DEPS=1
+# libvlc + kyaudioreg are only needed by the client. Export the flag
+# so kysdk/kymedia/contrib/build-macos.sh knows whether to build them.
+if [ "$TARGET" = "client" ] || [ "$TARGET" = "both" ]; then
+    export KYBER_BUILD_CLIENT_DEPS=1
+fi
 
 # Build dependencies
 if [ "$BUILD_DEPS" = true ]; then
@@ -249,31 +286,53 @@ CARGO_TARGET=`get_cargo_target $HOST_ARCH`
 # Run action
 case "$ACTION" in
     "build")
-        cargo build \
-            -p kyclient \
-            --target $CARGO_TARGET \
-            --release
-
-        cp \
-            target/$CARGO_TARGET/release/kyclient \
-            test/tls/kybertest_rootca_cert.pem \
-            $OUT_DIR/bin
-        
+        # Shared resources used by either target
         mkdir -p $OUT_DIR/share/kyber
+        cp kyclient/res/kyber.icns $OUT_DIR/share/kyber
+        cp test/tls/kybertest_rootca_cert.pem $OUT_DIR/bin
 
-        cp \
-            kyclient/res/Info.plist \
-            $OUT_DIR/share/kyber/client-Info.plist
+        if [ "$TARGET" = "client" ] || [ "$TARGET" = "both" ]; then
+            # Build the desktop kyclient binary. Overwrites any SDK kyclient
+            # that the deps stage may have left at $OUT_DIR/bin/kyclient.
+            cargo build \
+                -p kyclient \
+                --target $CARGO_TARGET \
+                --release
 
-        cp \
-            kyclient/res/kyber.icns \
-            $OUT_DIR/share/kyber
+            cp \
+                target/$CARGO_TARGET/release/kyclient \
+                $OUT_DIR/bin
+
+            cp \
+                kyclient/res/Info.plist \
+                $OUT_DIR/share/kyber/client-Info.plist
+        fi
+
+        if [ "$TARGET" = "server" ] || [ "$TARGET" = "both" ]; then
+            # Server runtime config and full TLS material
+            cp \
+                kyber_config.toml \
+                $OUT_DIR/bin
+
+            cp \
+                test/tls/kybertest_cert.pem \
+                test/tls/kybertest_key.pem \
+                $OUT_DIR/bin
+
+            cp \
+                scripts/macos/server-Info.plist \
+                $OUT_DIR/share/kyber/server-Info.plist
+        fi
     ;;
     "clippy")
-        cargo clippy -p kyclient --target $CARGO_TARGET -- -D warnings
+        if [ "$TARGET" = "client" ] || [ "$TARGET" = "both" ]; then
+            cargo clippy -p kyclient --target $CARGO_TARGET -- -D warnings
+        fi
     ;;
     "test")
-        cargo test -p kyclient
+        if [ "$TARGET" = "client" ] || [ "$TARGET" = "both" ]; then
+            cargo test -p kyclient
+        fi
     ;;
     "none")
         echo "No action requested"
@@ -282,5 +341,7 @@ esac
 
 # Package if requested
 if [ "$PACKAGE" = true ]; then
-    package_client $OUT_DIR
+    if [ "$TARGET" = "client" ] || [ "$TARGET" = "both" ]; then
+        package_client $OUT_DIR
+    fi
 fi
