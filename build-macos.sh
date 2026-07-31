@@ -49,6 +49,11 @@ OPTIONS:
    -p            Generate a package of the app
    -o <path>     Install the built binaries in the absolute path (Default: ./rootfs-$HOST_ARCH-macos)
    -a <arch>     Use the specified arch (default: $HOST_ARCH)
+
+ENVIRONMENT:
+   KYBER_CLIENT_APP_DIRECTORY   Override the kyclient bundle directory name
+   KYBER_APP_DIRECTORY          Legacy fallback used when the client-specific
+                                variable is unset
 EOF
 }
 
@@ -76,13 +81,15 @@ build_deps() {
     cd -
 }
 
-package() {
+package_client() {
     local source_directory=$1
 
-    if [[ -z "${KYBER_APP_DIRECTORY}" ]]; then
-        local app_dir="kyber-kyclient.app"
-    else
+    if [[ -n "${KYBER_CLIENT_APP_DIRECTORY}" ]]; then
+        local app_dir="${KYBER_CLIENT_APP_DIRECTORY}"
+    elif [[ -n "${KYBER_APP_DIRECTORY}" ]]; then
         local app_dir="${KYBER_APP_DIRECTORY}"
+    else
+        local app_dir="Kyber-Client.app"
     fi
 
     echo "Creating $app_dir from $source_directory"
@@ -118,8 +125,8 @@ package() {
 
     # Copy resources
     cp \
-        $source_directory/share/kyber/Info.plist \
-        $app_dir/Contents
+        $source_directory/share/kyber/client-Info.plist \
+        $app_dir/Contents/Info.plist
 
     cp \
         $source_directory/share/kyber/kyber.icns \
@@ -256,7 +263,7 @@ case "$ACTION" in
 
         cp \
             kyclient/res/Info.plist \
-            $OUT_DIR/share/kyber
+            $OUT_DIR/share/kyber/client-Info.plist
 
         cp \
             kyclient/res/kyber.icns \
@@ -275,5 +282,5 @@ esac
 
 # Package if requested
 if [ "$PACKAGE" = true ]; then
-    package $OUT_DIR
+    package_client $OUT_DIR
 fi
