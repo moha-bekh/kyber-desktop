@@ -57,8 +57,11 @@ TARGET:
 
 ENVIRONMENT:
    KYBER_CLIENT_APP_DIRECTORY   Override the kyclient bundle directory name
-   KYBER_APP_DIRECTORY          Legacy fallback used when the client-specific
-                                variable is unset
+   KYBER_SERVER_APP_DIRECTORY   Override the server bundle directory name
+   KYBER_APP_DIRECTORY          Legacy fallback consulted by both package steps
+                                when the target-specific variable is unset
+   KYBER_SERVER_SKIP_DMG        When set, package_server keeps the standalone .app
+                                and skips the .pkg/.dmg installer build
 EOF
 }
 
@@ -176,6 +179,85 @@ package_client() {
     local zipname=$(basename $app_dir).zip
     echo "Creating ${zipname}"
     zip --symlinks -r ${zipname} $app_dir
+}
+
+# Recursively bundle a Mach-O's rootfs dylib deps into Frameworks and rewrite
+# every reference (and the copied dylibs' install ids) to @rpath.
+fix_macho_deps() {
+    local macho=$1 frameworks=$2 src=$3
+    # otool's first line is the file's own id; skip it with NR>1.
+    for dep in $(otool -L "$macho" | awk 'NR>1{print $1}' | grep "^$src/"); do
+        local libname=$(basename "$dep")
+        local newly=0
+        if [ ! -e "$frameworks/$libname" ]; then
+            # -L: deref versioned symlinks so the real dylib lands under $libname
+            cp -pL "$dep" "$frameworks/$libname"
+            chmod u+w "$frameworks/$libname"
+            install_name_tool -id "@rpath/$libname" "$frameworks/$libname"
+            newly=1
+        fi
+        install_name_tool -change "$dep" "@rpath/$libname" "$macho"
+        if [ "$newly" = 1 ]; then
+            fix_macho_deps "$frameworks/$libname" "$frameworks" "$src"
+        fi
+    done
+    return 0
+}
+
+package_server() {
+    local source_directory=$1
+
+    if [[ -n "${KYBER_SERVER_APP_DIRECTORY}" ]]; then
+        local app_dir="${KYBER_SERVER_APP_DIRECTORY}"
+    elif [[ -n "${KYBER_APP_DIRECTORY}" ]]; then
+        local app_dir="${KYBER_APP_DIRECTORY}"
+    else
+        local app_dir="Kyber-Server.app"
+    fi
+
+    echo "Creating $app_dir from $source_directory"
+    mkdir -p $app_dir/Contents/MacOS $app_dir/Contents/Frameworks $app_dir/Contents/Resources
+
+    cp \
+        $source_directory/bin/kycontroller \
+        $source_directory/bin/kyavserver \
+        $source_directory/bin/kynputserver \
+        $source_directory/bin/kyber_config.toml \
+        $source_directory/bin/kybertest_cert.pem \
+        $source_directory/bin/kybertest_key.pem \
+        $source_directory/bin/kybertest_rootca_cert.pem \
+        $app_dir/Contents/MacOS
+
+    # Copy resources
+    cp \
+        $source_directory/share/kyber/server-Info.plist \
+        $app_dir/Contents/Info.plist
+
+    cp \
+        $source_directory/share/kyber/kyber.icns \
+        $app_dir/Contents/Resources
+
+    local frameworks="$app_dir/Contents/Frameworks"
+
+    # Seed liblua: dlopen'd by libtxproto's scripting, so otool -L can't see it.
+    cp -pL $source_directory/lib/liblua.dylib "$frameworks/liblua.dylib"
+    chmod u+w "$frameworks/liblua.dylib"
+    install_name_tool -id "@rpath/liblua.dylib" "$frameworks/liblua.dylib"
+    fix_macho_deps "$frameworks/liblua.dylib" "$frameworks" "$source_directory"
+
+    # Walk each executable's real dependency graph into the bundle.
+    for exe in kycontroller kyavserver kynputserver; do
+        install_name_tool -add_rpath "@executable_path/../Frameworks/" \
+            "$app_dir/Contents/MacOS/$exe"
+        fix_macho_deps "$app_dir/Contents/MacOS/$exe" "$frameworks" "$source_directory"
+    done
+
+    if [[ -n "${KYBER_SERVER_SKIP_DMG:-}" ]]; then
+        echo "KYBER_SERVER_SKIP_DMG set — keeping standalone $app_dir, skipping installer/DMG."
+    else
+        bash ./scripts/macos/build-kyber-dmg.sh "$(basename "$app_dir" .app)"
+        rm -Rf $app_dir
+    fi
 }
 
 get_cargo_target()
@@ -343,5 +425,8 @@ esac
 if [ "$PACKAGE" = true ]; then
     if [ "$TARGET" = "client" ] || [ "$TARGET" = "both" ]; then
         package_client $OUT_DIR
+    fi
+    if [ "$TARGET" = "server" ] || [ "$TARGET" = "both" ]; then
+        package_server $OUT_DIR
     fi
 fi
