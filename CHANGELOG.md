@@ -35,6 +35,7 @@ All notable changes to this project will be documented in this file.
 * kyclient: Add --version to log revision
 * kynput/capi: use cbindgen to prefix type names
 * kynput/capi: Improve robustness vs NULL pointer
+* kycontroller: Show version in tray menu
 
 ## [0.27.0] - 2026-06-26
 
