@@ -225,6 +225,10 @@ clippy-windows-x86_64:
     ./build-win32.sh -s -c -o $ROOTFS_PATH
 
 .macos-common:
+  variables:
+    GIT_STRATEGY: clone
+    GIT_DEPTH: 1
+    GIT_SUBMODULE_DEPTH: 1
   before_script: |
     rustup override set $MACOS_RUST_VERSION
 
