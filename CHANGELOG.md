@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller: Correctly log git version in startup logs
 * kyclient: Log correct kyclient revision
 * kyclient: Add --version to log revision
+* kynput/capi: use cbindgen to prefix type names
 
 ## [0.27.0] - 2026-06-26
 
