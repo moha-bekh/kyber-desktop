@@ -356,12 +356,6 @@ export PATH=$OUT_DIR/bin:$PATH
 export LD_LIBRARY_PATH=$OUT_DIR/lib
 export PKG_CONFIG_PATH=$OUT_DIR/lib/pkgconfig
 
-# libvlc + kyaudioreg are only needed by the client. Export the flag
-# so kysdk/kymedia/contrib/build-macos.sh knows whether to build them.
-if [ "$TARGET" = "client" ] || [ "$TARGET" = "both" ]; then
-    export KYBER_BUILD_CLIENT_DEPS=1
-fi
-
 # Build dependencies
 if [ "$BUILD_DEPS" = true ]; then
     build_deps
