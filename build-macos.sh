@@ -51,9 +51,9 @@ OPTIONS:
    -a <arch>     Use the specified arch (default: $HOST_ARCH)
 
 TARGET:
-   client        Build the desktop client (default)
+   client        Build the desktop client
    server        Build the host/server
-   both          Build client and server
+   both          Build client and server (default)
 
 ENVIRONMENT:
    KYBER_CLIENT_APP_DIRECTORY   Override the kyclient bundle directory name
@@ -290,7 +290,7 @@ get_cargo_target()
 BUILD_DEPS=true
 PACKAGE=false
 ACTION="build"
-TARGET="client"
+TARGET="both"
 OUT_DIR=""
 
 while getopts "hfsdctpo:a:" OPTION
