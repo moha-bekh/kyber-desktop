@@ -93,8 +93,7 @@ build_deps() {
             ./build-macos.sh -a $HOST_ARCH -o $OUT_DIR build-kycontroller
             ;;
         both)
-            ./build-macos.sh -a $HOST_ARCH -o $OUT_DIR build-kyclient
-            ./build-macos.sh -s -a $HOST_ARCH -o $OUT_DIR build-kycontroller
+            ./build-macos.sh -a $HOST_ARCH -o $OUT_DIR
             ;;
     esac
     cd -
