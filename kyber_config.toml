@@ -1,4 +1,67 @@
+[log]
+# Shared fallback log level, applied to every binary section below that does
+# not set its own log_level.
+#
+# Possible values: "trace", "debug", "info", "warn", "error", "off"
+#
+# Overridden by the KYBER_LOG_LEVEL environment variable, and by a binary
+# section's own log_level.
+#
+# Default: "info"
+#log_level = "info"
+
+# Shared fallback per-target log levels, applied to every binary section.
+#
+# Each key pins a level for a module-path prefix (usually a crate name),
+# regardless of log_level. Use it to silence one noisy crate or to debug
+# one crate without raising the whole log.
+#
+# Levels: "trace", "debug", "info", "warn", "error", "off"
+#
+# Merged with a binary section's own log_levels; on the same target key, the
+# binary section wins. Overridden per target by target=level directives in
+# the KYBER_LOG_LEVEL environment variable.
+#
+# Default: none
+#log_levels = { kynet = "trace" }
+
 [kyavserver]
+# Log level for this binary
+#
+# Possible values: "trace", "debug", "info", "warn", "error", "off"
+#
+# Overridden by the KYBER_LOG_LEVEL environment variable.
+#
+# Default: "info"
+#log_level = "info"
+
+# Per-target log levels for this binary
+#
+# Each key pins a level for a module-path prefix (usually a crate name),
+# regardless of log_level. Use it to silence one noisy crate or to debug
+# one crate without raising the whole log.
+#
+# Levels: "trace", "debug", "info", "warn", "error", "off"
+#
+# Overridden per target by target=level directives in the KYBER_LOG_LEVEL
+# environment variable.
+#
+# Default: none
+#log_levels = { kynet = "trace" }
+
+# Log level for the txproto pipeline (frame capture, encoders, FFmpeg
+# internals routed through libtxproto).
+#
+# Filters records emitted with the `txproto::*` log target via
+# hierarchical target matching. Covers the frame-drop spam from
+# `txproto::\\.\DISPLAY1`, the `txproto::lavc:*` encoder debug, and the
+# FFmpeg-internal records (`txproto::h264_nvenc`, etc.) in one knob.
+#
+# Possible values: "trace", "debug", "info", "warn", "error", "off"
+#
+# Default: same as log_level
+#txproto_log_level = "warn"
+
 # Configure the video encoder to use
 #
 # Possible values: "x264", "nvenc", "qsv", "amf", "vaapi", "videotoolbox"
@@ -71,6 +134,29 @@
 #y = 0.0
 
 [kycontroller]
+# Log level for this binary
+#
+# Possible values: "trace", "debug", "info", "warn", "error", "off"
+#
+# Overridden by the KYBER_LOG_LEVEL environment variable.
+#
+# Default: "info"
+#log_level = "info"
+
+# Per-target log levels for this binary
+#
+# Each key pins a level for a module-path prefix (usually a crate name),
+# regardless of log_level. Use it to silence one noisy crate or to debug
+# one crate without raising the whole log.
+#
+# Levels: "trace", "debug", "info", "warn", "error", "off"
+#
+# Overridden per target by target=level directives in the KYBER_LOG_LEVEL
+# environment variable.
+#
+# Default: none
+#log_levels = { kynet = "trace" }
+
 # Enable or disable the system tray icon (Windows only)
 #
 # Default: true
@@ -297,6 +383,29 @@ enabled = false
 # jwks_cache_ttl = 300
 
 [kynputserver]
+# Log level for this binary
+#
+# Possible values: "trace", "debug", "info", "warn", "error", "off"
+#
+# Overridden by the KYBER_LOG_LEVEL environment variable.
+#
+# Default: "info"
+#log_level = "info"
+
+# Per-target log levels for this binary
+#
+# Each key pins a level for a module-path prefix (usually a crate name),
+# regardless of log_level. Use it to silence one noisy crate or to debug
+# one crate without raising the whole log.
+#
+# Levels: "trace", "debug", "info", "warn", "error", "off"
+#
+# Overridden per target by target=level directives in the KYBER_LOG_LEVEL
+# environment variable.
+#
+# Default: none
+#log_levels = { kynet = "trace" }
+
 # Force to plug Xbox 360 controllers
 #
 # Only supported on Windows
@@ -321,6 +430,30 @@ enabled = false
 #
 # Default: true
 #keyboard_key_repeat = true
+
+[kyservice]
+# Log level for this binary
+#
+# Possible values: "trace", "debug", "info", "warn", "error", "off"
+#
+# Overridden by the KYBER_LOG_LEVEL environment variable.
+#
+# Default: "info"
+#log_level = "info"
+
+# Per-target log levels for this binary
+#
+# Each key pins a level for a module-path prefix (usually a crate name),
+# regardless of log_level. Use it to silence one noisy crate or to debug
+# one crate without raising the whole log.
+#
+# Levels: "trace", "debug", "info", "warn", "error", "off"
+#
+# Overridden per target by target=level directives in the KYBER_LOG_LEVEL
+# environment variable.
+#
+# Default: none
+#log_levels = { kynet = "trace" }
 
 [kyservice.kidd]
 # Enable or disable Kidd
