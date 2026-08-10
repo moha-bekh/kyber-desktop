@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
 * kyclient/capi: rename metrics types to camel case
 * kyvlcplayer: Pass -vv to VLC when KYBER_VLC_VERBOSE is set
 * kycontroller: Disable intra_refresh when GopStream is requested
+* kysdk: Integrate log4ky
 
 ## [0.27.0] - 2026-06-26
 
