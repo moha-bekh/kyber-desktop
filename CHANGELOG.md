@@ -41,6 +41,7 @@ All notable changes to this project will be documented in this file.
 * kyvlcplayer: Pass -vv to VLC when KYBER_VLC_VERBOSE is set
 * kycontroller: Disable intra_refresh when GopStream is requested
 * kysdk: Integrate log4ky
+* kyclient: Replace log4rs with log4ky
 
 ## [0.27.0] - 2026-06-26
 

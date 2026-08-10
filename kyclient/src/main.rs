@@ -42,74 +42,6 @@ use error::{Error, Result};
 use event_loop::UserEvent;
 use parse_utils::parse_bitrate;
 
-fn setup_logs(logfile: &str, level: LevelFilter) -> log4rs::Handle {
-    use std::path::Path;
-
-    use log4rs::{
-        append::{console::ConsoleAppender, file::FileAppender},
-        config::{Appender, Config, Logger, Root},
-        encode::pattern::PatternEncoder,
-    };
-
-    // Setup pattern
-    let pattern_encoder = PatternEncoder::new("{d(%Y-%m-%dT%H:%M:%S.%3f)} {h({l})} {t} - {m}{n}");
-
-    // Setup Console output
-    let stdout = ConsoleAppender::builder()
-        .encoder(Box::new(pattern_encoder.clone()))
-        .build();
-
-    // Compute log file path
-    // On Windows, use %LOCALAPPDATA%\Kyber\log to avoid permission issues
-    // when running without admin rights (Program Files is read-only for non-admin)
-    let log_folder = "log";
-    let log_file = format!("{logfile}.log");
-
-    let log_path = if cfg!(windows) {
-        let base_path = std::env::var("LOCALAPPDATA")
-            .map(std::path::PathBuf::from)
-            .unwrap_or_else(|_| {
-                let mut exe_path = std::env::current_exe().unwrap();
-                exe_path.pop();
-                exe_path
-            });
-        base_path.join("Kyber").join(log_folder).join(log_file)
-    } else {
-        Path::new(log_folder).join(log_file)
-    };
-
-    // Create log directory if it doesn't exist
-    if let Some(parent) = log_path.parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
-
-    // Setup File output
-    let file = FileAppender::builder()
-        .encoder(Box::new(pattern_encoder))
-        .build(&log_path)
-        .unwrap();
-
-    // Configure logger
-    let mut config = Config::builder()
-        .appender(Appender::builder().build("stdout", Box::new(stdout)))
-        .appender(Appender::builder().build("file", Box::new(file)));
-
-    if std::env::var("KYBER_VLC_VERBOSE").is_ok() {
-        config = config.logger(Logger::builder().build("vlc", LevelFilter::Debug));
-    }
-
-    let config = config
-        .build(
-            Root::builder()
-                .appender("file")
-                .appender("stdout")
-                .build(level),
-        )
-        .unwrap();
-
-    log4rs::init_config(config).unwrap()
-}
-
 pub enum DisplayParams {
     Single(usize),
     Multiple(usize),
@@ -243,15 +175,8 @@ fn load_tls_conf(matches: &clap::ArgMatches) -> Result<TlsConfig> {
     })
 }
 
-fn main() {
-    let _log_handle = setup_logs("kyclient", LevelFilter::Info);
-
-    kynput_rs::init_logger();
-    kyclient_rs::init();
-
-    info!("Kyber client. Revision {}", env!("VERGEN_GIT_DESCRIBE"));
-
-    let app = clap::App::new("Streaming client")
+fn build_cli() -> clap::App<'static> {
+    clap::App::new("Streaming client")
         .version(env!("VERGEN_GIT_DESCRIBE"))
         .about("IP of the streamer to connect to")
         .arg(
@@ -519,9 +444,30 @@ fn main() {
                 .multiple(true)
                 .conflicts_with_all(&["jwt", "oidc"]),
         )
-        .arg(clap::Arg::with_name("STREAMER_IP").index(1));
+        .arg(clap::Arg::with_name("STREAMER_IP").index(1))
+}
 
-    let matches = app.get_matches();
+fn main() {
+    let matches = build_cli().get_matches();
+
+    // kyclient has no config file; log4ky's own default_log_dir picks the
+    // OS-native log directory (KYBER_LOG_DIR still overrides it).
+    let vlc_level = std::env::var("KYBER_VLC_VERBOSE")
+        .is_ok()
+        .then_some(LevelFilter::Debug);
+    let Ok(_log_handle) = log4ky::LoggerBuilder::new("kyclient")
+        .console(!cfg!(feature = "win32-hide-console"))
+        .default_target_level("vlc", vlc_level)
+        .init()
+    else {
+        // Unreachable with no config file; invalid log config is fatal by contract.
+        std::process::exit(1);
+    };
+
+    kynput_rs::init_logger();
+    kyclient_rs::init();
+
+    info!("Kyber client. Revision {}", env!("VERGEN_GIT_DESCRIBE"));
 
     // Handle utility commands (these exit without connecting)
     if let Some(values) = matches.values_of("tls-tofu-accept") {
