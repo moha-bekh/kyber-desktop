@@ -26,6 +26,7 @@
 use std::time::Duration;
 
 use log::{error, info, warn};
+use log4ky::notice;
 use winit::event_loop::EventLoopProxy;
 
 use crate::error::{Error, Result};
@@ -58,11 +59,10 @@ async fn run_oidc_flow(issuer: &str, client_id: &str) -> Result<OidcResult> {
 
     let url = flow.auth_url().to_owned();
 
-    eprintln!();
-    eprintln!("Attempting to open authentication page in your browser.");
-    eprintln!("If it doesn't open, navigate to:");
-    eprintln!("  {url}");
-    eprintln!();
+    notice!(
+        "\nAttempting to open authentication page in your browser.\n\
+         If it doesn't open, navigate to:\n  {url}"
+    );
 
     info!("Opening browser for OIDC authentication");
     match tokio::task::spawn_blocking(move || kyc::browser::open_url(&url)).await {
@@ -73,7 +73,7 @@ async fn run_oidc_flow(issuer: &str, client_id: &str) -> Result<OidcResult> {
         Err(_) => warn!("Browser task panicked. Use the URL above to authenticate manually."),
     }
 
-    eprintln!("Waiting for authentication...");
+    notice!("Waiting for authentication...");
 
     let tokens = flow.wait_for_tokens().await?;
 

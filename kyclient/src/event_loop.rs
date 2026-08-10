@@ -22,6 +22,7 @@ use std::cmp::Ordering;
 use std::sync::Arc;
 
 use log::{debug, error, info, warn};
+use log4ky::notice;
 use raw_window_handle::RawWindowHandle;
 use winit::{
     dpi::{LogicalPosition, LogicalSize},
@@ -45,19 +46,17 @@ use crate::{CliArgs, TlsVerification};
 
 /// Print SSH-style warning when a host's certificate has changed.
 fn print_cert_changed_warning(hostname: &str, expected: &str, actual: &str) {
-    eprintln!();
-    eprintln!("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-    eprintln!("@    WARNING: REMOTE HOST CERTIFICATE HAS CHANGED!       @");
-    eprintln!("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-    eprintln!("IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!");
-    eprintln!();
-    eprintln!("Host: {}", hostname);
-    eprintln!("Expected: {}", expected);
-    eprintln!("Got:      {}", actual);
-    eprintln!();
-    eprintln!("To remove the old fingerprint, run:");
-    eprintln!("  client --tls-tofu-remove {}", hostname);
-    eprintln!();
+    notice!(
+        "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n\
+         @    WARNING: REMOTE HOST CERTIFICATE HAS CHANGED!       @\n\
+         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n\
+         IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!\n\n\
+         Host: {hostname}\n\
+         Expected: {expected}\n\
+         Got:      {actual}\n\n\
+         To remove the old fingerprint, run:\n  \
+         kyclient --tls-tofu-remove {hostname}"
+    );
 }
 
 #[derive(Clone, Debug)]
@@ -132,12 +131,10 @@ pub(crate) fn configure_tls_verification(
                     hostname,
                     fingerprint,
                 } => {
-                    eprintln!();
-                    eprintln!(
-                        "The authenticity of host '{}' can't be established.",
-                        hostname
+                    notice!(
+                        "\nThe authenticity of host '{hostname}' can't be established.\n\
+                         Certificate fingerprint is {fingerprint}."
                     );
-                    eprintln!("Certificate fingerprint is {}.", fingerprint);
                     eprint!("Are you sure you want to continue connecting (yes/no)? ");
 
                     use std::io::Write;
@@ -176,13 +173,12 @@ pub(crate) fn configure_tls_verification(
                     hostname,
                     fingerprint,
                 } => {
-                    eprintln!();
-                    eprintln!("Host '{}' is not in known_hosts.", hostname);
-                    eprintln!("Fingerprint: {}", fingerprint);
-                    eprintln!();
-                    eprintln!("To add this host, run:");
-                    eprintln!("  client --tls-tofu-accept {} {}", hostname, fingerprint);
-                    eprintln!();
+                    notice!(
+                        "\nHost '{hostname}' is not in known_hosts.\n\
+                         Fingerprint: {fingerprint}\n\n\
+                         To add this host, run:\n  \
+                         kyclient --tls-tofu-accept {hostname} {fingerprint}"
+                    );
                     false
                 }
                 TofuPrompt::CertificateChanged {

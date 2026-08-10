@@ -32,6 +32,7 @@ mod parse_utils;
 mod window;
 
 use log::{error, info, warn, LevelFilter};
+use log4ky::notice;
 use winit::event_loop::EventLoopBuilder;
 
 use kyclient_rs::{
@@ -483,12 +484,12 @@ fn main() {
                 }
                 Err(e) => {
                     error!("Failed to add host: {:?}", e);
-                    eprintln!("Error: Failed to add host to known_hosts");
+                    notice!("Error: Failed to add host to known_hosts");
                     std::process::exit(1);
                 }
             }
         } else {
-            eprintln!(
+            notice!(
                 "Error: --tls-tofu-accept requires exactly 2 arguments: <hostname> <fingerprint>"
             );
             std::process::exit(1);
@@ -509,7 +510,7 @@ fn main() {
             }
             Err(e) => {
                 error!("Failed to remove host: {:?}", e);
-                eprintln!("Error: Failed to remove host from known_hosts");
+                notice!("Error: Failed to remove host from known_hosts");
                 std::process::exit(1);
             }
         }
@@ -530,7 +531,7 @@ fn main() {
             }
             Err(e) => {
                 error!("Failed to list hosts: {:?}", e);
-                eprintln!("Error: Failed to list known_hosts");
+                notice!("Error: Failed to list known_hosts");
                 std::process::exit(1);
             }
         }
@@ -538,8 +539,10 @@ fn main() {
 
     // For normal connection, STREAMER_IP is required
     let Some(streamer_ip) = matches.value_of("STREAMER_IP") else {
-        eprintln!("Error: STREAMER_IP is required");
-        eprintln!("Usage: client <STREAMER_IP> [OPTIONS]");
+        notice!(
+            "Error: STREAMER_IP is required\n\
+             Usage: kyclient <STREAMER_IP> [OPTIONS]"
+        );
         return;
     };
     let streamer_ip = String::from(streamer_ip);
@@ -635,7 +638,7 @@ fn main() {
 
     let tls_config = load_tls_conf(&matches).unwrap_or_else(|e| {
         error!("{}", e);
-        eprintln!("Error: {}", e);
+        notice!("Error: {}", e);
         std::process::exit(1);
     });
 
