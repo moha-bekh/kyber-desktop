@@ -446,6 +446,16 @@ fn build_cli() -> clap::App<'static> {
                 .conflicts_with_all(&["jwt", "oidc"]),
         )
         .arg(clap::Arg::with_name("STREAMER_IP").index(1))
+        .arg(
+            clap::Arg::with_name("log-level")
+                .long("log-level")
+                .help("Log level: trace, debug, info, warn, error, off. Overrides the KYBER_LOG_LEVEL root level.")
+                .takes_value(true)
+                .value_name("LEVEL")
+                .value_parser(clap::builder::PossibleValuesParser::new([
+                    "off", "error", "warn", "info", "debug", "trace",
+                ])),
+        )
 }
 
 fn main() {
@@ -456,9 +466,13 @@ fn main() {
     let vlc_level = std::env::var("KYBER_VLC_VERBOSE")
         .is_ok()
         .then_some(LevelFilter::Debug);
+    let cli_level: Option<LevelFilter> = matches
+        .value_of("log-level")
+        .map(|s| s.parse().expect("level validated by clap"));
     let Ok(_log_handle) = log4ky::LoggerBuilder::new("kyclient")
         .console(!cfg!(feature = "win32-hide-console"))
         .default_target_level("vlc", vlc_level)
+        .cli_level(cli_level)
         .init()
     else {
         // Unreachable with no config file; invalid log config is fatal by contract.
