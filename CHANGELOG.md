@@ -38,6 +38,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller: Show version in tray menu
 * kyclient/capi: use cbindgen to prefix type names
 * kyclient/capi: rename metrics types to camel case
+* kyvlcplayer: Pass -vv to VLC when KYBER_VLC_VERBOSE is set
 
 ## [0.27.0] - 2026-06-26
 
