@@ -286,6 +286,7 @@ clippy-windows-x86_64:
   artifacts:
     paths:
       - Kyber-Client-*.app.zip
+      - Kyber-Server-*.app.zip
       - Kyber-Server-*.dmg
     expire_in: 1 week
 

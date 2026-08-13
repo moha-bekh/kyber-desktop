@@ -60,7 +60,7 @@ ENVIRONMENT:
    KYBER_SERVER_APP_DIRECTORY   Override the server bundle directory name
    KYBER_APP_DIRECTORY          Legacy fallback consulted by both package steps
                                 when the target-specific variable is unset
-   KYBER_SERVER_SKIP_DMG        When set, package_server keeps the standalone .app
+   KYBER_SERVER_SKIP_DMG        When set, package_server only zips the .app bundle
                                 and skips the .pkg/.dmg installer build
 EOF
 }
@@ -176,7 +176,16 @@ package_client() {
     # Fix libkynput
     install_name_tool -change $source_directory/lib/$SDL2_NAME @rpath/$SDL2_NAME $app_dir/Contents/Frameworks/$LIBKYNPUT_NAME
 
+    zip_app_bundle $app_dir
+}
+
+# Archive a .app bundle for distribution. --symlinks keeps the versioned dylib
+# links intact; a plain directory artifact would flatten them and lose the
+# executable bits.
+zip_app_bundle() {
+    local app_dir=$1
     local zipname=$(basename $app_dir).zip
+
     echo "Creating ${zipname}"
     zip --symlinks -r ${zipname} $app_dir
 }
@@ -252,11 +261,15 @@ package_server() {
         fix_macho_deps "$app_dir/Contents/MacOS/$exe" "$frameworks" "$source_directory"
     done
 
+    # Ship the bundle on its own as well as inside the installer: the .pkg does
+    # not reliably place the app in /Applications yet, so the .app.zip is the
+    # fallback anyone can unpack by hand.
+    zip_app_bundle $app_dir
+
     if [[ -n "${KYBER_SERVER_SKIP_DMG:-}" ]]; then
-        echo "KYBER_SERVER_SKIP_DMG set — keeping standalone $app_dir, skipping installer/DMG."
+        echo "KYBER_SERVER_SKIP_DMG set — skipping the .pkg/.dmg installer build."
     else
         bash ./scripts/macos/build-kyber-dmg.sh "$(basename "$app_dir" .app)"
-        rm -Rf $app_dir
     fi
 }
 
