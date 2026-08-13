@@ -31,6 +31,9 @@ mod oidc_manager;
 mod parse_utils;
 mod window;
 
+#[cfg(target_os = "windows")]
+use std::path::PathBuf;
+
 use log::{error, info, warn, LevelFilter};
 use log4ky::notice;
 use winit::event_loop::EventLoopBuilder;
@@ -461,8 +464,18 @@ fn build_cli() -> clap::App<'static> {
 fn main() {
     let matches = build_cli().get_matches();
 
-    // kyclient has no config file; log4ky's own default_log_dir picks the
-    // OS-native log directory (KYBER_LOG_DIR still overrides it).
+    // KYBER_LOG_DIR still wins, same as every other binary.
+    let log_dir = log4ky::env_log_dir();
+
+    // log4ky's shared default is %ProgramData%\Kyber on Windows, which a
+    // non-admin kyclient session may not be able to write to. Use the
+    // user's own directory instead, same base as
+    // known_hosts::get_known_hosts_path.
+    #[cfg(target_os = "windows")]
+    let log_dir = log_dir.or_else(|| {
+        std::env::var_os("LOCALAPPDATA").map(|dir| PathBuf::from(dir).join("Kyber/logs"))
+    });
+
     let vlc_level = std::env::var("KYBER_VLC_VERBOSE")
         .is_ok()
         .then_some(LevelFilter::Debug);
@@ -470,6 +483,10 @@ fn main() {
         .value_of("log-level")
         .map(|s| s.parse().expect("level validated by clap"));
     let Ok(_log_handle) = log4ky::LoggerBuilder::new("kyclient")
+        .base(log4ky::LogConfig {
+            log_dir: log_dir.as_deref(),
+            ..Default::default()
+        })
         .console(!cfg!(feature = "win32-hide-console"))
         .default_target_level("vlc", vlc_level)
         .cli_level(cli_level)
