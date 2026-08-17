@@ -82,8 +82,6 @@ Note that there are some options in the build script to avoid some build steps:
 #### Run client
 
 ```bash
-# Force X11 Compatibility Mode
-export WAYLAND_DISPLAY=""
 ./rootfs-x86_64-linux-gnu/run_kyclient.sh <host_ip>
 ```
 

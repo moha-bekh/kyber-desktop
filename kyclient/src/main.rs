@@ -697,8 +697,15 @@ fn main() {
         auto_reconnect,
     };
 
+    let mut event_loop_builder = EventLoopBuilder::<UserEvent>::with_user_event();
+    #[cfg(target_os = "linux")]
+    {
+        use winit::platform::x11::EventLoopBuilderExtX11;
+        event_loop_builder.with_x11();
+    }
+
     // Create window
-    let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
+    let event_loop = event_loop_builder.build();
 
     let icon = icon::load_icon().ok();
 
