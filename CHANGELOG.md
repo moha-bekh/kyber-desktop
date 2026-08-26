@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 * kymedia: Bump opus to 1.6.1
+* Integrate kywebsocket
 
 ## [0.28.0] - 2026-08-18
 
