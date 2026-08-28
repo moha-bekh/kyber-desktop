@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+* kymedia: Bump opus to 1.6.1
+
 ## [0.28.0] - 2026-08-18
 
 * desktop: Update client app icon to new Kyber brand mark
