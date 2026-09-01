@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 * kymedia: Bump opus to 1.6.1
 * Integrate kywebsocket
+* kyclient: Integrate WebSocket into kymux backend
 
 ## [0.28.0] - 2026-08-18
 
