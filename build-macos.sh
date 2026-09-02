@@ -261,9 +261,8 @@ package_server() {
         fix_macho_deps "$app_dir/Contents/MacOS/$exe" "$frameworks" "$source_directory"
     done
 
-    # Ship the bundle on its own as well as inside the installer: the .pkg does
-    # not reliably place the app in /Applications yet, so the .app.zip is the
-    # fallback anyone can unpack by hand.
+    # Ship the bundle on its own as well as inside the installer, for anyone
+    # who'd rather unpack it by hand than run the .pkg.
     zip_app_bundle $app_dir
 
     if [[ -n "${KYBER_SERVER_SKIP_DMG:-}" ]]; then
