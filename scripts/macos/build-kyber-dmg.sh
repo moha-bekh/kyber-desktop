@@ -54,10 +54,19 @@ cp "$PREINSTALL_SRC"  "${SCRIPTS_DIR}/preinstall"
 cp "$POSTINSTALL_SRC" "${SCRIPTS_DIR}/postinstall"
 chmod 755 "${SCRIPTS_DIR}/preinstall" "${SCRIPTS_DIR}/postinstall"
 
+COMPONENT_PLIST="${BUILD_DIR}/component.plist"
+pkgbuild --analyze --root "$PAYLOAD" "$COMPONENT_PLIST"
+
+# The LaunchAgent needs the bundle at a fixed /Applications path.
+/usr/libexec/PlistBuddy -c "Print :0:BundleIsRelocatable" "$COMPONENT_PLIST" &>/dev/null \
+    || die "Expected the app bundle as the only component in ${COMPONENT_PLIST}"
+/usr/libexec/PlistBuddy -c "Set :0:BundleIsRelocatable false" "$COMPONENT_PLIST"
+
 PKG_OUT="${BUILD_DIR}/${PKG_NAME}"
 
 pkgbuild \
     --root             "$PAYLOAD" \
+    --component-plist  "$COMPONENT_PLIST" \
     --scripts          "$SCRIPTS_DIR" \
     --identifier       "$IDENTIFIER" \
     --version          "$VERSION" \
