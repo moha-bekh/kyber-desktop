@@ -3,7 +3,9 @@
 set -euo pipefail
 
 LABEL="tech.kyber.server"
-APP_NAME="${1:-Kyber-Server}"
+# APP_NAME carries the commit sha in CI; the install path must not follow it.
+BUNDLE_NAME="Kyber-Server"
+APP_NAME="${1:-${BUNDLE_NAME}}"
 PKG_NAME="${APP_NAME}.pkg"
 DMG_NAME="${APP_NAME}.dmg"
 DMG_VOL="Kyber Server"
@@ -36,7 +38,7 @@ PAYLOAD="${BUILD_DIR}/payload"
 mkdir -p "${PAYLOAD}/Applications"
 mkdir -p "${PAYLOAD}/Library/LaunchAgents"
 
-PAYLOAD_APP="${PAYLOAD}/Applications/${APP_NAME}.app"
+PAYLOAD_APP="${PAYLOAD}/Applications/${BUNDLE_NAME}.app"
 ditto "$APP_SRC" "$PAYLOAD_APP"
 chmod -R 755 "$PAYLOAD_APP"
 
@@ -44,7 +46,7 @@ codesign -s - -f --deep "$PAYLOAD_APP"
 
 PLIST_DST="${PAYLOAD}/Library/LaunchAgents/${LABEL}.plist"
 cp "$PLIST_SRC" "$PLIST_DST"
-/usr/libexec/PlistBuddy -c "Set :ProgramArguments:0 /Applications/${APP_NAME}.app/Contents/MacOS/kycontroller" "$PLIST_DST"
+/usr/libexec/PlistBuddy -c "Set :ProgramArguments:0 /Applications/${BUNDLE_NAME}.app/Contents/MacOS/kycontroller" "$PLIST_DST"
 chmod 644 "$PLIST_DST"
 
 SCRIPTS_DIR="${BUILD_DIR}/scripts"
