@@ -29,9 +29,8 @@ for f in "$PLIST_SRC" "$PREINSTALL_SRC" "$POSTINSTALL_SRC" "$AGENT_MANAGER_SCRIP
     [[ -e "$f" ]] || die "Required file not found: ${f}"
 done
 
-which pkgbuild     &>/dev/null || die "pkgbuild not found — run on macOS."
-which productbuild &>/dev/null || die "productbuild not found — run on macOS."
-which hdiutil      &>/dev/null || die "hdiutil not found — run on macOS."
+which pkgbuild &>/dev/null || die "pkgbuild not found — run on macOS."
+which hdiutil  &>/dev/null || die "hdiutil not found — run on macOS."
 
 PAYLOAD="${BUILD_DIR}/payload"
 mkdir -p "${PAYLOAD}/Applications"
