@@ -303,7 +303,7 @@ pub(crate) fn build_cli() -> clap::App<'static> {
             clap::Arg::with_name("protocol")
                 .long(FLAG_PROTOCOL)
                 .help("Protocol to use")
-                .value_parser(["rtp", "kymux"])
+                .value_parser(["rtp", "kymux", "websocket"])
                 .default_value("kymux"),
         )
         .arg(
@@ -766,6 +766,7 @@ fn main() {
                 audio_protocol,
             }
         }
+        Some("websocket") => StreamingProtocol::WebSocket,
         _ => {
             error!("No valid protocol specified");
             return;
