@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 * libkypc: Improve `Worker` drop behavior
 * kymux: Make protocols generic
 * kyctl: Complete control-plane struct share between host and client
+* kyclient: Use log4ky's user scope for the Windows log directory
 
 ## [0.28.0] - 2026-08-18
 
