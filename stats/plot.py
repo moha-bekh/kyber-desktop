@@ -303,6 +303,32 @@ for source_id, l in sorted(frames.items()):
     print("Watermark statistics (us)")
     calculate_statistics("watermarking", "watermarked")
 
+    print("Pipeline breakdown (share of mean Capture-to-Displayed latency)")
+    total_start = np.array(y["acquired"])
+    total_end = np.array(y["displayed"])
+    total_mask = (~np.isnan(total_start)) & (~np.isnan(total_end))
+    if total_mask.any():
+        total_mean = np.mean(total_end[total_mask] - total_start[total_mask])
+        stage_fields = [
+            ("Capture to Encode Start", "acquired", "encoding"),
+            ("Encode", "encoding", "encoded"),
+            ("Network", "sent", "received"),
+            ("Decode", "decoding", "decoded"),
+            ("Prepare", "decoded", "prepared"),
+            ("Watermark", "watermarking", "watermarked"),
+        ]
+        for name, start_field, end_field in stage_fields:
+            s = np.array(y[start_field])
+            e = np.array(y[end_field])
+            mask = (~np.isnan(s)) & (~np.isnan(e))
+            if not mask.any():
+                continue
+            stage_mean = np.mean(e[mask] - s[mask])
+            pct = 100 * stage_mean / total_mean if total_mean > 0 else 0
+            print(f"\t{name:<24} {stage_mean / 1000:>7.2f} ms  {pct:>5.1f}%")
+    else:
+        print("\tNo data available (fields 'acquired' and/or 'displayed' not present in frames)")
+
     colors = {
         "acquired": "#808080",      # Gray - reference point (baseline)
         "encoding": "#FF6B6B",      # Red - start of pipeline
