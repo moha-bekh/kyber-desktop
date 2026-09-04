@@ -359,6 +359,12 @@ for source_id, l in sorted(frames.items()):
     ax1.grid(True, alpha=0.3, linestyle='--')
     ax1.margins(0.01, 0.05)
 
+    # Frame budget reference lines (60 FPS / 120 FPS), drawn under the data
+    for budget_us, budget_label in [(16_667, "60 FPS budget (16.67 ms)"), (8_333, "120 FPS budget (8.33 ms)")]:
+        ax1.axhline(budget_us, color="0.3", linestyle=":", linewidth=1.2, alpha=0.6, zorder=0)
+        ax1.text(1.005, budget_us, budget_label, transform=ax1.get_yaxis_transform(),
+                 va='center', ha='left', fontsize=8, color="0.3", alpha=0.9, clip_on=False)
+
     # Plot each stage with improved styling
     for k, v in reversed(list(y.items())):
         valid_data = [(x[i], v[i]) for i in range(len(x)) if not np.isnan(v[i])]
