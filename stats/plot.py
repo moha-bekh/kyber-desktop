@@ -345,8 +345,8 @@ for source_id, l in sorted(frames.items()):
     }
 
     # Create figure with multiple subplots
-    fig = plt.figure(figsize=(18, 14))
-    gs = fig.add_gridspec(5, 3, hspace=0.4, wspace=0.35)
+    fig = plt.figure(figsize=(18, 17))
+    gs = fig.add_gridspec(6, 3, hspace=0.45, wspace=0.35)
 
     # Main timeline plot (spans full width at top)
     ax1 = fig.add_subplot(gs[0:2, :])
@@ -394,6 +394,40 @@ for source_id, l in sorted(frames.items()):
 
     fig.canvas.mpl_connect('key_press_event', reset_view)
 
+    # Latency-over-time plot: per-stage *durations* (not cumulative from acquisition),
+    # overlaid so temporal patterns (periodic spikes, drift, step changes) stand out.
+    ax_time = fig.add_subplot(gs[2, :])
+    ax_time.set_title('Latency Over Time (per-stage duration)', fontsize=12, fontweight='bold')
+    ax_time.set_xlabel('Time (s)', fontsize=10)
+    ax_time.set_ylabel('Duration (ms)', fontsize=10)
+    ax_time.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f'{x / 1_000_000:.1f}'))
+    ax_time.grid(True, alpha=0.3, linestyle='--')
+
+    time_series = [
+        ("Encode", "encoding", "encoded", "#FF6B6B"),
+        ("Network", "sent", "received", "#FFD93D"),
+        ("Decode", "decoding", "decoded", "#4ECDC4"),
+        ("Total", "acquired", "displayed", "#9B6BD8"),
+    ]
+    x_arr = np.array(x, dtype=np.float64)
+    # Draw largest-duration series first (Total) and smallest last, same trick as the
+    # main plot, so short bars aren't buried under taller ones sharing the same x.
+    for name, start_field, end_field, color in reversed(time_series):
+        s = np.array(y[start_field])
+        e = np.array(y[end_field])
+        mask = (~np.isnan(s)) & (~np.isnan(e))
+        if not mask.any():
+            continue
+        ax_time.vlines(x_arr[mask], 0, (e[mask] - s[mask]) / 1000, alpha=0.8, linewidth=0.8,
+                       color=color, label=name)
+
+    handles, labels = ax_time.get_legend_handles_labels()
+    ax_time.legend(handles[::-1], labels[::-1], loc='upper left', framealpha=0.9, fontsize=9)
+
+    zp_time = ZoomPan()
+    zp_time.zoom_factory(ax_time, base_scale=1.3)
+    zp_time.pan_factory(ax_time)
+
     # Helper function to create distribution histograms
     def create_distribution_plot(ax, start_field, end_field, title, color):
         latency = []
@@ -420,15 +454,15 @@ for source_id, l in sorted(frames.items()):
 
     # Distributions for all main metrics
     distributions = [
-        (gs[2, 0], "acquired", "encoding", "Capture to Encode Start", "#FF6B6B"),
-        (gs[2, 1], "acquired", "encoded", "Capture to Encoded (Server)", "#FF1493"),
-        (gs[2, 2], "encoding", "encoded", "Encode Time", "#FFA07A"),
-        (gs[3, 0], "sent", "received", "Network Latency", "#FFD93D"),
-        (gs[3, 1], "decoding", "decoded", "Decode Time", "#4ECDC4"),
-        (gs[3, 2], "decoded", "prepared", "Prepare Time", "#9B6BD8"),
-        (gs[4, 0], "watermarking", "watermarked", "Watermark Time", "#2A9D8F"),
-        (gs[4, 1], "acquired", "displayed", "Capture to Displayed (Total)", "#C77DFF"),
-        (gs[4, 2], "acquired", "skipped", "Capture to Skip (Dropped Frames)", "#E63946"),
+        (gs[3, 0], "acquired", "encoding", "Capture to Encode Start", "#FF6B6B"),
+        (gs[3, 1], "acquired", "encoded", "Capture to Encoded (Server)", "#FF1493"),
+        (gs[3, 2], "encoding", "encoded", "Encode Time", "#FFA07A"),
+        (gs[4, 0], "sent", "received", "Network Latency", "#FFD93D"),
+        (gs[4, 1], "decoding", "decoded", "Decode Time", "#4ECDC4"),
+        (gs[4, 2], "decoded", "prepared", "Prepare Time", "#9B6BD8"),
+        (gs[5, 0], "watermarking", "watermarked", "Watermark Time", "#2A9D8F"),
+        (gs[5, 1], "acquired", "displayed", "Capture to Displayed (Total)", "#C77DFF"),
+        (gs[5, 2], "acquired", "skipped", "Capture to Skip (Dropped Frames)", "#E63946"),
     ]
 
     for grid_pos, start_field, end_field, title, color in distributions:
