@@ -31,6 +31,7 @@ print(f"Time window: skip first {START_OFFSET_SECONDS}s and last {STOP_OFFSET_SE
 frames = defaultdict(list)  # map of source_id -> list of frames
 
 print(f"Opening {input}")
+invalid_json_count = 0
 with open(input) as f:
     for line_num, line in enumerate(f, 1):
         stripped = line.strip()
@@ -40,10 +41,13 @@ with open(input) as f:
             j = json.loads(stripped)
         except json.JSONDecodeError:
             print(f"Skipping invalid JSON on line {line_num}")
+            invalid_json_count += 1
             continue
         if j["log_type"] == "frame_metric":
             source_id = j["source_id"]
             frames[source_id].append(j)
+
+print(f"Invalid JSON lines: {invalid_json_count}")
 
 # x and y are (re)initialized per source_id inside the main loop below, so data from
 # one source never bleeds into another source's stats/plots.
@@ -223,6 +227,7 @@ for source_id, l in sorted(frames.items()):
     print(f"Filtering window: {START_OFFSET_SECONDS}s to {total_duration - STOP_OFFSET_SECONDS:.1f}s")
     print(f"Filtered duration: {filtered_duration:.1f}s ({filter_start/1_000_000:.1f}s to {filter_end/1_000_000:.1f}s)")
 
+    incomplete_count = 0
     for f in sorted(l, key=lambda f: f["pts"]):
         try:
             pts = f["pts"]
@@ -242,10 +247,15 @@ for source_id, l in sorted(frames.items()):
                 else:
                     v.append(np.nan) # missing value
         except:
+            incomplete_count += 1
             print(f"source_id={source_id} pts={pts} frame incomplete: {f}")
 
 
     print(f"Sample count: {len(x)}")
+
+    print("Data quality")
+    print(f"\tValid frames:      {len(x)}")
+    print(f"\tIncomplete frames: {incomplete_count}")
 
     print("Capture to Displayed statistics (us) - Total pipeline latency")
     calculate_statistics("acquired", "displayed")
