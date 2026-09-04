@@ -45,21 +45,24 @@ with open(input) as f:
             source_id = j["source_id"]
             frames[source_id].append(j)
 
+# x and y are (re)initialized per source_id inside the main loop below, so data from
+# one source never bleeds into another source's stats/plots.
+METRIC_KEYS = [
+    "acquired",  # Reference point (always 0)
+    "encoding",
+    "encoded",
+    "sent",
+    "received",
+    "decoding",
+    "decoded",
+    "prepared",
+    "displayed",
+    "skipped",
+    "watermarking",
+    "watermarked",
+]
 x = []
-y = {
-    "acquired": [],  # Reference point (always 0)
-    "encoding": [],
-    "encoded": [],
-    "sent": [],
-    "received": [],
-    "decoding": [],
-    "decoded": [],
-    "prepared": [],
-    "displayed": [],
-    "skipped": [],
-    "watermarking": [],
-    "watermarked": [],
-}
+y = {key: [] for key in METRIC_KEYS}
 
 def get_timings(f):
     pts = f["pts"]
@@ -186,6 +189,10 @@ class ZoomPan:
 
 for source_id, l in sorted(frames.items()):
     print(f"=== SOURCE {source_id} ===")
+
+    # Reset per-source accumulators so one source's frames never leak into another's stats/plots
+    x = []
+    y = {key: [] for key in METRIC_KEYS}
 
     # Find min and max timestamps for filtering
     all_pts = [f["pts"] for f in l if "pts" in f]
