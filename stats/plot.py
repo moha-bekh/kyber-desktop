@@ -257,6 +257,25 @@ for source_id, l in sorted(frames.items()):
     print(f"\tValid frames:      {len(x)}")
     print(f"\tIncomplete frames: {incomplete_count}")
 
+    print("Frame rate")
+    if len(x) >= 2:
+        intervals_us = np.diff(np.array(x, dtype=np.float64))
+        intervals_us = intervals_us[intervals_us > 0]  # guard against duplicate/out-of-order pts
+        if len(intervals_us) > 0:
+            fps_values = 1_000_000 / intervals_us
+            interval_p50, interval_p90, interval_p99 = np.percentile(intervals_us, [50, 90, 99])
+            print(f"\tAverage: {np.mean(fps_values):.2f} FPS")
+            print(f"\tMin:     {np.min(fps_values):.2f} FPS")
+            print(f"\tMax:     {np.max(fps_values):.2f} FPS")
+            print("\tFrame interval:")
+            print(f"\t\tp50: {interval_p50 / 1000:.2f} ms")
+            print(f"\t\tp90: {interval_p90 / 1000:.2f} ms")
+            print(f"\t\tp99: {interval_p99 / 1000:.2f} ms")
+        else:
+            print("\tNo valid frame intervals available")
+    else:
+        print("\tNot enough frames to compute frame rate")
+
     print("Capture to Displayed statistics (us) - Total pipeline latency")
     calculate_statistics("acquired", "displayed")
 
