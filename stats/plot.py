@@ -285,14 +285,15 @@ for source_id, l in sorted(frames.items()):
     ax1.margins(0.01, 0.05)
 
     # Plot each stage with improved styling
-    for k, v in y.items():
+    for k, v in reversed(list(y.items())):
         valid_data = [(x[i], v[i]) for i in range(len(x)) if not np.isnan(v[i])]
         if valid_data:
             x_vals, y_vals = zip(*valid_data)
-            ax1.plot(x_vals, y_vals, marker='o', markersize=2, linewidth=1.5,
-                    alpha=0.8, color=colors.get(k, "#95A5A6"), label=k)
+            ax1.vlines(x_vals, 0, y_vals, alpha=0.9, linewidth=0.8,
+                      color=colors.get(k, "#95A5A6"), label=k)
 
-    ax1.legend(loc='upper left', framealpha=0.9, fontsize=10)
+    handles, labels = ax1.get_legend_handles_labels()
+    ax1.legend(handles[::-1], labels[::-1], loc='upper left', framealpha=0.9, fontsize=10)
 
     # Enable zoom and pan for the main plot
     zp = ZoomPan()
