@@ -233,6 +233,12 @@ for source_id, l in sorted(frames.items()):
 
     print(f"Sample count: {len(x)}")
 
+    print("Capture to Displayed statistics (us) - Total pipeline latency")
+    calculate_statistics("acquired", "displayed")
+
+    print("Capture to Skip statistics (us) - Latency before a dropped frame")
+    calculate_statistics("acquired", "skipped")
+
     print("Capture to Encode Start statistics (us)")
     calculate_statistics("acquired", "encoding")
 
@@ -345,6 +351,8 @@ for source_id, l in sorted(frames.items()):
         (gs[3, 1], "decoding", "decoded", "Decode Time", "#4ECDC4"),
         (gs[3, 2], "decoded", "prepared", "Prepare Time", "#9B6BD8"),
         (gs[4, 0], "watermarking", "watermarked", "Watermark Time", "#2A9D8F"),
+        (gs[4, 1], "acquired", "displayed", "Capture to Displayed (Total)", "#C77DFF"),
+        (gs[4, 2], "acquired", "skipped", "Capture to Skip (Dropped Frames)", "#E63946"),
     ]
 
     for grid_pos, start_field, end_field, title, color in distributions:
