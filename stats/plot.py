@@ -95,12 +95,19 @@ def calculate_statistics(start_field, end_field):
 
     minimum = np.min(data)
     maximum = np.max(data)
+    mean = np.mean(data)
+    std = np.std(data)
     median = np.median(data)
+    p90, p99 = np.percentile(data, [90, 99])
     deciles = np.percentile(data, [10, 20, 30, 40, 50, 60, 70, 80, 90])
 
     print(f"\tMinimum: {minimum}")
     print(f"\tMaximum: {maximum}")
-    print(f"\tMedian: {median}")
+    print(f"\tMean: {mean:.1f}")
+    print(f"\tStd Dev: {std:.1f}")
+    print(f"\tP50 (Median): {median}")
+    print(f"\tP90: {p90}")
+    print(f"\tP99: {p99}")
     print("\tDeciles:")
     for i, decile in enumerate(deciles, 1):
         print(f"\t\tD{i} ({i}0th percentile): {decile}")
@@ -336,14 +343,15 @@ for source_id, l in sorted(frames.items()):
         if latency:
             latency_ms = np.array(latency) / 1000
             ax.hist(latency_ms, bins=25, color=color, alpha=0.7, edgecolor='black', linewidth=0.5)
-            median_val = np.median(latency_ms)
-            ax.axvline(median_val, color='red', linestyle='--', linewidth=2,
-                      label=f'Median: {median_val:.2f}ms')
+            p50, p90, p99 = np.percentile(latency_ms, [50, 90, 99])
+            ax.axvline(p50, color='red', linestyle='--', linewidth=2, label=f'P50: {p50:.2f}ms')
+            ax.axvline(p90, color='darkorange', linestyle='-.', linewidth=1.5, label=f'P90: {p90:.2f}ms')
+            ax.axvline(p99, color='black', linestyle=':', linewidth=1.5, label=f'P99: {p99:.2f}ms')
             ax.set_xlabel('Latency (ms)', fontsize=9)
             ax.set_ylabel('Count', fontsize=9)
             ax.set_title(title, fontsize=10, fontweight='bold')
             ax.grid(True, alpha=0.3, axis='y')
-            ax.legend(fontsize=8)
+            ax.legend(fontsize=7)
             ax.tick_params(labelsize=8)
         else:
             ax.text(0.5, 0.5, 'No data', ha='center', va='center', transform=ax.transAxes)
