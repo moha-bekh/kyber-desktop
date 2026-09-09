@@ -62,6 +62,17 @@
 # Default: same as log_level
 #txproto_log_level = "warn"
 
+# Log level for the libavconv backend's FFmpeg internals.
+#
+# Filters records emitted with the `ffmpeg` log target. Only takes effect
+# when backend = "libavconv"; the txproto backend's FFmpeg logs are covered
+# by txproto_log_level instead.
+#
+# Possible values: "trace", "debug", "info", "warn", "error", "off"
+#
+# Default: same as log_level
+#ffmpeg_log_level = "warn"
+
 # Select which AV engine handles capture/encode/mux.
 #
 # Possible values: "libavconv", "txproto"
