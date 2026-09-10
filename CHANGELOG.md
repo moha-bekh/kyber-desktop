@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 * kyclient: Integrate WebSocket into kymux backend
 * kycontroller: Integrate WebSocket into kymux backend
 * kyavservice: drop x264 force-cfr=0 workaround
+* libavconv-rs: fix filtergraph heartbeat marker lost when no hook is set
 
 ## [0.28.0] - 2026-08-18
 
