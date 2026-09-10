@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller: Integrate WebSocket into kymux backend
 * kyavservice: drop x264 force-cfr=0 workaround
 * libavconv-rs: fix filtergraph heartbeat marker lost when no hook is set
+* kyavservice/x264: Enable 4:4:4 support
 
 ## [0.28.0] - 2026-08-18
 
