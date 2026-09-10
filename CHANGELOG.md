@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller/tray: Stop repeating the same tray status log
 * kymedia: fix build for gcc 16
 * kymedia: Configure libavconv's FFmpeg log level via log4ky
+* libkypc: Improve `Worker` drop behavior
 
 ## [0.28.0] - 2026-08-18
 
