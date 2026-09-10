@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 * kyavservice/x264: Enable 4:4:4 support
 * kyavservice/x264: Drop 1920 downscale, keep pix fmt conversion only
 * kycontroller/tray: Stop repeating the same tray status log
+* kymedia: fix build for gcc 16
 
 ## [0.28.0] - 2026-08-18
 
