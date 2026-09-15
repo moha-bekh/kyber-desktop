@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 * kyclient: Use log4ky's user scope for the Windows log directory
 * kyavservice/libavconv: Forward DXGI cursor over KyberInputServer pipe
 * kymedia: Integrate various libavconv fixes
+* kyavservice: Treat custom video encoder config as overrides
 
 ## [0.28.0] - 2026-08-18
 
