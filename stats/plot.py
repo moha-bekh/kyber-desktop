@@ -396,7 +396,7 @@ for source_id, l in sorted(frames.items()):
 
     # Latency-over-time plot: per-stage *durations* (not cumulative from acquisition),
     # overlaid so temporal patterns (periodic spikes, drift, step changes) stand out.
-    ax_time = fig.add_subplot(gs[2, :])
+    ax_time = fig.add_subplot(gs[2, :], sharex=ax1)
     ax_time.set_title('Latency Over Time (per-stage duration)', fontsize=12, fontweight='bold')
     ax_time.set_xlabel('Time (s)', fontsize=10)
     ax_time.set_ylabel('Duration (ms)', fontsize=10)
@@ -420,6 +420,15 @@ for source_id, l in sorted(frames.items()):
             continue
         ax_time.vlines(x_arr[mask], 0, (e[mask] - s[mask]) / 1000, alpha=0.8, linewidth=0.8,
                        color=color, label=name)
+
+    # Median total (Capture to Displayed) latency reference line
+    total_s = np.array(y["acquired"])
+    total_e = np.array(y["displayed"])
+    total_mask = (~np.isnan(total_s)) & (~np.isnan(total_e))
+    if total_mask.any():
+        median_total_ms = np.median((total_e[total_mask] - total_s[total_mask]) / 1000)
+        ax_time.axhline(median_total_ms, color="black", linestyle="--", linewidth=1.2,
+                        alpha=0.8, zorder=5, label=f"Median Total: {median_total_ms:.2f} ms")
 
     handles, labels = ax_time.get_legend_handles_labels()
     ax_time.legend(handles[::-1], labels[::-1], loc='upper left', framealpha=0.9, fontsize=9)
