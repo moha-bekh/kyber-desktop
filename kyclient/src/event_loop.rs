@@ -579,7 +579,7 @@ impl State {
                 debug!("OIDC challenge received: issuer={issuer}, client_id={client_id}");
                 let oidc = match &mut self.oidc {
                     Some(oidc) => oidc,
-                    None => match OidcManager::new(None) {
+                    None => match OidcManager::new(self.cli_args.kyhub_config.clone()) {
                         Ok(oidc) => self.oidc.insert(oidc),
                         Err(e) => {
                             error!("Failed to create OIDC manager: {e:?}");
@@ -785,10 +785,23 @@ pub struct EventLoopWrapper {
 impl EventLoopWrapper {
     pub fn new(
         event_loop: EventLoop<UserEvent>,
-        cli_args: CliArgs,
+        mut cli_args: CliArgs,
         icon: Option<Icon>,
     ) -> Result<Self> {
         let eventloop_proxy = event_loop.create_proxy();
+
+        // In kyhub mode, sign in and get the machine token before connecting,
+        // so the controller accepts the first login without a challenge.
+        let mut oidc = None;
+        if let Some(kyhub_config) = cli_args.kyhub_config.clone() {
+            let mut mgr = OidcManager::new(Some(kyhub_config))?;
+            let machine = mgr.kyhub_login()?;
+            cli_args.auth_credentials = kyclient_rs::AuthCredentials::Oidc {
+                token: machine.access_token,
+            };
+            oidc = Some(mgr);
+        }
+
         let client = State::connect(&cli_args, &eventloop_proxy)?;
 
         Ok(Self {
@@ -804,7 +817,7 @@ impl EventLoopWrapper {
                 mute: false,
                 bitrate: None,
                 saved_streaming_config: None,
-                oidc: None,
+                oidc,
                 close_requested: false,
             },
         })

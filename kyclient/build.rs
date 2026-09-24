@@ -73,7 +73,9 @@ fn generate_rc() {
 }
 
 fn main() {
-    // Public client id of a packaged build.
+    // kyhub API URL, OIDC issuer and public client id of a packaged build.
+    println!("cargo:rerun-if-env-changed=KYHUB_API_URL");
+    println!("cargo:rerun-if-env-changed=KYHUB_ISSUER");
     println!("cargo:rerun-if-env-changed=KYHUB_CLIENT_ID");
 
     // Fetch tags when none are reachable (shallow or detached checkout) so

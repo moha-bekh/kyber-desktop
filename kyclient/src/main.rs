@@ -44,6 +44,7 @@ use kyclient_rs::{
 
 use error::{Error, Result};
 use event_loop::UserEvent;
+use oidc_manager::KyhubConfig;
 use parse_utils::parse_bitrate;
 
 pub enum DisplayParams {
@@ -90,6 +91,7 @@ pub struct CliArgs {
     keyboard_grab: bool,
     metrics: bool,
     auto_reconnect: bool,
+    pub(crate) kyhub_config: Option<KyhubConfig>,
 }
 
 impl CliArgs {
@@ -111,6 +113,38 @@ impl CliArgs {
 
         Ok(connect_config)
     }
+}
+
+/// kyhub API URL and OIDC issuer of a packaged build, set with `KYHUB_API_URL`
+/// and `KYHUB_ISSUER`. Unset in a plain build.
+const BUILT_IN_KYHUB_API_URL: Option<&str> = option_env!("KYHUB_API_URL");
+const BUILT_IN_KYHUB_ISSUER: Option<&str> = option_env!("KYHUB_ISSUER");
+
+fn load_kyhub_config(matches: &clap::ArgMatches) -> Result<Option<KyhubConfig>> {
+    let Some(machine_id) = matches.get_one::<String>("kyhub-machine-id") else {
+        return Ok(None);
+    };
+    let is_uuid = machine_id.len() == 36
+        && machine_id
+            .chars()
+            .all(|c| c.is_ascii_hexdigit() || c == '-');
+    if !is_uuid {
+        return Err(Error::Config("kyhub machine id must be a UUID".to_owned()));
+    }
+    let url = matches
+        .get_one::<String>("kyhub-url")
+        .map(String::as_str)
+        .or(BUILT_IN_KYHUB_API_URL)
+        .ok_or_else(|| {
+            Error::Config("kyhub mode needs --kyhub-url, or a build with KYHUB_API_URL".to_owned())
+        })?;
+    let issuer = BUILT_IN_KYHUB_ISSUER
+        .ok_or_else(|| Error::Config("kyhub mode needs a build with KYHUB_ISSUER".to_owned()))?;
+    Ok(Some(KyhubConfig {
+        url: url.to_owned(),
+        machine_id: machine_id.clone(),
+        issuer: issuer.to_owned(),
+    }))
 }
 
 fn load_tls_conf(matches: &clap::ArgMatches) -> Result<TlsConfig> {
@@ -214,6 +248,8 @@ pub(crate) const FLAG_TLS_FINGERPRINT: &str = "tls-fingerprint";
 pub(crate) const FLAG_TLS_TOFU: &str = "tls-tofu";
 pub(crate) const FLAG_TLS_TOFU_INTERACTIVE: &str = "tls-tofu-interactive";
 pub(crate) const FLAG_TLS_KNOWN_HOSTS: &str = "tls-known-hosts";
+pub(crate) const FLAG_KYHUB_URL: &str = "kyhub-url";
+pub(crate) const FLAG_KYHUB_MACHINE_ID: &str = "kyhub-machine-id";
 
 /// clap value parser for `--bitrate`: accepts a plain number or a K/M-suffixed
 /// value, rejecting anything else at parse time. A malformed value is an
@@ -527,12 +563,31 @@ pub(crate) fn build_cli() -> clap::App<'static> {
                 .value_parser(clap::builder::NonEmptyStringValueParser::new())
                 .conflicts_with_all(&["jwt", "oidc", "basic_auth"]),
         )
+        .arg(
+            clap::Arg::new("kyhub-url")
+                .long(FLAG_KYHUB_URL)
+                .help("kyhub API base URL, overrides the one built in")
+                .takes_value(true),
+        )
+        .arg(
+            clap::Arg::new("kyhub-machine-id")
+                .long(FLAG_KYHUB_MACHINE_ID)
+                .help("kyhub machine UUID: sign in to kyhub and connect with a machine token")
+                .takes_value(true),
+        )
         .group(
             clap::ArgGroup::new("basic_auth")
                 .args(&["username", "password"])
                 .requires_all(&["username", "password"])
                 .multiple(true)
                 .conflicts_with_all(&["jwt", "oidc"]),
+        )
+        .group(
+            clap::ArgGroup::new("kyhub")
+                .args(&["kyhub-url", "kyhub-machine-id"])
+                .requires("kyhub-machine-id")
+                .multiple(true)
+                .conflicts_with_all(&["jwt", "basic_auth", "oidc"]),
         )
         .arg(clap::Arg::with_name("STREAMER_IP").index(1))
         .arg(
@@ -771,6 +826,12 @@ fn main() {
         std::process::exit(1);
     });
 
+    let kyhub_config = load_kyhub_config(&matches).unwrap_or_else(|e| {
+        error!("{}", e);
+        notice!("Error: {}", e);
+        std::process::exit(1);
+    });
+
     let cli_args = CliArgs {
         streamer_ip: streamer_ip.clone(),
         streamer_port,
@@ -793,6 +854,7 @@ fn main() {
         keyboard_grab,
         metrics,
         auto_reconnect,
+        kyhub_config,
     };
 
     let mut event_loop_builder = EventLoopBuilder::<UserEvent>::with_user_event();
@@ -807,10 +869,53 @@ fn main() {
 
     let icon = icon::load_icon().ok();
 
-    let mut event_loop = event_loop::EventLoopWrapper::new(event_loop, cli_args, icon).unwrap();
+    // In kyhub mode the sign-in runs in here, so a closed browser tab or a
+    // refused machine is an expected failure, not a panic.
+    let mut event_loop = event_loop::EventLoopWrapper::new(event_loop, cli_args, icon)
+        .unwrap_or_else(|e| {
+            error!("{}", e);
+            notice!("Error: {}", e);
+            std::process::exit(1);
+        });
 
     let stop_req_cb = event_loop.create_stop_request_cb();
     ctrlc::set_handler(stop_req_cb).unwrap();
 
     event_loop.run().unwrap();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn kyhub_config(args: &[&str]) -> Result<Option<KyhubConfig>> {
+        let argv = ["client", "h"].iter().chain(args).copied();
+        let matches = build_cli()
+            .try_get_matches_from(argv)
+            .expect("arguments accepted by clap");
+        load_kyhub_config(&matches)
+    }
+
+    #[test]
+    fn kyhub_config_absent_without_machine_id() {
+        assert!(kyhub_config(&[]).unwrap().is_none());
+    }
+
+    #[test]
+    fn kyhub_config_rejects_non_uuid_machine_id() {
+        assert!(kyhub_config(&["--kyhub-machine-id", "not-a-uuid"]).is_err());
+        assert!(
+            kyhub_config(&["--kyhub-machine-id", "3f2b1c9e-0000-4000-8000-00000000000g"]).is_err()
+        );
+    }
+
+    #[test]
+    fn kyhub_config_needs_a_url_on_a_plain_build() {
+        if BUILT_IN_KYHUB_API_URL.is_none() {
+            assert!(
+                kyhub_config(&["--kyhub-machine-id", "3f2b1c9e-0000-4000-8000-000000000001"])
+                    .is_err()
+            );
+        }
+    }
 }
