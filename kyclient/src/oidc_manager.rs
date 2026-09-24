@@ -251,6 +251,41 @@ fn send_oidc_result(proxy: &EventLoopProxy<UserEvent>, result: OidcResult) {
     }
 }
 
+/// Run `op` behind the retry schedule `delays`, in seconds. On the first success
+/// the result is delivered via `proxy`; if every attempt fails, `OidcFlowFailed`
+/// is signalled. `what` labels the operation in log lines.
+async fn refresh_with_backoff<F, Fut>(
+    what: &str,
+    delays: &[u64],
+    proxy: EventLoopProxy<UserEvent>,
+    mut op: F,
+) where
+    F: FnMut() -> Fut,
+    Fut: std::future::Future<Output = Result<OidcResult>>,
+{
+    let mut last_error = None;
+    for i in 0..=delays.len() {
+        if i > 0 {
+            let backoff = delays[i - 1];
+            info!("Retrying {what} in {backoff} seconds...");
+            tokio::time::sleep(Duration::from_secs(backoff)).await;
+        }
+
+        match op().await {
+            Ok(oidc) => {
+                send_oidc_result(&proxy, oidc);
+                return;
+            }
+            Err(e) => {
+                warn!("{what} failed: {e:?}");
+                last_error = Some(e);
+            }
+        }
+    }
+    warn!("{what} failed after retries: {last_error:?}");
+    let _ = proxy.send_event(UserEvent::OidcFlowFailed);
+}
+
 async fn refresh_oidc_with_retry(
     issuer: String,
     client_id: String,
@@ -259,34 +294,24 @@ async fn refresh_oidc_with_retry(
 ) {
     const RETRY_DELAYS: [u64; 3] = [30, 60, 120];
 
-    if let Some(token) = refresh_token {
-        let mut last_error = None;
-        for i in 0..=RETRY_DELAYS.len() {
-            if i > 0 {
-                let backoff = RETRY_DELAYS[i - 1];
-                info!("Retrying silent OIDC refresh in {backoff} seconds...");
-                tokio::time::sleep(std::time::Duration::from_secs(backoff)).await;
-            }
+    let Some(token) = refresh_token else {
+        let _ = proxy.send_event(UserEvent::OidcFlowFailed);
+        return;
+    };
 
-            match kyc::refresh_token(&issuer, &client_id, &token)
+    let (issuer, client_id, token) = (&issuer, &client_id, &token);
+    refresh_with_backoff(
+        "silent OIDC refresh",
+        &RETRY_DELAYS,
+        proxy,
+        move || async move {
+            kyc::refresh_token(issuer, client_id, token)
                 .await
                 .map_err(Into::into)
                 .and_then(to_result)
-            {
-                Ok(oidc) => {
-                    send_oidc_result(&proxy, oidc);
-                    return;
-                }
-                Err(e) => {
-                    warn!("Silent OIDC refresh failed: {e:?}");
-                    last_error = Some(e);
-                }
-            }
-        }
-        warn!("Silent OIDC refresh failed after retries: {last_error:?}");
-    }
-
-    let _ = proxy.send_event(UserEvent::OidcFlowFailed);
+        },
+    )
+    .await;
 }
 
 /// Reject a kyhub base URL that would carry the portal or refresh token over
