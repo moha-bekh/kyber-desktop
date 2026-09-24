@@ -579,7 +579,7 @@ impl State {
                 debug!("OIDC challenge received: issuer={issuer}, client_id={client_id}");
                 let oidc = match &mut self.oidc {
                     Some(oidc) => oidc,
-                    None => match OidcManager::new() {
+                    None => match OidcManager::new(None) {
                         Ok(oidc) => self.oidc.insert(oidc),
                         Err(e) => {
                             error!("Failed to create OIDC manager: {e:?}");

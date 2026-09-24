@@ -73,6 +73,9 @@ fn generate_rc() {
 }
 
 fn main() {
+    // Public client id of a packaged build.
+    println!("cargo:rerun-if-env-changed=KYHUB_CLIENT_ID");
+
     // Fetch tags when none are reachable (shallow or detached checkout) so
     // git-describe resolves the release tag. Best-effort: offline builds fail
     // the fetch and fall back to the short SHA below. Bound a stalled HTTP fetch

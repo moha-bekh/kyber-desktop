@@ -1378,6 +1378,8 @@ dependencies = [
  "log4ky",
  "mockall",
  "raw-window-handle",
+ "reqwest",
+ "serde",
  "serial_test",
  "tokio",
  "url",

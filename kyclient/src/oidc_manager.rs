@@ -33,13 +33,52 @@ use winit::event_loop::EventLoopProxy;
 use crate::error::{Error, Result};
 use crate::event_loop::UserEvent;
 
+/// Total timeout for a single kyhub Connect exchange request. Bounds the
+/// blocking `.send()`/`.json()` so a slow or half-open kyhub cannot stall the
+/// refresh task forever (the session would silently stop renewing).
+const KYHUB_EXCHANGE_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// Public kyhub client the user signs in with before `:connect`, set at build
+/// time with `KYHUB_CLIENT_ID`.
+const KYHUB_PUBLIC_CLIENT_ID: &str = match option_env!("KYHUB_CLIENT_ID") {
+    Some(id) => id,
+    None => "kyhub-portal",
+};
+
+/// kyhub connection config for token exchange.
+///
+/// When set, the client signs the user in to kyhub and connects to the
+/// controller with the machine-scoped token from `:connect`. Required when the
+/// controller enforces `audience` in its OIDC config.
+#[derive(Clone, Debug)]
+pub(crate) struct KyhubConfig {
+    /// Base URL of the kyhub API.
+    pub(crate) url: String,
+    /// Machine UUID, used as the `/machines/{id}` path segment. kyhub derives
+    /// the exchange audience (the machine's IdP client ID) from it
+    /// server-side; the client never sends an audience itself.
+    pub(crate) machine_id: String,
+    /// kyhub's OIDC issuer, where the user signs in.
+    pub(crate) issuer: String,
+}
+
+/// A configured kyhub endpoint together with the HTTP client used to reach it.
+/// Only `OidcManager::new` builds one, after `require_secure_kyhub_url` accepted
+/// the base URL.
+#[derive(Clone)]
+struct KyhubClient {
+    config: KyhubConfig,
+    http: reqwest::Client,
+}
+
 #[derive(Clone)]
 pub(crate) struct OidcResult {
     /// OAuth2 access token for API calls (UMA2, etc.).
     pub(crate) access_token: String,
     /// `None` when the provider does not issue refresh tokens.
     pub(crate) refresh_token: Option<String>,
-    /// Unix timestamp when the ID token expires.
+    /// Unix timestamp when the token expires: the ID token for a PKCE sign-in,
+    /// the machine token itself for kyhub.
     pub(crate) exp: u64,
 }
 
@@ -67,6 +106,87 @@ fn to_result(tokens: kyc::OidcTokens) -> Result<OidcResult> {
         refresh_token: tokens.refresh_token,
         exp,
     })
+}
+
+/// Exchange a portal token for a machine-scoped token via kyhub Connect.
+///
+/// On success the returned `OidcResult` carries the exchanged token (short-lived,
+/// `aud=machine_client_id`) and kyhub's refresh token for `:refresh-connection`.
+///
+/// Failure is hard: if the exchange fails the error propagates. The caller must
+/// not fall back to the portal token because that would silently downgrade to
+/// no audience validation.
+async fn kyhub_connect(kyhub: &KyhubClient, portal_token: &str) -> Result<OidcResult> {
+    #[derive(serde::Deserialize)]
+    struct ConnectResponse {
+        credential: Option<Credential>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct Credential {
+        auth_token: String,
+        auth_refresh_token: Option<String>,
+    }
+
+    let url = format!(
+        "{}/machines/{}:connect",
+        kyhub.config.url.trim_end_matches('/'),
+        kyhub.config.machine_id
+    );
+    let resp = kyhub
+        .http
+        .post(&url)
+        .bearer_auth(portal_token)
+        .send()
+        .await
+        .map_err(|e| kyc::Error::TokenExchange(format!("{e:?}")))?;
+
+    let status = resp.status();
+    if !status.is_success() {
+        // kyhub answers 404 for a machine the user may not see, so 403 and
+        // 404 both mean no access, not a missing machine.
+        let msg = if matches!(
+            status,
+            reqwest::StatusCode::FORBIDDEN | reqwest::StatusCode::NOT_FOUND
+        ) {
+            format!(
+                "no access to machine {} (kyhub answered HTTP {status})",
+                kyhub.config.machine_id
+            )
+        } else {
+            format!("kyhub Connect returned HTTP {status}")
+        };
+        return Err(kyc::Error::TokenExchange(msg).into());
+    }
+
+    let body: ConnectResponse = resp
+        .json()
+        .await
+        .map_err(|e| kyc::Error::TokenExchange(format!("{e:?}")))?;
+
+    let credential = body.credential.ok_or_else(|| {
+        kyc::Error::TokenExchange("kyhub Connect returned no credential".to_owned())
+    })?;
+
+    credential_result(credential.auth_token, credential.auth_refresh_token)
+}
+
+/// Build an [`OidcResult`] from a kyhub token pair. `exp` is read from the
+/// access token's own claim, the same value the controller validates against;
+/// the refresh token, if any, is kept for the next renewal.
+fn credential_result(auth_token: String, auth_refresh_token: Option<String>) -> Result<OidcResult> {
+    let exp = kyc::jwt::parse_exp(&auth_token).map_err(Error::from)?;
+    Ok(OidcResult {
+        access_token: auth_token,
+        refresh_token: auth_refresh_token,
+        exp,
+    })
+}
+
+/// Sign the user in to kyhub, then exchange that token at `:connect`.
+async fn run_kyhub_flow(kyhub: &KyhubClient) -> Result<OidcResult> {
+    let portal = run_oidc_flow(&kyhub.config.issuer, KYHUB_PUBLIC_CLIENT_ID).await?;
+    kyhub_connect(kyhub, &portal.access_token).await
 }
 
 async fn run_oidc_flow(issuer: &str, client_id: &str) -> Result<OidcResult> {
@@ -113,6 +233,7 @@ enum OidcState {
 pub struct OidcManager {
     state: OidcState,
     rt: Option<tokio::runtime::Runtime>,
+    kyhub: Option<KyhubClient>,
 }
 
 impl Drop for OidcManager {
@@ -168,8 +289,29 @@ async fn refresh_oidc_with_retry(
     let _ = proxy.send_event(UserEvent::OidcFlowFailed);
 }
 
+/// Reject a kyhub base URL that would carry the portal or refresh token over
+/// plaintext, except loopback dev hosts (`localhost`, `*.localhost`, and the
+/// loopback IP ranges `127.0.0.0/8` / `::1`).
+fn require_secure_kyhub_url(base_url: &str) -> Result<()> {
+    let parsed =
+        url::Url::parse(base_url).map_err(|e| Error::Config(format!("invalid kyhub URL: {e}")))?;
+    let is_loopback = match parsed.host() {
+        Some(url::Host::Ipv4(ip)) => ip.is_loopback(),
+        Some(url::Host::Ipv6(ip)) => ip.is_loopback(),
+        Some(url::Host::Domain(host)) => host == "localhost" || host.ends_with(".localhost"),
+        None => false,
+    };
+    if parsed.scheme() == "https" || (parsed.scheme() == "http" && is_loopback) {
+        return Ok(());
+    }
+    Err(Error::Config(format!(
+        "refusing to send tokens to insecure kyhub URL scheme: {}",
+        parsed.scheme()
+    )))
+}
+
 impl OidcManager {
-    pub fn new() -> Result<Self> {
+    pub fn new(kyhub_config: Option<KyhubConfig>) -> Result<Self> {
         let rt = tokio::runtime::Builder::new_multi_thread()
             .worker_threads(1)
             .thread_name("oidc")
@@ -177,9 +319,24 @@ impl OidcManager {
             .enable_time()
             .build()
             .map_err(|e| Error::Config(format!("Failed to create async runtime: {e}")))?;
+        let kyhub = match kyhub_config {
+            Some(config) => {
+                require_secure_kyhub_url(&config.url)?;
+                let http = reqwest::Client::builder()
+                    .timeout(KYHUB_EXCHANGE_TIMEOUT)
+                    .redirect(reqwest::redirect::Policy::none())
+                    .build()
+                    .map_err(|e| {
+                        Error::Config(format!("Failed to create kyhub HTTP client: {e}"))
+                    })?;
+                Some(KyhubClient { config, http })
+            }
+            None => None,
+        };
         Ok(Self {
             state: OidcState::Idle,
             rt: Some(rt),
+            kyhub,
         })
     }
 
@@ -219,6 +376,16 @@ impl OidcManager {
                 }
             }
         });
+    }
+
+    /// Sign in to kyhub and get the machine token, blocking until done. Runs
+    /// before the client connects, so the controller never sends a challenge.
+    pub fn kyhub_login(&mut self) -> Result<OidcResult> {
+        let kyhub = self
+            .kyhub
+            .clone()
+            .ok_or_else(|| Error::Config("kyhub login without kyhub config".to_owned()))?;
+        self.rt().block_on(run_kyhub_flow(&kyhub))
     }
 
     pub fn on_token_received(&mut self, oidc: &OidcResult) {
@@ -329,5 +496,33 @@ mod tests {
         let exp = now + 3600;
         let d = time_until_refresh(exp);
         assert!(d.as_secs() >= 3535 && d.as_secs() <= 3540);
+    }
+
+    #[test]
+    fn secure_kyhub_url_accepts_https_any_host() {
+        assert!(require_secure_kyhub_url("https://api.kyhub.example.com/api/v1").is_ok());
+    }
+
+    #[test]
+    fn secure_kyhub_url_accepts_http_loopback() {
+        assert!(require_secure_kyhub_url("http://api.kyhub.localhost/api/v1").is_ok());
+        assert!(require_secure_kyhub_url("http://localhost:8080/api/v1").is_ok());
+        assert!(require_secure_kyhub_url("http://127.0.0.1:8080/api/v1").is_ok());
+        assert!(require_secure_kyhub_url("http://[::1]:8080/api/v1").is_ok());
+    }
+
+    #[test]
+    fn secure_kyhub_url_rejects_http_public_host() {
+        assert!(require_secure_kyhub_url("http://api.kyhub.example.com/api/v1").is_err());
+        // Names that only look local, and IPs outside the loopback ranges.
+        assert!(require_secure_kyhub_url("http://localhost.attacker.example/api/v1").is_err());
+        assert!(require_secure_kyhub_url("http://127.0.0.1.nip.io/api/v1").is_err());
+        assert!(require_secure_kyhub_url("http://[::ffff:127.0.0.1]/api/v1").is_err());
+        assert!(require_secure_kyhub_url("http://0.0.0.0/api/v1").is_err());
+    }
+
+    #[test]
+    fn secure_kyhub_url_rejects_invalid() {
+        assert!(require_secure_kyhub_url("not a url").is_err());
     }
 }

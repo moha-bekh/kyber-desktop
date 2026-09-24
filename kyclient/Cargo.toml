@@ -12,6 +12,8 @@ libc = "0.2.153"
 log = "0.4.21"
 log4ky = { version = "0.1.0", features = ["toml"] }
 raw-window-handle = "0.5.0"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1", features = ["derive"] }
 url = "2.5.0"
 
 kyc = "0.1.0"
