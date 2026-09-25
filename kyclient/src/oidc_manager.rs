@@ -23,6 +23,7 @@
 //! Drives the interactive PKCE flow and background token refresh for kyclient,
 //! using [`kyc`] for the protocol layer.
 
+use std::fmt;
 use std::time::Duration;
 
 use log::{error, info, warn};
@@ -32,7 +33,7 @@ use winit::event_loop::EventLoopProxy;
 use crate::error::{Error, Result};
 use crate::event_loop::UserEvent;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub(crate) struct OidcResult {
     /// OAuth2 access token for API calls (UMA2, etc.).
     pub(crate) access_token: String,
@@ -40,6 +41,20 @@ pub(crate) struct OidcResult {
     pub(crate) refresh_token: Option<String>,
     /// Unix timestamp when the ID token expires.
     pub(crate) exp: u64,
+}
+
+/// Tokens stay out of logs: `EventLoopClosed` prints the event it carries.
+impl fmt::Debug for OidcResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("OidcResult")
+            .field("access_token", &"<redacted>")
+            .field(
+                "refresh_token",
+                &self.refresh_token.as_ref().map(|_| "<redacted>"),
+            )
+            .field("exp", &self.exp)
+            .finish()
+    }
 }
 
 fn to_result(tokens: kyc::OidcTokens) -> Result<OidcResult> {
@@ -111,7 +126,7 @@ impl Drop for OidcManager {
 
 fn send_oidc_result(proxy: &EventLoopProxy<UserEvent>, result: OidcResult) {
     if let Err(e) = proxy.send_event(UserEvent::OidcTokenReceived(result)) {
-        error!("Failed to send OIDC result: {e:?}");
+        error!("Failed to send OIDC result: {e}");
     }
 }
 
