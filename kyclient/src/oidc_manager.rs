@@ -33,10 +33,17 @@ use winit::event_loop::EventLoopProxy;
 use crate::error::{Error, Result};
 use crate::event_loop::UserEvent;
 
-/// Total timeout for a single kyhub Connect exchange request. Bounds the
-/// blocking `.send()`/`.json()` so a slow or half-open kyhub cannot stall the
-/// refresh task forever (the session would silently stop renewing).
+/// Total timeout for a single kyhub request, Connect or refresh-connection.
+/// Bounds the blocking `.send()`/`.json()` so a slow or half-open kyhub cannot
+/// stall the refresh task forever (the session would silently stop renewing).
 const KYHUB_EXCHANGE_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// Overrides [`KYHUB_EXCHANGE_TIMEOUT`] so a hung refresh leaves time to retry.
+const KYHUB_REFRESH_TIMEOUT: Duration = Duration::from_secs(8);
+
+/// How long before exp a kyhub machine token is renewed. The token lives about
+/// 60 s, so the IdP lead of 60 s would renew it at once, again and again.
+const KYHUB_REFRESH_LEAD_SECS: u64 = 30;
 
 /// Public kyhub client the user signs in with before `:connect`, set at build
 /// time with `KYHUB_CLIENT_ID`.
@@ -219,11 +226,38 @@ fn time_until_refresh(exp: u64) -> Duration {
     kyc::jwt::time_until_refresh(exp)
 }
 
+/// Time until a kyhub machine token is renewed: the lead before `exp`, but
+/// never sooner than half of what is left. A client clock ahead of the IdP
+/// shortens the visible lifetime, and a fixed lead would then renew at once,
+/// again and again. At least one second, so a token that is already late
+/// cannot spin the refresh loop.
+fn time_until_kyhub_refresh(exp: u64) -> Duration {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let left = exp.saturating_sub(now);
+    let secs = left.saturating_sub(KYHUB_REFRESH_LEAD_SECS).max(left / 2);
+    Duration::from_secs(secs.max(1))
+}
+
+/// How the background task obtains the next token when a refresh fires.
+#[derive(Clone)]
+enum RefreshStrategy {
+    /// Interactive PKCE tokens: refresh against the IdP.
+    Pkce { issuer: String, client_id: String },
+    /// kyhub machine tokens: redeem the refresh token at kyhub
+    /// `:refresh-connection`. It is kyhub's refresh token, so the client cannot
+    /// refresh directly against the IdP. Seeded by [`OidcManager::seed_kyhub`].
+    Kyhub,
+}
+
 enum OidcState {
     Idle,
     Running {
-        issuer: String,
-        client_id: String,
+        strategy: RefreshStrategy,
         refresh_token: Option<String>,
         cancel_tx: Option<tokio::sync::oneshot::Sender<()>>,
         flow_active: bool,
@@ -276,13 +310,18 @@ async fn refresh_with_backoff<F, Fut>(
                 send_oidc_result(&proxy, oidc);
                 return;
             }
+            Err(e @ Error::KyhubRejected(_)) => {
+                // A retry cannot change a 4xx: give up now.
+                last_error = Some(e);
+                break;
+            }
             Err(e) => {
                 warn!("{what} failed: {e:?}");
                 last_error = Some(e);
             }
         }
     }
-    warn!("{what} failed after retries: {last_error:?}");
+    warn!("{what} failed for good: {last_error:?}");
     let _ = proxy.send_event(UserEvent::OidcFlowFailed);
 }
 
@@ -335,6 +374,82 @@ fn require_secure_kyhub_url(base_url: &str) -> Result<()> {
     )))
 }
 
+/// Redeem a portal-issued refresh token at kyhub `:refresh-connection` for a
+/// fresh machine-audienced access token. The refresh token rotates, so the new
+/// one is threaded back for the next cycle. `exp` comes from the returned access
+/// token's own claim (what the controller validates against).
+async fn refresh_connection(kyhub: &KyhubClient, refresh_token: &str) -> Result<OidcResult> {
+    #[derive(serde::Serialize)]
+    struct RefreshRequest<'a> {
+        refresh_token: &'a str,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct RefreshResponse {
+        auth_token: String,
+        auth_refresh_token: Option<String>,
+    }
+
+    let url = format!(
+        "{}/machines/{}:refresh-connection",
+        kyhub.config.url.trim_end_matches('/'),
+        kyhub.config.machine_id
+    );
+    let resp = kyhub
+        .http
+        .post(&url)
+        .timeout(KYHUB_REFRESH_TIMEOUT)
+        .json(&RefreshRequest { refresh_token })
+        .send()
+        .await
+        .map_err(|e| kyc::Error::TokenExchange(format!("{e:?}")))?;
+
+    let status = resp.status();
+    if !status.is_success() {
+        // The refresh token is spent, or the machine is gone or disabled:
+        // a 4xx will not change on retry. 429 is the exception.
+        if status.is_client_error() && status != reqwest::StatusCode::TOO_MANY_REQUESTS {
+            return Err(Error::KyhubRejected(status));
+        }
+        return Err(kyc::Error::TokenExchange(format!(
+            "kyhub refresh-connection returned HTTP {status}"
+        ))
+        .into());
+    }
+
+    let body: RefreshResponse = resp
+        .json()
+        .await
+        .map_err(|e| kyc::Error::TokenExchange(format!("{e:?}")))?;
+
+    credential_result(body.auth_token, body.auth_refresh_token)
+}
+
+/// kyhub refresh loop: redeem the refresh token at kyhub
+/// `:refresh-connection`, retrying with backoff. Mirrors
+/// [`refresh_oidc_with_retry`] but talks only to kyhub. On exhaustion (or an
+/// expired refresh token) it signals failure and the session ends at the
+/// current access token's expiry.
+async fn refresh_kyhub_with_retry(
+    kyhub: Option<KyhubClient>,
+    refresh_token: Option<String>,
+    proxy: EventLoopProxy<UserEvent>,
+) {
+    const RETRY_DELAYS: [u64; 2] = [5, 10];
+
+    let (Some(kyhub), Some(token)) = (kyhub, refresh_token) else {
+        warn!("kyhub refresh without kyhub config or refresh token");
+        let _ = proxy.send_event(UserEvent::OidcFlowFailed);
+        return;
+    };
+
+    let (kyhub, token) = (&kyhub, &token);
+    refresh_with_backoff("kyhub refresh", &RETRY_DELAYS, proxy, move || async move {
+        refresh_connection(kyhub, token).await
+    })
+    .await;
+}
+
 impl OidcManager {
     pub fn new(kyhub_config: Option<KyhubConfig>) -> Result<Self> {
         let rt = tokio::runtime::Builder::new_multi_thread()
@@ -385,9 +500,32 @@ impl OidcManager {
         client_id: String,
         proxy: EventLoopProxy<UserEvent>,
     ) {
+        // In kyhub mode the challenge means the machine token was refused: sign
+        // in to kyhub again instead of using the controller's IdP client.
+        if let Some(kyhub) = self.kyhub.clone() {
+            self.state = OidcState::Running {
+                strategy: RefreshStrategy::Kyhub,
+                refresh_token: None,
+                cancel_tx: None,
+                flow_active: true,
+            };
+            self.rt().spawn(async move {
+                match run_kyhub_flow(&kyhub).await {
+                    Ok(oidc) => send_oidc_result(&proxy, oidc),
+                    Err(e) => {
+                        warn!("kyhub sign-in failed: {e:?}");
+                        let _ = proxy.send_event(UserEvent::OidcFlowFailed);
+                    }
+                }
+            });
+            return;
+        }
+
         self.state = OidcState::Running {
-            issuer: issuer.clone(),
-            client_id: client_id.clone(),
+            strategy: RefreshStrategy::Pkce {
+                issuer: issuer.clone(),
+                client_id: client_id.clone(),
+            },
             refresh_token: None,
             cancel_tx: None,
             flow_active: true,
@@ -403,14 +541,27 @@ impl OidcManager {
         });
     }
 
-    /// Sign in to kyhub and get the machine token, blocking until done. Runs
-    /// before the client connects, so the controller never sends a challenge.
-    pub fn kyhub_login(&mut self) -> Result<OidcResult> {
+    /// Sign in to kyhub and get the machine token, blocking until done, then
+    /// schedule its renewal. Runs before the client connects, so the controller
+    /// never sends a challenge.
+    pub fn kyhub_login(&mut self, proxy: EventLoopProxy<UserEvent>) -> Result<OidcResult> {
         let kyhub = self
             .kyhub
             .clone()
             .ok_or_else(|| Error::Config("kyhub login without kyhub config".to_owned()))?;
-        self.rt().block_on(run_kyhub_flow(&kyhub))
+        let machine = self.rt().block_on(run_kyhub_flow(&kyhub))?;
+        self.start_kyhub_renewal(&machine, proxy);
+        Ok(machine)
+    }
+
+    fn start_kyhub_renewal(&mut self, machine: &OidcResult, proxy: EventLoopProxy<UserEvent>) {
+        match &machine.refresh_token {
+            Some(token) => {
+                self.seed_kyhub(token.clone());
+                self.schedule_refresh(machine.exp, proxy);
+            }
+            None => warn!("no kyhub refresh token, the session ends when the token expires"),
+        }
     }
 
     pub fn on_token_received(&mut self, oidc: &OidcResult) {
@@ -433,12 +584,22 @@ impl OidcManager {
         }
     }
 
+    /// Seed the manager for the kyhub refresh path: only the refresh token is
+    /// stored, ready for [`Self::schedule_refresh`].
+    pub fn seed_kyhub(&mut self, refresh_token: String) {
+        self.state = OidcState::Running {
+            strategy: RefreshStrategy::Kyhub,
+            refresh_token: Some(refresh_token),
+            cancel_tx: None,
+            flow_active: false,
+        };
+    }
+
     pub fn schedule_refresh(&mut self, exp: u64, proxy: EventLoopProxy<UserEvent>) {
         self.cancel_refresh();
 
         let OidcState::Running {
-            issuer,
-            client_id,
+            strategy,
             refresh_token,
             cancel_tx,
             ..
@@ -447,10 +608,14 @@ impl OidcManager {
             return;
         };
 
-        let (issuer, client_id, refresh_token) =
-            (issuer.clone(), client_id.clone(), refresh_token.clone());
+        let strategy = strategy.clone();
+        let refresh_token = refresh_token.clone();
+        let kyhub = self.kyhub.clone();
 
-        let delay = time_until_refresh(exp);
+        let delay = match strategy {
+            RefreshStrategy::Pkce { .. } => time_until_refresh(exp),
+            RefreshStrategy::Kyhub => time_until_kyhub_refresh(exp),
+        };
         let (tx, mut rx) = tokio::sync::oneshot::channel();
         *cancel_tx = Some(tx);
 
@@ -458,7 +623,14 @@ impl OidcManager {
             tokio::select! {
                 _ = &mut rx => {}
                 _ = tokio::time::sleep(delay) => {
-                    refresh_oidc_with_retry(issuer, client_id, refresh_token, proxy).await;
+                    match strategy {
+                        RefreshStrategy::Pkce { issuer, client_id } => {
+                            refresh_oidc_with_retry(issuer, client_id, refresh_token, proxy).await;
+                        }
+                        RefreshStrategy::Kyhub => {
+                            refresh_kyhub_with_retry(kyhub, refresh_token, proxy).await;
+                        }
+                    }
                 }
             }
         });
@@ -524,6 +696,21 @@ mod tests {
     }
 
     #[test]
+    fn time_until_kyhub_refresh_leads_by_30s_and_never_zero() {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let d = time_until_kyhub_refresh(now + 60);
+        assert!(d.as_secs() >= 29 && d.as_secs() <= 30);
+        // A short or skewed lifetime renews at half of what is left.
+        let d = time_until_kyhub_refresh(now + 30);
+        assert!(d.as_secs() >= 14 && d.as_secs() <= 15);
+        assert_eq!(time_until_kyhub_refresh(0), Duration::from_secs(1));
+    }
+
+    #[test]
     fn secure_kyhub_url_accepts_https_any_host() {
         assert!(require_secure_kyhub_url("https://api.kyhub.example.com/api/v1").is_ok());
     }
@@ -549,5 +736,27 @@ mod tests {
     #[test]
     fn secure_kyhub_url_rejects_invalid() {
         assert!(require_secure_kyhub_url("not a url").is_err());
+    }
+
+    #[test]
+    fn credential_result_reads_exp_and_threads_rotated_token() {
+        let jwt = make_jwt(r#"{"sub":"user","exp":9999999999}"#);
+        let out = credential_result(jwt.clone(), Some("rotated".to_owned())).unwrap();
+        assert_eq!(out.access_token, jwt);
+        assert_eq!(out.exp, 9999999999);
+        assert_eq!(out.refresh_token.as_deref(), Some("rotated"));
+    }
+
+    #[test]
+    fn credential_result_allows_absent_rotated_token() {
+        let jwt = make_jwt(r#"{"sub":"user","exp":9999999999}"#);
+        let out = credential_result(jwt, None).unwrap();
+        assert!(out.refresh_token.is_none());
+    }
+
+    #[test]
+    fn credential_result_rejects_token_without_exp() {
+        let jwt = make_jwt(r#"{"sub":"user"}"#);
+        assert!(credential_result(jwt, None).is_err());
     }
 }

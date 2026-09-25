@@ -795,7 +795,7 @@ impl EventLoopWrapper {
         let mut oidc = None;
         if let Some(kyhub_config) = cli_args.kyhub_config.clone() {
             let mut mgr = OidcManager::new(Some(kyhub_config))?;
-            let machine = mgr.kyhub_login()?;
+            let machine = mgr.kyhub_login(eventloop_proxy.clone())?;
             cli_args.auth_credentials = kyclient_rs::AuthCredentials::Oidc {
                 token: machine.access_token,
             };

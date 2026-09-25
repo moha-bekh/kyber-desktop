@@ -40,6 +40,8 @@ pub enum Error {
     Config(String),
     // OIDC flow errors
     Oidc(kyc::Error),
+    /// kyhub refused the request for good: a 4xx a retry cannot fix.
+    KyhubRejected(reqwest::StatusCode),
 }
 
 impl From<std::io::Error> for Error {
@@ -107,6 +109,7 @@ impl std::fmt::Display for Error {
             Error::WindowFailed(e) => write!(f, "Window failed: {}", e),
             Error::Config(msg) => write!(f, "{}", msg),
             Error::Oidc(e) => write!(f, "OIDC error: {}", e),
+            Error::KyhubRejected(status) => write!(f, "kyhub refused the request: HTTP {}", status),
         }
     }
 }
