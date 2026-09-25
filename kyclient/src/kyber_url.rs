@@ -31,7 +31,7 @@ use std::ffi::OsString;
 use url::{Host, Url};
 
 use crate::error::{Error, Result};
-use crate::FLAG_PORT;
+use crate::{FLAG_AUTH_OIDC_TOKEN, FLAG_KYHUB_MACHINE_ID, FLAG_PORT};
 
 const SCHEME: &str = "kyber://";
 
@@ -85,6 +85,8 @@ pub(crate) fn maybe_translate_url(args: &[OsString]) -> Result<Option<Vec<String
     // A `port` query parameter overrides the port in the authority.
     let mut port = url.port().map(|p| p.to_string());
     let mut flags: Vec<String> = Vec::new();
+    let mut has_oidc_token = false;
+    let mut has_machine_id = false;
 
     let cli = crate::build_cli();
     for (key, value) in url.query_pairs() {
@@ -115,6 +117,17 @@ pub(crate) fn maybe_translate_url(args: &[OsString]) -> Result<Option<Vec<String
         } else {
             push_flag(&mut flags, flag, key, value)?;
         }
+        has_oidc_token |= flag == FLAG_AUTH_OIDC_TOKEN;
+        has_machine_id |= flag == FLAG_KYHUB_MACHINE_ID;
+    }
+
+    // kyhub_machine_id alone would sign the user in to kyhub and send the
+    // minted machine token to the link's host. A link only adopts a token it
+    // carries.
+    if has_machine_id && !has_oidc_token {
+        return Err(Error::Config(
+            "kyber:// URL must not set kyhub_machine_id without auth_oidc_token: a link cannot start a sign-in".to_string(),
+        ));
     }
 
     let mut argv = vec![program.to_string_lossy().into_owned(), host];
@@ -361,6 +374,60 @@ mod tests {
                 "{key} must be rejected"
             );
         }
+    }
+
+    #[test]
+    fn auth_oidc_refresh_token_value() {
+        assert_eq!(
+            translate("kyber://h?auth_oidc_refresh_token=refresh.tok.en"),
+            expected(&["client", "h", "--auth-oidc-refresh-token", "refresh.tok.en"])
+        );
+    }
+
+    #[test]
+    fn kyhub_machine_id_value() {
+        assert_eq!(
+            translate(
+                "kyber://h?auth_oidc_token=t&kyhub_machine_id=3f2b1c9e-0000-4000-8000-000000000001"
+            ),
+            expected(&[
+                "client",
+                "h",
+                "--auth-oidc-token",
+                "t",
+                "--kyhub-machine-id",
+                "3f2b1c9e-0000-4000-8000-000000000001"
+            ])
+        );
+    }
+
+    #[test]
+    fn kyhub_machine_id_needs_a_token() {
+        // A link must not start a kyhub sign-in for the machine it names.
+        assert!(maybe_translate_url(&args(
+            "kyber://h?kyhub_machine_id=3f2b1c9e-0000-4000-8000-000000000001"
+        ))
+        .is_err());
+    }
+
+    #[test]
+    fn refresh_token_needs_token_and_machine_id() {
+        let cli = crate::build_cli();
+        assert!(cli
+            .try_get_matches_from(translate(
+                "kyber://h?auth_oidc_token=t&auth_oidc_refresh_token=r"
+            ))
+            .is_err());
+        assert!(maybe_translate_url(&args(
+            "kyber://h?auth_oidc_refresh_token=r&kyhub_machine_id=3f2b1c9e-0000-4000-8000-000000000001"
+        ))
+        .is_err());
+        let cli = crate::build_cli();
+        assert!(cli
+            .try_get_matches_from(translate(
+                "kyber://h?auth_oidc_token=t&auth_oidc_refresh_token=r&kyhub_machine_id=3f2b1c9e-0000-4000-8000-000000000001"
+            ))
+            .is_ok());
     }
 
     #[test]

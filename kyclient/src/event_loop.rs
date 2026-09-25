@@ -592,6 +592,12 @@ impl State {
                     warn!("OIDC flow already in progress, skipping");
                     return Ok(());
                 }
+                if !oidc.challenge_sign_in_allowed() {
+                    error!("the controller refused the link's machine token");
+                    notice!("Error: the controller refused the link's token. Open a new link from the portal.");
+                    *control_flow = ControlFlow::Exit;
+                    return Ok(());
+                }
                 oidc.start_flow(issuer, client_id, self.eventloop_proxy.clone());
             }
             Event::UserEvent(UserEvent::Client(kyclient_rs::Event::DataPlaneConnectFailed)) => {
@@ -791,11 +797,20 @@ impl EventLoopWrapper {
         let eventloop_proxy = event_loop.create_proxy();
 
         // In kyhub mode, sign in and get the machine token before connecting,
-        // so the controller accepts the first login without a challenge.
+        // so the controller accepts the first login without a challenge. A
+        // kyber:// link already carries the machine token: no sign in then.
         let mut oidc = None;
         if let Some(kyhub_config) = cli_args.kyhub_config.clone() {
             let mut mgr = OidcManager::new(Some(kyhub_config))?;
-            let machine = mgr.kyhub_login(eventloop_proxy.clone())?;
+            let machine = match &cli_args.auth_credentials {
+                kyclient_rs::AuthCredentials::Oidc { token } if !token.is_empty() => mgr
+                    .kyhub_adopt(
+                        token.clone(),
+                        cli_args.kyhub_refresh_token.take(),
+                        eventloop_proxy.clone(),
+                    )?,
+                _ => mgr.kyhub_login(eventloop_proxy.clone())?,
+            };
             cli_args.auth_credentials = kyclient_rs::AuthCredentials::Oidc {
                 token: machine.access_token,
             };

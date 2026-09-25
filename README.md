@@ -276,6 +276,8 @@ The full mapping:
 | `auth_username` | `--auth-username` | value |
 | `auth_token` | `--auth-token` | value |
 | `auth_oidc_token` | `--auth-oidc-token` | value |
+| `auth_oidc_refresh_token` | `--auth-oidc-refresh-token` | value |
+| `kyhub_machine_id` | `--kyhub-machine-id` | value |
 | `yuv444` | `--yuv444` (alias of `--444`) | boolean |
 | `software_decode` | `--software-decode` | boolean |
 | `tls_tofu` | `--tls-tofu` | boolean |
@@ -283,7 +285,7 @@ The full mapping:
 
 A `kyber://` link is web-triggerable, so the parameters that would change how the server is trusted, start a sign-in or carry a password are rejected: `tls_skip_verification`, `tls_fingerprint`, `tls_root_cert`, `tls_host`, `tls_tofu_interactive`, `auth_oidc` and `auth_password`. `tls_tofu` stays: it trusts the first certificate of the link's own host only. Any other unknown parameter is an error, and so is anything else on the command line next to a link: the client logs the error and exits instead of connecting with a setting silently dropped.
 
-A link with `auth_oidc_token` logs in with that token and never opens a browser. The session ends when the token expires. The token is visible to the other processes of the same user for as long as the client runs, in the command line the OS passes and in any launcher journal, so a portal should mint a short-lived, single-use token for a link.
+A link with `auth_oidc_token` logs in with that token and never opens a browser. With `kyhub_machine_id` and `auth_oidc_refresh_token` next to it, the client renews the token at kyhub's `:refresh-connection`; without them the session ends when the token expires. `kyhub_machine_id` alone is rejected, and a challenge from the link's host ends the session instead of signing in to kyhub: a link must not start a sign-in. The token is visible to the other processes of the same user for as long as the client runs, in the command line the OS passes and in any launcher journal, so a portal should mint a short-lived, single-use token for a link.
 
 To register the scheme on Linux, build the package and run the install script from it:
 

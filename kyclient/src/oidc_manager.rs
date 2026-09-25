@@ -268,6 +268,11 @@ pub struct OidcManager {
     state: OidcState,
     rt: Option<tokio::runtime::Runtime>,
     kyhub: Option<KyhubClient>,
+    /// A controller challenge may sign in to kyhub only when the user asked
+    /// for kyhub mode on the command line. A token that came with a link is
+    /// used as is: the host is the link's choice, and a sign-in would mint a
+    /// fresh machine token for it.
+    kyhub_challenge_sign_in: bool,
 }
 
 impl Drop for OidcManager {
@@ -477,6 +482,7 @@ impl OidcManager {
             state: OidcState::Idle,
             rt: Some(rt),
             kyhub,
+            kyhub_challenge_sign_in: false,
         })
     }
 
@@ -550,6 +556,26 @@ impl OidcManager {
             .clone()
             .ok_or_else(|| Error::Config("kyhub login without kyhub config".to_owned()))?;
         let machine = self.rt().block_on(run_kyhub_flow(&kyhub))?;
+        self.kyhub_challenge_sign_in = true;
+        self.start_kyhub_renewal(&machine, proxy);
+        Ok(machine)
+    }
+
+    /// Whether a controller challenge may start a sign-in. Always for the
+    /// IdP flow; in kyhub mode only after [`Self::kyhub_login`].
+    pub fn challenge_sign_in_allowed(&self) -> bool {
+        self.kyhub.is_none() || self.kyhub_challenge_sign_in
+    }
+
+    /// Take a machine token that came with a kyber:// link instead of signing
+    /// in. Its renewal is scheduled from the token's own `exp`.
+    pub fn kyhub_adopt(
+        &mut self,
+        access_token: String,
+        refresh_token: Option<String>,
+        proxy: EventLoopProxy<UserEvent>,
+    ) -> Result<OidcResult> {
+        let machine = credential_result(access_token, refresh_token)?;
         self.start_kyhub_renewal(&machine, proxy);
         Ok(machine)
     }
@@ -708,6 +734,19 @@ mod tests {
         let d = time_until_kyhub_refresh(now + 30);
         assert!(d.as_secs() >= 14 && d.as_secs() <= 15);
         assert_eq!(time_until_kyhub_refresh(0), Duration::from_secs(1));
+    }
+
+    #[test]
+    fn challenge_sign_in_needs_a_command_line_login() {
+        let plain = OidcManager::new(None).unwrap();
+        assert!(plain.challenge_sign_in_allowed());
+        let kyhub = OidcManager::new(Some(KyhubConfig {
+            url: "https://api.kyhub.example.com/api/v1".to_owned(),
+            machine_id: "3f2b1c9e-0000-4000-8000-000000000001".to_owned(),
+            issuer: "https://idp.kyhub.example.com/realms/kyhub".to_owned(),
+        }))
+        .unwrap();
+        assert!(!kyhub.challenge_sign_in_allowed());
     }
 
     #[test]

@@ -92,6 +92,8 @@ pub struct CliArgs {
     metrics: bool,
     auto_reconnect: bool,
     pub(crate) kyhub_config: Option<KyhubConfig>,
+    /// kyhub refresh token handed over with a machine token, from a kyber:// link.
+    pub(crate) kyhub_refresh_token: Option<String>,
 }
 
 impl CliArgs {
@@ -244,6 +246,7 @@ pub(crate) const FLAG_AUTH_PASSWORD: &str = "auth-password";
 pub(crate) const FLAG_AUTH_TOKEN: &str = "auth-token";
 pub(crate) const FLAG_AUTH_OIDC: &str = "auth-oidc";
 pub(crate) const FLAG_AUTH_OIDC_TOKEN: &str = "auth-oidc-token";
+pub(crate) const FLAG_AUTH_OIDC_REFRESH_TOKEN: &str = "auth-oidc-refresh-token";
 pub(crate) const FLAG_TLS_FINGERPRINT: &str = "tls-fingerprint";
 pub(crate) const FLAG_TLS_TOFU: &str = "tls-tofu";
 pub(crate) const FLAG_TLS_TOFU_INTERACTIVE: &str = "tls-tofu-interactive";
@@ -276,9 +279,11 @@ pub(crate) const URL_ARGS: &[&str] = &[
     "intra-refresh",
     "jwt",
     "keyboard-grab",
+    "kyhub-machine-id",
     "kymux-audio",
     "kymux-video",
     "metrics",
+    "oidc-refresh-token",
     "oidc-token",
     "port",
     "protocol",
@@ -564,6 +569,13 @@ pub(crate) fn build_cli() -> clap::App<'static> {
                 .conflicts_with_all(&["jwt", "oidc", "basic_auth"]),
         )
         .arg(
+            clap::Arg::new("oidc-refresh-token")
+                .long(FLAG_AUTH_OIDC_REFRESH_TOKEN)
+                .help("Refresh token for silent token renewal via kyhub :refresh-connection")
+                .takes_value(true)
+                .requires_all(&["kyhub-machine-id", "oidc-token"]),
+        )
+        .arg(
             clap::Arg::new("kyhub-url")
                 .long(FLAG_KYHUB_URL)
                 .help("kyhub API base URL, overrides the one built in")
@@ -831,6 +843,7 @@ fn main() {
         notice!("Error: {}", e);
         std::process::exit(1);
     });
+    let kyhub_refresh_token = matches.get_one::<String>("oidc-refresh-token").cloned();
 
     let cli_args = CliArgs {
         streamer_ip: streamer_ip.clone(),
@@ -855,6 +868,7 @@ fn main() {
         metrics,
         auto_reconnect,
         kyhub_config,
+        kyhub_refresh_token,
     };
 
     let mut event_loop_builder = EventLoopBuilder::<UserEvent>::with_user_event();
