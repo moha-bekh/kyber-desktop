@@ -36,7 +36,7 @@ use kyclient_rs::{
     Client, ConnectConfig, StreamingSessionConfig, TofuPrompt, VideoPlayerConfig, WindowHandle,
 };
 
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::inputs::{InputContext, ShortcutType};
 use crate::metrics::MetricsProcessor;
 use crate::oidc_manager::OidcManager;
@@ -325,21 +325,19 @@ impl State {
         event_loop: &EventLoopWindowTarget<UserEvent>,
         displays: &[kyclient_rs::Display],
     ) -> Result<()> {
+        let first_display = displays.first().ok_or(Error::NoDisplays)?;
+
         match &self.cli_args.display_params {
             DisplayParams::Single(display_idx) => {
-                let display_idx = if *display_idx < displays.len() {
-                    *display_idx
-                } else {
-                    warn!("Display {display_idx} is out of range, fallback to first screen",);
+                let display = displays.get(*display_idx).unwrap_or_else(|| {
+                    warn!("Display {display_idx} is out of range, fallback to first screen");
+                    first_display
+                });
 
-                    0
-                };
-
-                self.create_single_window(
-                    event_loop,
-                    &displays[display_idx],
-                    event_loop.primary_monitor(),
-                )?;
+                self.create_single_window(event_loop, display, event_loop.primary_monitor())?;
+            }
+            DisplayParams::Multiple(0) => {
+                info!("No window to create");
             }
             DisplayParams::Multiple(display_count) => {
                 self.create_multiple_windows(event_loop, displays, *display_count)?;
@@ -558,7 +556,14 @@ impl State {
             Event::UserEvent(UserEvent::Client(kyclient_rs::Event::ControlPlaneConnected {
                 displays,
             })) => {
-                self.create_windows(event_loop, &displays)?;
+                match self.create_windows(event_loop, &displays) {
+                    Ok(()) => {}
+                    Err(Error::NoDisplays) => {
+                        error!("Controller reported no displays; cannot start streaming");
+                        return self.request_stop(control_flow);
+                    }
+                    Err(err) => return Err(err),
+                }
                 self.start_streaming()?;
             }
             Event::UserEvent(UserEvent::Client(

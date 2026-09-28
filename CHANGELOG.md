@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 * kycontroller: Release AV subscriptions synchronously on session teardown
 * kyclient,kycontroller: Misc metrics fixups
 * kyavservice: Add GStreamer grab backend
+* kyclient: Exit cleanly when the controller has no displays
 
 ## [0.28.0] - 2026-08-18
 
