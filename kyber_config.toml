@@ -403,6 +403,72 @@ enabled = false
 # Default: 300 (5 minutes)
 # jwks_cache_ttl = 300
 
+# kyhub agent
+#
+# Connects this machine to a kyhub instance for centralized management.
+# Register the machine in the kyhub Portal to obtain the credentials below.
+#
+# These credentials identify the machine, not one program: kyhub creates one
+# client per machine. So the section sits at the top level, beside [log], and
+# not under any one program.
+#
+# Example:
+#
+#   [kyhub]
+#   enabled = true
+#   api_url = "https://kyhub.example.com"
+#   token_endpoint = "https://keycloak.example.com/realms/myrealm/protocol/openid-connect/token"
+#   client_id = "kyhub-machine-00000000-0000-0000-0000-000000000000"
+#   client_secret = "your-client-secret"
+#
+#[kyhub]
+# Enable or disable the kyhub agent.
+# Default: false
+#enabled = false
+
+# kyhub API URL.
+# The base URL of the kyhub instance this machine belongs to.
+#api_url = "https://kyhub.example.com"
+
+# OIDC token endpoint.
+# Returned by the kyhub Portal when the machine is registered.
+# Points to the Keycloak realm that issues machine bearer tokens.
+#token_endpoint = "https://keycloak.example.com/realms/myrealm/protocol/openid-connect/token"
+
+# OAuth2 client credentials for machine-to-machine authentication.
+# Returned by the kyhub Portal when the machine is registered.
+# kyhub never stores client_secret after returning it once. Keep this file secret.
+#client_id = "kyhub-machine-00000000-0000-0000-0000-000000000000"
+#client_secret = "your-client-secret"
+
+# How the client credentials are presented to the token endpoint.
+# Returned by the kyhub Portal. Optional; defaults to "client_secret_basic".
+# Supported values:
+#   "client_secret_basic" Credentials in the HTTP Basic Authorization header.
+#   "client_secret_post"  Credentials in the request body.
+# Any other value is rejected and the kycontroller refuses to start, rather
+# than starting with the kyhub agent quietly turned off.
+#auth_method = "client_secret_basic"
+
+# Manually declared endpoints (optional). Read by the kycontroller only.
+# Added to the auto-detected local addresses in every heartbeat.
+# Use for NAT port forwarding, VPN, or relay endpoints that are not
+# visible from local interface enumeration.
+#
+# Supported kinds:
+#   "ipv4-direct"       Direct IPv4 reachability
+#   "ipv6-direct"       Direct IPv6 reachability
+#   "nat-port-redirect" Behind a NAT with port forwarding on the router
+#   "vpn"               Reachable over a VPN
+#   "relay"             Reachable via a relay server
+#
+# Example: machine behind a NAT with port 8080 forwarded on the router:
+#
+#   [[kyhub.endpoints]]
+#   kind = "nat-port-redirect"
+#   host = "203.0.113.1"
+#   port = 8080
+
 [kynputserver]
 # Log level for this binary
 #
