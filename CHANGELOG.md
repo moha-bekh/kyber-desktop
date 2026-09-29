@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 * kyavservice/x264: Enable 4:4:4 support on avconv backend
 * kyavservice/avconv: Pick the hw encode device per encoder, not grab backend
 * kyavservice/avconv: Fix yuv444 & reduce amf encode latency to match txproto
+* kycontroller: Release AV subscriptions synchronously on session teardown
 
 ## [0.28.0] - 2026-08-18
 
