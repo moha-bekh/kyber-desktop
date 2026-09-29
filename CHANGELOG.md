@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 * kymedia: Integrate various libavconv fixes
 * kyavservice: Treat custom video encoder config as overrides
 * kyavservice/x264: Enable 4:4:4 support on avconv backend
+* kyavservice/avconv: Pick the hw encode device per encoder, not grab backend
 
 ## [0.28.0] - 2026-08-18
 
