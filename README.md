@@ -248,6 +248,53 @@ The bundle can be runned by another Mac, but it must be allowed at first:
 xattr -r -d com.apple.quarantine kyber-client.app
 ```
 
+## Connecting via a `kyber://` link
+
+The client can open a connection from a `kyber://<host>:<port>/?<param>=<value>` URL, so a browser or the kyhub portal can launch a session with one click. Each query parameter is a CLI flag spelled with underscores (`tls_tofu` for `--tls-tofu`); `yuv444` and `display_index` map to aliases of `--444` and `--display-idx`. Boolean parameters take a value in the URL (`tls_tofu=true`, accepts `true`/`1`/empty or `false`/`0`) but map to a bare flag on the CLI. Value parameters that carry a boolean (`audio`, `inputs`, ...) accept only `true` or `false`, since clap validates them. Values are form decoded, so `+` means a space and a literal `+` must be `%2B`. A `port` parameter overrides the port in the authority. For example `kyber://streamer.example?tls_tofu=true&auth_oidc_token=<token>` launches the same session as `kyclient streamer.example --tls-tofu --auth-oidc-token <token>`.
+
+The full mapping:
+
+| URL parameter | CLI flag | Type |
+|---|---|---|
+| `port` | `--port` (or the port in `<host>:<port>`) | value |
+| `protocol` | `--protocol` | value |
+| `kymux_video` | `--kymux-video` | value |
+| `kymux_audio` | `--kymux-audio` | value |
+| `video_codec` | `--video-codec` | value |
+| `bitrate` | `--bitrate` | value |
+| `audio` | `--audio` | value |
+| `inputs` | `--inputs` | value |
+| `intra_refresh` | `--intra-refresh` | value |
+| `gamepad_force_xbox360` | `--gamepad-force-xbox360` | value |
+| `clipboard` | `--clipboard` | value |
+| `keyboard_grab` | `--keyboard-grab` | value |
+| `metrics` | `--metrics` | value |
+| `audio_buffer` | `--audio-buffer` | value |
+| `video_buffer` | `--video-buffer` | value |
+| `display_index` | `--display-index` (alias of `--display-idx`) | value |
+| `display_count` | `--display-count` | value |
+| `auth_username` | `--auth-username` | value |
+| `auth_token` | `--auth-token` | value |
+| `auth_oidc_token` | `--auth-oidc-token` | value |
+| `yuv444` | `--yuv444` (alias of `--444`) | boolean |
+| `software_decode` | `--software-decode` | boolean |
+| `tls_tofu` | `--tls-tofu` | boolean |
+| `tls_known_hosts` | `--tls-known-hosts` | boolean |
+
+A `kyber://` link is web-triggerable, so the parameters that would change how the server is trusted, start a sign-in or carry a password are rejected: `tls_skip_verification`, `tls_fingerprint`, `tls_root_cert`, `tls_host`, `tls_tofu_interactive`, `auth_oidc` and `auth_password`. `tls_tofu` stays: it trusts the first certificate of the link's own host only. Any other unknown parameter is an error, and so is anything else on the command line next to a link: the client logs the error and exits instead of connecting with a setting silently dropped.
+
+A link with `auth_oidc_token` logs in with that token and never opens a browser. The session ends when the token expires. The token is visible to the other processes of the same user for as long as the client runs, in the command line the OS passes and in any launcher journal, so a portal should mint a short-lived, single-use token for a link.
+
+To register the scheme on Linux, build the package and run the install script from it:
+
+```bash
+./build-linux.sh -p
+tar xjf kyber-linux-x86_64.tar.bz2
+./kyber-linux-x86_64/install_kyclient.sh
+```
+
+This sets the client as the handler for `x-scheme-handler/kyber`. To undo, remove `~/.local/share/applications/kyber.desktop`. On Windows, run `register_url_scheme.bat` from the extracted package to register the scheme for the current user (no admin rights needed); `unregister_url_scheme.bat` removes it.
+
 ## Some tips
 
 ### My video decoder crashes
