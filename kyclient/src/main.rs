@@ -209,6 +209,7 @@ pub(crate) const FLAG_AUTH_USERNAME: &str = "auth-username";
 pub(crate) const FLAG_AUTH_PASSWORD: &str = "auth-password";
 pub(crate) const FLAG_AUTH_TOKEN: &str = "auth-token";
 pub(crate) const FLAG_AUTH_OIDC: &str = "auth-oidc";
+pub(crate) const FLAG_AUTH_OIDC_TOKEN: &str = "auth-oidc-token";
 pub(crate) const FLAG_TLS_FINGERPRINT: &str = "tls-fingerprint";
 pub(crate) const FLAG_TLS_TOFU: &str = "tls-tofu";
 pub(crate) const FLAG_TLS_TOFU_INTERACTIVE: &str = "tls-tofu-interactive";
@@ -242,6 +243,7 @@ pub(crate) const URL_ARGS: &[&str] = &[
     "kymux-audio",
     "kymux-video",
     "metrics",
+    "oidc-token",
     "port",
     "protocol",
     "software-decode",
@@ -517,6 +519,14 @@ pub(crate) fn build_cli() -> clap::App<'static> {
                 .takes_value(false)
                 .conflicts_with("jwt"),
         )
+        .arg(
+            clap::Arg::new("oidc-token")
+                .long(FLAG_AUTH_OIDC_TOKEN)
+                .help("Pre-supplied OIDC token, validated by the controller's OIDC backend (no browser flow)")
+                .takes_value(true)
+                .value_parser(clap::builder::NonEmptyStringValueParser::new())
+                .conflicts_with_all(&["jwt", "oidc", "basic_auth"]),
+        )
         .group(
             clap::ArgGroup::new("basic_auth")
                 .args(&["username", "password"])
@@ -721,7 +731,14 @@ fn main() {
         }
     };
 
-    let auth_credentials = if matches.is_present("oidc") {
+    let auth_credentials = if let Some(token) = matches.get_one::<String>("oidc-token") {
+        // The token is sent as the OIDC bearer at login, so the controller
+        // sends no 401 challenge and the interactive PKCE flow never starts.
+        // clap rejects an empty value, which would fall back to the challenge.
+        AuthCredentials::Oidc {
+            token: token.clone(),
+        }
+    } else if matches.is_present("oidc") {
         AuthCredentials::Oidc {
             token: String::new(),
         }

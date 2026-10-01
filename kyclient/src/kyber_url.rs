@@ -324,6 +324,20 @@ mod tests {
     }
 
     #[test]
+    fn auth_oidc_token_value() {
+        assert_eq!(
+            translate("kyber://h?auth_oidc_token=abc.def.ghi&tls_tofu=true"),
+            expected(&[
+                "client",
+                "h",
+                "--auth-oidc-token",
+                "abc.def.ghi",
+                "--tls-tofu",
+            ])
+        );
+    }
+
+    #[test]
     fn percent_decoded_value() {
         assert_eq!(
             translate("kyber://h?auth_token=a%2Bb%2Fc+d"),
@@ -394,6 +408,59 @@ mod tests {
         assert!(cli
             .try_get_matches_from(translate("kyber://h?bitrate=20M"))
             .is_ok());
+    }
+
+    #[test]
+    fn empty_oidc_token_is_an_error() {
+        let cli = crate::build_cli();
+        assert!(cli
+            .try_get_matches_from(translate("kyber://h?auth_oidc_token="))
+            .is_err());
+    }
+
+    #[test]
+    fn oidc_token_conflicts_with_explicit_basic_auth() {
+        // Default username/password must not conflict, explicit ones must.
+        let cli = crate::build_cli();
+        assert!(cli
+            .try_get_matches_from(translate("kyber://h?auth_oidc_token=tok"))
+            .is_ok());
+        let cli = crate::build_cli();
+        assert!(cli
+            .try_get_matches_from(translate("kyber://h?auth_oidc_token=tok&auth_username=u"))
+            .is_err());
+    }
+
+    #[test]
+    fn portal_launch_url_parses() {
+        // The shape the portal builds for a native client, with every
+        // session profile parameter set.
+        let argv = translate(
+            "kyber://desktop.kyber.internal:52789/?auth_oidc_token=TOK&tls_tofu=true&video_codec=hevc&bitrate=10000000&audio=true&clipboard=true&inputs=false",
+        );
+        assert_eq!(
+            argv,
+            expected(&[
+                "client",
+                "desktop.kyber.internal",
+                "--port",
+                "52789",
+                "--auth-oidc-token",
+                "TOK",
+                "--tls-tofu",
+                "--video-codec",
+                "hevc",
+                "--bitrate",
+                "10000000",
+                "--audio",
+                "true",
+                "--clipboard",
+                "true",
+                "--inputs",
+                "false",
+            ])
+        );
+        assert!(crate::build_cli().try_get_matches_from(argv).is_ok());
     }
 
     #[test]
