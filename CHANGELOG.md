@@ -35,6 +35,7 @@ All notable changes to this project will be documented in this file.
 * kyavservice/avconv: Fall back to a nominal frame rate on the encoder
 * kyavservice/avconv: Map DRM PRIME frames to VAAPI/QSV, download for x264
 * kyavservice/vaapi: Fix encode crash on discrete GPU (Intel Arc) via XCB capture
+* kyctl/kyclient: Rename ConnectFailedReason variants for consistency
 
 ## [0.28.0] - 2026-08-18
 
