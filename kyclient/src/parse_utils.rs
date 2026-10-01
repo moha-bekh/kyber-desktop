@@ -45,7 +45,7 @@ pub(crate) fn parse_bitrate(mut bitrate: String) -> Option<u32> {
     };
 
     match scale {
-        Some(scale) => Some(bitrate * scale),
+        Some(scale) => bitrate.checked_mul(scale),
         None => Some(bitrate),
     }
 }
@@ -64,5 +64,7 @@ mod tests {
         assert_eq!(parse_bitrate("230K".into()), Some(230_000));
         assert_eq!(parse_bitrate("1M".into()), Some(1_000_000));
         assert_eq!(parse_bitrate("230M".into()), Some(230_000_000));
+        // 5000M overflows u32; the checked scale must not wrap.
+        assert_eq!(parse_bitrate("5000M".into()), None);
     }
 }

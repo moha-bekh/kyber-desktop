@@ -176,6 +176,14 @@ fn load_tls_conf(matches: &clap::ArgMatches) -> Result<TlsConfig> {
     })
 }
 
+/// clap value parser for `--bitrate`: accepts a plain number or a K/M-suffixed
+/// value, rejecting anything else at parse time. A malformed value is an
+/// argument error instead of a panic.
+fn parse_bitrate_arg(value: &str) -> std::result::Result<u32, String> {
+    parse_bitrate(value.to_owned())
+        .ok_or_else(|| format!("expected a number optionally suffixed with K or M, got '{value}'"))
+}
+
 fn build_cli() -> clap::App<'static> {
     clap::App::new("Streaming client")
         .version(env!("VERGEN_GIT_DESCRIBE"))
@@ -218,7 +226,8 @@ fn build_cli() -> clap::App<'static> {
             clap::Arg::with_name("bitrate")
                 .long("bitrate")
                 .help("Set connection bitrate (Unit: bytes)")
-                .takes_value(true),
+                .takes_value(true)
+                .value_parser(parse_bitrate_arg),
         )
         .arg(
             clap::Arg::with_name("audio")
@@ -607,9 +616,7 @@ fn main() {
         }
     };
 
-    let bitrate = matches
-        .value_of("bitrate")
-        .map(|bitrate| parse_bitrate(bitrate.into()).unwrap());
+    let bitrate = matches.get_one::<u32>("bitrate").copied();
 
     let display_index = matches.get_one("display-idx").copied();
     let display_count = matches.get_one("display-count").copied();
