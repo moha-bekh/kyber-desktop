@@ -32,6 +32,8 @@ mod oidc_manager;
 mod parse_utils;
 mod window;
 
+use std::ffi::OsString;
+
 use log::{error, info, warn, LevelFilter};
 use log4ky::notice;
 use winit::event_loop::EventLoopBuilder;
@@ -535,16 +537,11 @@ pub(crate) fn build_cli() -> clap::App<'static> {
         )
 }
 
-fn main() {
-    let matches = build_cli().get_matches();
-
-    let vlc_level = std::env::var("KYBER_VLC_VERBOSE")
-        .is_ok()
-        .then_some(LevelFilter::Debug);
-    let cli_level: Option<LevelFilter> = matches
-        .value_of("log-level")
-        .map(|s| s.parse().expect("level validated by clap"));
-    let Ok(_log_handle) = log4ky::LoggerBuilder::new("kyclient")
+fn logger(
+    cli_level: Option<LevelFilter>,
+    vlc_level: Option<LevelFilter>,
+) -> log4ky::LoggerBuilder<'static> {
+    log4ky::LoggerBuilder::new("kyclient")
         .base(log4ky::LogConfig {
             scope: log4ky::LogScope::User,
             ..Default::default()
@@ -552,8 +549,32 @@ fn main() {
         .console(!cfg!(feature = "win32-hide-console"))
         .default_target_level("vlc", vlc_level)
         .cli_level(cli_level)
-        .init()
-    else {
+}
+
+fn main() {
+    // A kyber:// link is translated to CLI arguments before clap sees them.
+    let args: Vec<OsString> = std::env::args_os().collect();
+    let argv: Vec<OsString> = match kyber_url::maybe_translate_url(&args) {
+        Ok(Some(argv)) => argv.into_iter().map(OsString::from).collect(),
+        Ok(None) => args,
+        Err(e) => {
+            // A link launch has no terminal and the WINDOWS subsystem has no
+            // console, so the log file is the only place the error can go.
+            let _log_handle = logger(None, None).init();
+            notice!("Error: {e}");
+            std::process::exit(1);
+        }
+    };
+
+    let matches = build_cli().get_matches_from(argv);
+
+    let vlc_level = std::env::var("KYBER_VLC_VERBOSE")
+        .is_ok()
+        .then_some(LevelFilter::Debug);
+    let cli_level: Option<LevelFilter> = matches
+        .value_of("log-level")
+        .map(|s| s.parse().expect("level validated by clap"));
+    let Ok(_log_handle) = logger(cli_level, vlc_level).init() else {
         // Unreachable with no config file; invalid log config is fatal by contract.
         std::process::exit(1);
     };
