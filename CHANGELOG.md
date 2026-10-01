@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 * kyclient,kycontroller: Misc metrics fixups
 * kyavservice: Add GStreamer grab backend
 * kyclient: Exit cleanly when the controller has no displays
+* kycontroller/auth/oidc: Add optional audience validation to OIDC config
 
 ## [0.28.0] - 2026-08-18
 
