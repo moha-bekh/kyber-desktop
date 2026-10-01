@@ -107,6 +107,12 @@ package() {
         $source_directory/share/kyber.ico \
         $staging_directory/share
 
+    # Copy the kyber:// scheme handler desktop entry
+    mkdir -p "$staging_directory/share/applications"
+    cp \
+        kyclient/res/kyber.desktop \
+        $staging_directory/share/applications
+
     # Copy libraries
     cd $source_directory
     find lib -name \*.so\* -exec cp -a --parents {} $staging_directory_realpath \;
@@ -120,6 +126,7 @@ package() {
     cp \
         scripts/linux/run_kyclient.sh \
         scripts/linux/run_kycontroller.sh \
+        scripts/linux/install_kyclient.sh \
         $staging_directory
 
     tar cfvj $(basename $staging_directory).tar.bz2 $staging_directory

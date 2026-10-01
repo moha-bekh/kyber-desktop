@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Kyber Client
+Comment=Connect to a Kyber streamer
+# install_kyclient.sh rewrites Exec to the absolute run_kyclient.sh wrapper so
+# PATH and LD_LIBRARY_PATH are set when the desktop environment launches us.
+Exec=kyclient %u
+Icon=kyber
+Terminal=false
+NoDisplay=true
+MimeType=x-scheme-handler/kyber;
+Categories=Network;RemoteAccess;
