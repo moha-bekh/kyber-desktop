@@ -26,6 +26,7 @@ mod event_loop;
 mod icon;
 mod inputs;
 mod keyboard_grabber;
+mod kyber_url;
 mod metrics;
 mod oidc_manager;
 mod parse_utils;
@@ -176,6 +177,41 @@ fn load_tls_conf(matches: &clap::ArgMatches) -> Result<TlsConfig> {
     })
 }
 
+// Long names of the CLI flags, shared with the kyber:// URL translator in
+// `kyber_url` so the two cannot drift. The `parser_flags_exist_in_cli` test
+// asserts every flag the translator emits exists on the CLI built here.
+pub(crate) const FLAG_PROTOCOL: &str = "protocol";
+pub(crate) const FLAG_KYMUX_VIDEO: &str = "kymux-video";
+pub(crate) const FLAG_KYMUX_AUDIO: &str = "kymux-audio";
+pub(crate) const FLAG_VIDEO_CODEC: &str = "video-codec";
+pub(crate) const FLAG_YUV444: &str = "yuv444";
+pub(crate) const FLAG_BITRATE: &str = "bitrate";
+pub(crate) const FLAG_AUDIO: &str = "audio";
+pub(crate) const FLAG_AUDIO_BUFFER: &str = "audio-buffer";
+pub(crate) const FLAG_VIDEO_BUFFER: &str = "video-buffer";
+pub(crate) const FLAG_INPUTS: &str = "inputs";
+pub(crate) const FLAG_PORT: &str = "port";
+pub(crate) const FLAG_DISPLAY_IDX: &str = "display-idx";
+pub(crate) const FLAG_DISPLAY_INDEX: &str = "display-index";
+pub(crate) const FLAG_DISPLAY_COUNT: &str = "display-count";
+pub(crate) const FLAG_SOFTWARE_DECODE: &str = "software-decode";
+pub(crate) const FLAG_INTRA_REFRESH: &str = "intra-refresh";
+pub(crate) const FLAG_GAMEPAD_FORCE_XBOX360: &str = "gamepad-force-xbox360";
+pub(crate) const FLAG_CLIPBOARD: &str = "clipboard";
+pub(crate) const FLAG_KEYBOARD_GRAB: &str = "keyboard-grab";
+pub(crate) const FLAG_TLS_HOST: &str = "tls-host";
+pub(crate) const FLAG_TLS_ROOT_CERT: &str = "tls-root-cert";
+pub(crate) const FLAG_TLS_SKIP_VERIFICATION: &str = "tls-skip-verification";
+pub(crate) const FLAG_METRICS: &str = "metrics";
+pub(crate) const FLAG_AUTH_USERNAME: &str = "auth-username";
+pub(crate) const FLAG_AUTH_PASSWORD: &str = "auth-password";
+pub(crate) const FLAG_AUTH_TOKEN: &str = "auth-token";
+pub(crate) const FLAG_AUTH_OIDC: &str = "auth-oidc";
+pub(crate) const FLAG_TLS_FINGERPRINT: &str = "tls-fingerprint";
+pub(crate) const FLAG_TLS_TOFU: &str = "tls-tofu";
+pub(crate) const FLAG_TLS_TOFU_INTERACTIVE: &str = "tls-tofu-interactive";
+pub(crate) const FLAG_TLS_KNOWN_HOSTS: &str = "tls-known-hosts";
+
 /// clap value parser for `--bitrate`: accepts a plain number or a K/M-suffixed
 /// value, rejecting anything else at parse time. A malformed value is an
 /// argument error instead of a panic.
@@ -184,34 +220,64 @@ fn parse_bitrate_arg(value: &str) -> std::result::Result<u32, String> {
         .ok_or_else(|| format!("expected a number optionally suffixed with K or M, got '{value}'"))
 }
 
-fn build_cli() -> clap::App<'static> {
+/// Arguments a `kyber://` link may set. A link is web-triggerable, so this is an
+/// opt-in list: server trust (TLS skip, pinning, root, host), interactive
+/// sign-in and passwords stay out. A new argument is not link-settable until its
+/// id is added here.
+pub(crate) const URL_ARGS: &[&str] = &[
+    "444",
+    "audio",
+    "audio-buffer",
+    "bitrate",
+    "clipboard",
+    "display-count",
+    "display-idx",
+    "gamepad-force-xbox360",
+    "inputs",
+    "intra-refresh",
+    "jwt",
+    "keyboard-grab",
+    "kymux-audio",
+    "kymux-video",
+    "metrics",
+    "port",
+    "protocol",
+    "software-decode",
+    "tls-known-hosts",
+    "tls-tofu",
+    "username",
+    "video-buffer",
+    "video-codec",
+];
+
+pub(crate) fn build_cli() -> clap::App<'static> {
     clap::App::new("Streaming client")
         .version(env!("VERGEN_GIT_DESCRIBE"))
         .about("IP of the streamer to connect to")
         .arg(
             clap::Arg::with_name("protocol")
-                .long("protocol")
+                .long(FLAG_PROTOCOL)
                 .help("Protocol to use")
                 .value_parser(["rtp", "kymux"])
                 .default_value("kymux"),
         )
         .arg(
             clap::Arg::with_name("kymux-video")
-                .long("kymux-video")
+                .long(FLAG_KYMUX_VIDEO)
                 .help("Kymux video protocol to use")
                 .value_parser(["reliable", "gopstream", "unreliable", "unreliable_fec"])
                 .default_value("reliable"),
         )
         .arg(
             clap::Arg::with_name("kymux-audio")
-                .long("kymux-audio")
+                .long(FLAG_KYMUX_AUDIO)
                 .help("Kymux audio protocol to use")
                 .value_parser(["reliable", "unreliable", "unreliable_fec"])
                 .default_value("reliable"),
         )
         .arg(
             clap::Arg::with_name("video-codec")
-                .long("video-codec")
+                .long(FLAG_VIDEO_CODEC)
                 .help("Video codec to use")
                 .value_parser(["h264", "hevc", "av1"])
                 .default_value("h264"),
@@ -219,114 +285,116 @@ fn build_cli() -> clap::App<'static> {
         .arg(
             clap::Arg::with_name("444")
                 .long("444")
+                .alias(FLAG_YUV444)
                 .help("Enable YUV444")
                 .takes_value(false),
         )
         .arg(
             clap::Arg::with_name("bitrate")
-                .long("bitrate")
+                .long(FLAG_BITRATE)
                 .help("Set connection bitrate (Unit: bytes)")
                 .takes_value(true)
                 .value_parser(parse_bitrate_arg),
         )
         .arg(
             clap::Arg::with_name("audio")
-                .long("audio")
+                .long(FLAG_AUDIO)
                 .help("Enable audio")
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("audio-buffer")
-                .long("audio-buffer")
+                .long(FLAG_AUDIO_BUFFER)
                 .help("Set audio buffer (in ms)")
                 .value_parser(clap::value_parser!(u32))
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("video-buffer")
-                .long("video-buffer")
+                .long(FLAG_VIDEO_BUFFER)
                 .help("Set video buffer (in ms)")
                 .value_parser(clap::value_parser!(u32))
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("inputs")
-                .long("inputs")
+                .long(FLAG_INPUTS)
                 .help("Enable inputs")
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("port")
-                .long("port")
+                .long(FLAG_PORT)
                 .help("Port to use for connection")
                 .value_parser(clap::value_parser!(u16))
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("display-idx")
-                .long("display-idx")
+                .long(FLAG_DISPLAY_IDX)
+                .alias(FLAG_DISPLAY_INDEX)
                 .help("Display Id to access")
                 .value_parser(clap::value_parser!(usize))
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("display-count")
-                .long("display-count")
+                .long(FLAG_DISPLAY_COUNT)
                 .help("Display count to stream")
                 .value_parser(clap::value_parser!(usize))
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("software-decode")
-                .long("software-decode")
+                .long(FLAG_SOFTWARE_DECODE)
                 .help("Enable video software decoding")
                 .takes_value(false),
         )
         .arg(
             clap::Arg::with_name("intra-refresh")
-                .long("intra-refresh")
+                .long(FLAG_INTRA_REFRESH)
                 .help("Enable Intra refresh (is supported by the encoder)")
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("gamepad-force-xbox360")
-                .long("gamepad-force-xbox360")
+                .long(FLAG_GAMEPAD_FORCE_XBOX360)
                 .help("Force to plug gamepads as Xbox 360 controllers")
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("clipboard")
-                .long("clipboard")
+                .long(FLAG_CLIPBOARD)
                 .help("Enable Clipboard support")
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("keyboard-grab")
-                .long("keyboard-grab")
+                .long(FLAG_KEYBOARD_GRAB)
                 .help("Enable keyboard grabbing for immersive mode. Default: true")
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("tls-host")
-                .long("tls-host")
+                .long(FLAG_TLS_HOST)
                 .help("TLS hostname to give during TLS connection")
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("tls-root-cert")
-                .long("tls-root-cert")
+                .long(FLAG_TLS_ROOT_CERT)
                 .help("TLS root certificate to trust")
                 .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("tls-fingerprint")
-                .long("tls-fingerprint")
+                .long(FLAG_TLS_FINGERPRINT)
                 .help("TLS certificate fingerprint to verify (format: sha256:XX:XX:...)")
                 .takes_value(true)
                 .conflicts_with_all(&[
@@ -353,7 +421,7 @@ fn build_cli() -> clap::App<'static> {
         )
         .arg(
             clap::Arg::with_name("tls-tofu")
-                .long("tls-tofu")
+                .long(FLAG_TLS_TOFU)
                 .help(
                     "Enable Trust-On-First-Use verification (auto-accepts first connection). \
                        Known hosts stored in: Linux: ~/.local/share/kyber/known_hosts, \
@@ -368,14 +436,14 @@ fn build_cli() -> clap::App<'static> {
         )
         .arg(
             clap::Arg::with_name("tls-tofu-interactive")
-                .long("tls-tofu-interactive")
+                .long(FLAG_TLS_TOFU_INTERACTIVE)
                 .help("Enable interactive TOFU (prompts yes/no for unknown hosts, CLI only)")
                 .takes_value(false)
                 .conflicts_with_all(&["tls-tofu", "tls-known-hosts", "tls-skip-verification"]),
         )
         .arg(
             clap::Arg::with_name("tls-known-hosts")
-                .long("tls-known-hosts")
+                .long(FLAG_TLS_KNOWN_HOSTS)
                 .help("Strict mode: only accept hosts already in known_hosts (rejects unknown)")
                 .takes_value(false)
                 .conflicts_with_all(&["tls-tofu", "tls-tofu-interactive", "tls-skip-verification"]),
@@ -403,13 +471,13 @@ fn build_cli() -> clap::App<'static> {
         )
         .arg(
             clap::Arg::with_name("tls-skip-verification")
-                .long("tls-skip-verification")
+                .long(FLAG_TLS_SKIP_VERIFICATION)
                 .help("DANGER: Skip TLS certificate verification (testing only)")
                 .takes_value(false),
         )
         .arg(
             clap::Arg::with_name("metrics")
-                .long("metrics")
+                .long(FLAG_METRICS)
                 .help("Enable metrics")
                 .value_parser(clap::value_parser!(bool))
                 .takes_value(true),
@@ -424,25 +492,25 @@ fn build_cli() -> clap::App<'static> {
         .next_help_heading("Authentication")
         .arg(
             clap::Arg::new("username")
-                .long("auth-username")
+                .long(FLAG_AUTH_USERNAME)
                 .help("Basic authentication username")
                 .default_value("Default user"),
         )
         .arg(
             clap::Arg::new("password")
-                .long("auth-password")
+                .long(FLAG_AUTH_PASSWORD)
                 .help("Basic authentication password")
                 .default_value("Default password"),
         )
         .arg(
             clap::Arg::new("jwt")
-                .long("auth-token")
+                .long(FLAG_AUTH_TOKEN)
                 .help("JsonWebToken authentication token")
                 .takes_value(true),
         )
         .arg(
             clap::Arg::new("oidc")
-                .long("auth-oidc")
+                .long(FLAG_AUTH_OIDC)
                 .help("Use OIDC authentication (server-initiated challenge)")
                 .takes_value(false)
                 .conflicts_with("jwt"),

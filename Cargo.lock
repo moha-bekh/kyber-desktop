@@ -1380,6 +1380,7 @@ dependencies = [
  "raw-window-handle",
  "serial_test",
  "tokio",
+ "url",
  "vergen",
  "winit",
 ]
