@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file.
 * kyclient: Exit cleanly when the controller has no displays
 * kycontroller/auth/oidc: Add optional audience validation to OIDC config
 * vlc: Make the "Video buffer" feature work with videotoolbox
+* kyclient: Fix ownership of display event arrays
 
 ## [0.28.0] - 2026-08-18
 
