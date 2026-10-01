@@ -128,6 +128,8 @@ package() {
         $BASE_DIR/scripts/windows/start_service.bat \
         $BASE_DIR/scripts/windows/stop_service.bat \
         $BASE_DIR/scripts/windows/uninstall_service.bat \
+        $BASE_DIR/scripts/windows/register_url_scheme.bat \
+        $BASE_DIR/scripts/windows/unregister_url_scheme.bat \
         $staging_directory
 
     # Copy resources
