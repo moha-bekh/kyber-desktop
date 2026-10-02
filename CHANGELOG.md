@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 * kyavservice/vaapi: Fix encode crash on discrete GPU (Intel Arc) via XCB capture
 * kyctl/kyclient: Rename ConnectFailedReason variants for consistency
 * kyclient,kycontroller: Move to rustls-platform-verifier 0.7
+* txproto: Expose filtergraph hardware-device injection
 
 ## [0.28.0] - 2026-08-18
 
