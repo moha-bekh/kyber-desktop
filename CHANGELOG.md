@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
 * txproto: Expose filtergraph hardware-device injection
 * kyutil,kynput,kyclient: Take the host log level in the log callbacks
 * kyutil,kyctl: Add the kyhub heartbeat agent
+* kywebsocket,kyclient: Add tungstenite driver and non-wasm websocket support
 
 ## [0.28.0] - 2026-08-18
 
