@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 * kyclient,kycontroller: Move to rustls-platform-verifier 0.7
 * txproto: Expose filtergraph hardware-device injection
 * kyutil,kynput,kyclient: Take the host log level in the log callbacks
+* kyutil,kyctl: Add the kyhub heartbeat agent
 
 ## [0.28.0] - 2026-08-18
 
