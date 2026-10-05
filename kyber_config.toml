@@ -369,10 +369,12 @@ enabled = true
 #   allowed_identifiers = ["alice@example.com"]
 #   allowed_groups = ["friends"]
 #
-[kycontroller.auth.oidc]
+# Commented out: on a kyhub managed machine this section comes from kyhub's
+# configuration. Uncomment it to use OIDC on a standalone server.
+# [kycontroller.auth.oidc]
 # Enable/Disable the backend.
 # Default: false
-enabled = false
+# enabled = false
 
 # OIDC issuer URL. Must support OpenID Connect Discovery
 # (/.well-known/openid-configuration).
