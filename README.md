@@ -75,7 +75,6 @@ The script outputs files in folder `rootfs-x86_64-linux-gnu`, including helper
 scripts to setup all the required envvars to run the client and the server.
 
 Note that there are some options in the build script to avoid some build steps:
-* `-n`: Skip git fetch/checkout (preserves your local changes)
 * `-s`: Skip the dependencies build
 * `-o`: Output directory (must be absolute path)
 
@@ -164,7 +163,6 @@ cargo install --locked cargo-c@0.10.15
 ```
 
 Note that there are some options in the build script to avoid some build steps:
-* `-n`: Skip git fetch/checkout (preserves your local changes)
 * `-s`: Skip the dependencies build
 * `-o`: Output directory (must be absolute path)
 
@@ -228,7 +226,6 @@ cargo install --locked cargo-c@0.10.15
 * `arm64`
 
 Note that there are some options in the build script to avoid some build steps:
-* `-n`: Skip git fetch/checkout (preserves your local changes)
 * `-s`: Skip the dependencies build
 * `-o`: Output directory (must be absolute path)
 
