@@ -33,7 +33,6 @@ Build Desktop Application.
 
 OPTIONS:
    -h            Show some help
-   -f            Force reset the dependencies to their pinned version
    -s            Skip native dependencies build
    -d            Build only native dependencies
    -c            Run clippy
@@ -42,24 +41,6 @@ OPTIONS:
    -w            Don't spawn cmd.exe when running processes
    -o <path>     Install the built binaries in the absolute path (Default: ./rootfs-x86_64-w64-mingw32)
 EOF
-}
-
-git_clone() {
-    local REPO=$1
-    local BRANCH=$2
-
-    if [[ -z "${CI_JOB_TOKEN}" ]]; then
-        local FULL_REPO_URI="git@gitlab.com:${REPO}"
-    else
-        local FULL_REPO_URI="https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/${REPO}"
-    fi
-
-    echo "Repo: '${FULL_REPO_URI}'"
-    if [[ -z "${BRANCH}" ]]; then
-        git clone --recurse-submodules ${FULL_REPO_URI}
-    else
-        git clone --recurse-submodules ${FULL_REPO_URI} -b $BRANCH
-    fi
 }
 
 build_deps() {
@@ -149,7 +130,7 @@ CONSOLE_FLAG=""
 HIDE_CONSOLE_FEATURE=""
 OUT_DIR=$(pwd)/rootfs-x86_64-w64-mingw32
 
-while getopts "hfsdctpo:w" OPTION
+while getopts "hsdctpo:w" OPTION
 do
     case $OPTION in
         h)
@@ -177,6 +158,10 @@ do
         w)
             CONSOLE_FLAG="-w"
             HIDE_CONSOLE_FEATURE="--features win32-hide-console"
+            ;;
+        *)
+            usage
+            exit 1
             ;;
     esac
 done
