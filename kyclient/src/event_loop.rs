@@ -44,6 +44,28 @@ use crate::window::{Position, Size, Window, WindowControlWinit, WindowsStateMach
 use crate::{client_proxy::ClientEventProxy, DisplayParams};
 use crate::{CliArgs, TlsVerification};
 
+/// Step and bounds of the bitrate shortcuts, in bit/s.
+const BITRATE_STEP: u32 = 5_000_000;
+const BITRATE_SHORTCUT_MIN: u32 = 5_000_000;
+const BITRATE_SHORTCUT_MAX: u32 = 70_000_000;
+
+/// The bitrate after a BitrateUp shortcut: one step more, up to the maximum.
+/// A bitrate already above it, set with `--bitrate`, is not lowered.
+fn bitrate_up(bitrate: u32) -> u32 {
+    bitrate
+        .saturating_add(BITRATE_STEP)
+        .min(BITRATE_SHORTCUT_MAX.max(bitrate))
+}
+
+/// The bitrate after a BitrateDown shortcut: one step less, down to the
+/// minimum. A bitrate already below it, set with `--bitrate`, is not raised,
+/// and the subtraction cannot wrap around to a huge value.
+fn bitrate_down(bitrate: u32) -> u32 {
+    bitrate
+        .saturating_sub(BITRATE_STEP)
+        .max(BITRATE_SHORTCUT_MIN.min(bitrate))
+}
+
 /// Print SSH-style warning when a host's certificate has changed.
 fn print_cert_changed_warning(hostname: &str, expected: &str, actual: &str) {
     notice!(
@@ -742,28 +764,18 @@ impl State {
                 self.client.audio_set_volume(volume)?;
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::BitrateUp)) => {
-                let Some(mut bitrate) = self.bitrate else {
+                let Some(bitrate) = self.bitrate else {
                     return Ok(());
                 };
 
-                bitrate += 5_000_000;
-                if bitrate > 70_000_000 {
-                    bitrate = 70_000_000;
-                }
-
-                self.client.set_bitrate(bitrate)?;
+                self.client.set_bitrate(bitrate_up(bitrate))?;
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::BitrateDown)) => {
-                let Some(mut bitrate) = self.bitrate else {
+                let Some(bitrate) = self.bitrate else {
                     return Ok(());
                 };
 
-                bitrate -= 5_000_000;
-                if bitrate < 5_000_000 {
-                    bitrate = 5_000_000;
-                }
-
-                self.client.set_bitrate(bitrate)?;
+                self.client.set_bitrate(bitrate_down(bitrate))?;
             }
             Event::UserEvent(UserEvent::Shortcut(ShortcutType::ToggleMute)) => {
                 let mute = !self.mute;
@@ -856,5 +868,38 @@ impl EventLoopWrapper {
                 warn!("Event handler failed during processing: {:?}", err);
             }
         });
+    }
+}
+
+#[cfg(test)]
+mod bitrate_shortcut_tests {
+    use super::*;
+
+    #[test]
+    fn up_steps_and_stops_at_the_maximum() {
+        assert_eq!(bitrate_up(10_000_000), 15_000_000);
+        assert_eq!(bitrate_up(68_000_000), 70_000_000);
+        assert_eq!(bitrate_up(70_000_000), 70_000_000);
+    }
+
+    #[test]
+    fn up_does_not_lower_a_bitrate_above_the_maximum() {
+        assert_eq!(bitrate_up(100_000_000), 100_000_000);
+        assert_eq!(bitrate_up(u32::MAX), u32::MAX);
+    }
+
+    #[test]
+    fn down_steps_and_stops_at_the_minimum() {
+        assert_eq!(bitrate_down(20_000_000), 15_000_000);
+        assert_eq!(bitrate_down(7_000_000), 5_000_000);
+        assert_eq!(bitrate_down(5_000_000), 5_000_000);
+    }
+
+    // `--bitrate 2M`: the former `bitrate -= 5_000_000` wrapped to 4 291 967 296
+    // in release builds, which the `< 5_000_000` check let through.
+    #[test]
+    fn down_does_not_wrap_or_raise_a_bitrate_below_the_minimum() {
+        assert_eq!(bitrate_down(2_000_000), 2_000_000);
+        assert_eq!(bitrate_down(0), 0);
     }
 }
